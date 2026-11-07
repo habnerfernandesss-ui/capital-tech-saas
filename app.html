@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Capital Tech SaaS | App do Técnico — Auditoria de Campo & Estanqueidade</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#38BDF8" id="meta-theme-color">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Motor OCR para leitura óptica da plaqueta do tanque -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
+    <!-- Motores Firebase (App, Realtime Database e Authentication) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #06080D;
+            --panel: #0E131F;
+            --card: #151C2C;
+            --g3-amber: #F59E0B;
+            --g3-amber-glow: rgba(245, 158, 11, 0.35);
+            --cyan: #38BDF8;
+            --green: #10B981;
+            --green-glow: rgba(16, 185, 129, 0.25);
+            --red: #E11D48;
+            --red-glow: rgba(225, 29, 72, 0.35);
+            --text: #F8FAFC;
+            --muted: #94A3B8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        html, body { background: var(--bg); color: var(--text); width: 100%; max-width: 100%; overflow-x: hidden; scroll-behavior: smooth; }
+        body { padding-bottom: 80px; }
+
+        /* =========================================
+           PORTA DE AÇO: TELA DE LOGIN DO TÉCNICO
+           ========================================= */
+        #login-overlay {
+            position: fixed; inset: 0; z-index: 99999;
+            background: radial-gradient(circle at top, #0F172A 0%, #05070B 100%);
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; padding: 20px;
+        }
+        .login-box {
+            background: var(--panel); border: 1.5px solid var(--g3-amber);
+            border-radius: 18px; padding: 34px 26px; width: 100%; max-width: 400px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9); text-align: center;
+        }
+        .login-logo {
+            width: 66px; height: 66px; border-radius: 16px; margin: 0 auto 14px auto;
+            background: linear-gradient(135deg, var(--g3-amber), #D97706);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.9rem; color: #000;
+            box-shadow: 0 0 25px var(--g3-amber-glow);
+        }
+        .login-title { font-size: 1.35rem; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; color: #fff; }
+        .login-sub { font-size: 0.75rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; margin-bottom: 22px; text-transform: uppercase; }
+        .login-btn {
+            width: 100%; padding: 14px; border: none; border-radius: 10px; margin-top: 14px;
+            background: linear-gradient(90deg, var(--g3-amber), #D97706);
+            color: #000; font-weight: 900; font-size: 0.95rem; text-transform: uppercase;
+            cursor: pointer; box-shadow: 0 8px 25px var(--g3-amber-glow); transition: 0.2s;
+        }
+        .login-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+        .login-error {
+            background: rgba(225, 29, 72, 0.15); border: 1px solid var(--red); color: #fda4af;
+            font-size: 0.78rem; padding: 10px; border-radius: 8px; margin-top: 12px; display: none; font-weight: 600;
+        }
+        .login-hint {
+            margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border);
+            font-size: 0.72rem; color: var(--muted); line-height: 1.4;
+        }
+
+        /* =========================================
+           INTERFACE DO APLICATIVO DE CAMPO
+           ========================================= */
+        .topbar {
+            background: rgba(14, 19, 31, 0.96); backdrop-filter: blur(16px);
+            border-bottom: 2px solid var(--g3-amber); padding: 12px 4%;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 6px 30px rgba(0,0,0,0.7);
+            flex-wrap: wrap; gap: 10px;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo {
+            width: 44px; height: 44px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--g3-amber), #D97706);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.3rem; color: #000;
+            box-shadow: 0 0 18px var(--g3-amber-glow); flex-shrink: 0;
+        }
+        .brand-title { font-weight: 900; font-size: 1.22rem; letter-spacing: 0.5px; line-height: 1.1; text-transform: uppercase; }
+        .brand-title span { color: var(--g3-amber); }
+        .brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .top-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .badge-os {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+            background: rgba(245, 158, 11, 0.15); border: 1px solid var(--g3-amber);
+            color: var(--g3-amber); padding: 6px 12px; border-radius: 6px;
+        }
+        .badge-gps {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            background: rgba(16, 185, 129, 0.15); border: 1px solid var(--green);
+            color: #34D399; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+        }
+        .btn-logout-tec {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700;
+            background: rgba(225, 29, 72, 0.15); border: 1px solid var(--red);
+            color: #fda4af; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+        }
+
+        .quick-nav {
+            background: #090D15; border-bottom: 1px solid var(--border);
+            padding: 10px 4%; display: flex; gap: 8px; overflow-x: auto;
+        }
+        .nav-pill {
+            background: var(--card); border: 1px solid var(--border); color: var(--muted);
+            padding: 7px 13px; border-radius: 50px; font-size: 0.8rem; font-weight: 600;
+            text-decoration: none; white-space: nowrap; transition: 0.2s;
+        }
+        .nav-pill:hover { border-color: var(--g3-amber); color: #fff; }
+
+        .container { max-width: 1040px; margin: 20px auto; padding: 0 3.5%; width: 100%; }
+
+        .module-card {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px; margin-bottom: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.55); width: 100%; overflow: hidden;
+        }
+        .module-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 20px;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .module-title { font-size: 1.12rem; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .module-title span { color: var(--g3-amber); font-family: 'JetBrains Mono', monospace; }
+        .module-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--cyan); background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.25); }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
+        
+        .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; width: 100%; }
+        .field label { font-size: 0.76rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .field input, .field select, .field textarea {
+            background: var(--card); border: 1px solid var(--border); color: #fff;
+            padding: 12px; border-radius: 8px; font-size: 0.9rem; outline: none;
+            width: 100%; max-width: 100%; min-width: 0; display: block;
+        }
+        .field input:focus, .field select:focus, .field textarea:focus {
+            border-color: var(--g3-amber); box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+        }
+
+        .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; width: 100%; }
+        .mode-btn {
+            background: var(--card); border: 2px solid var(--border); color: var(--text);
+            padding: 15px 12px; border-radius: 12px; cursor: pointer; text-align: center;
+            transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; gap: 5px;
+            width: 100%; user-select: none;
+        }
+        .mode-btn:hover { border-color: rgba(245, 158, 11, 0.5); transform: translateY(-2px); }
+        .mode-btn strong { font-size: 0.95rem; text-transform: uppercase; pointer-events: none; }
+        .mode-btn small { font-size: 0.74rem; color: var(--muted); pointer-events: none; }
+        .mode-btn.active {
+            border-color: var(--g3-amber) !important;
+            background: rgba(245, 158, 11, 0.18) !important;
+            box-shadow: 0 0 22px var(--g3-amber-glow) !important;
+        }
+        .mode-btn.emerg-active {
+            border-color: var(--red) !important;
+            background: rgba(225, 29, 72, 0.22) !important;
+            box-shadow: 0 0 25px var(--red-glow) !important;
+        }
+
+        .mode-status-bar {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--g3-amber);
+            color: var(--g3-amber); padding: 10px 15px; border-radius: 8px;
+            font-weight: 700; font-size: 0.88rem; margin-bottom: 18px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+        }
+
+        .emergency-banner {
+            display: none; background: rgba(225, 29, 72, 0.16); border: 2px solid var(--red);
+            color: #fecdd3; padding: 14px 18px; border-radius: 10px; margin-bottom: 18px;
+            font-size: 0.9rem; font-weight: 600; line-height: 1.4;
+        }
+
+        .history-panel {
+            background: #090D16; border: 1px solid rgba(56, 189, 248, 0.25);
+            border-left: 4px solid var(--cyan); border-radius: 10px; padding: 15px; margin-top: 14px;
+        }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.82rem; color: var(--cyan); font-weight: 700; text-transform: uppercase; flex-wrap: wrap; gap: 6px; }
+        .history-list { list-style: none; font-size: 0.85rem; color: #cbd5e1; }
+        .history-list li { padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .history-list li:last-child { border-bottom: none; }
+
+        .gps-bar { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+        .btn-mini {
+            background: rgba(56, 189, 248, 0.12); border: 1px solid var(--cyan); color: var(--cyan);
+            padding: 9px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .btn-mini:hover { background: var(--cyan); color: #000; }
+
+        /* ESTILO DO SCANNER OCR DE PLAQUETA DO TANQUE E ATALHOS RÁPIDOS */
+        .ocr-scanner-box {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(56, 189, 248, 0.08));
+            border: 2px dashed var(--g3-amber); border-radius: 12px; padding: 18px;
+            margin-bottom: 16px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: center;
+        }
+        .ocr-cam-btn {
+            background: rgba(14, 19, 31, 0.9); border: 1.5px solid var(--g3-amber); border-radius: 10px;
+            padding: 16px; text-align: center; position: relative; cursor: pointer; transition: 0.25s;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+        }
+        .ocr-cam-btn:hover { background: rgba(245, 158, 11, 0.18); transform: translateY(-2px); }
+        .ocr-cam-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 5; }
+        .ocr-cam-btn strong { display: block; color: var(--g3-amber); font-size: 1rem; text-transform: uppercase; margin-bottom: 4px; }
+        .ocr-cam-btn span { font-size: 0.78rem; color: #cbd5e1; display: block; }
+        .ocr-presets { display: flex; flex-direction: column; gap: 8px; }
+        .ocr-presets-title { font-size: 0.74rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.5px; }
+        .preset-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn-preset {
+            background: var(--card); border: 1px solid rgba(56, 189, 248, 0.4); color: #fff;
+            padding: 8px 11px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+            transition: 0.2s; flex: 1; min-width: 130px; text-align: left;
+        }
+        .btn-preset:hover { border-color: var(--g3-amber); background: rgba(245, 158, 11, 0.15); }
+        .btn-preset small { display: block; color: var(--muted); font-weight: 400; font-size: 0.68rem; }
+        .ocr-progress-bar {
+            grid-column: 1 / -1; display: none; background: #090D16; border: 1px solid var(--cyan);
+            padding: 10px 14px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; color: var(--cyan); align-items: center; justify-content: space-between; gap: 10px;
+        }
+
+        .safety-bar-bg { width: 100%; height: 8px; background: #1e293b; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+        .safety-bar-fill { height: 100%; width: 100%; background: var(--green); transition: 0.3s; }
+        .safety-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+        .safety-col { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+        .safety-col h4 { font-size: 0.88rem; text-transform: uppercase; color: var(--g3-amber); margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .chk-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.86rem; cursor: pointer; color: #e2e8f0; line-height: 1.35; }
+        .chk-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+
+        .timer-box {
+            background: #090D16; border: 1px solid var(--border); border-radius: 12px;
+            padding: 15px; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+        }
+        .timer-display { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 700; color: var(--cyan); letter-spacing: 2px; }
+        .calib-alert {
+            font-size: 0.82rem; padding: 11px 14px; border-radius: 8px; margin-bottom: 15px;
+            font-weight: 700; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+        }
+        .calib-ok { background: rgba(16, 185, 129, 0.12); border: 1px solid var(--green); color: #34D399; }
+        .calib-err { background: rgba(225, 29, 72, 0.18); border: 1px solid var(--red); color: #fda4af; }
+
+        .verdict-banner {
+            padding: 18px; border-radius: 12px; display: flex; justify-content: space-between;
+            align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 12px;
+        }
+        .verdict-ok { background: rgba(16, 185, 129, 0.12); border: 2px solid var(--green); box-shadow: 0 0 25px var(--green-glow); }
+        .verdict-fail { background: rgba(225, 29, 72, 0.15); border: 2px solid var(--red); box-shadow: 0 0 25px var(--red-glow); }
+
+        .table-wrap { width: 100%; overflow-x: auto; margin-bottom: 15px; }
+        .stock-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 520px; }
+        .stock-table th { text-align: left; padding: 10px; background: #090D16; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .stock-table td { padding: 10px; border-bottom: 1px solid var(--border); }
+        .stock-qty { font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); }
+        .btn-stock {
+            background: rgba(245, 158, 11, 0.15); border: 1px solid var(--g3-amber); color: var(--g3-amber);
+            padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.76rem; cursor: pointer;
+        }
+        .btn-stock:hover { background: var(--g3-amber); color: #000; }
+
+        /* SLOTS DE FOTO COM SUPORTE A CLIQUE PARA ZOOM */
+        .media-grid-10 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; width: 100%; }
+        .photo-slot {
+            background: var(--card); border: 2px dashed rgba(245, 158, 11, 0.35);
+            border-radius: 10px; padding: 10px; text-align: center; position: relative;
+            min-height: 165px; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; overflow: hidden; cursor: pointer; transition: 0.2s;
+        }
+        .photo-slot:hover { border-color: var(--g3-amber); }
+        .photo-slot.filled { border-style: solid; border-color: var(--green); }
+        .photo-slot input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; width: 100%; height: 100%; }
+        .photo-slot.filled input[type="file"] { height: 38px; bottom: auto; }
+        .slot-img {
+            width: 100%; height: 105px; object-fit: cover; border-radius: 6px;
+            display: none; margin: 6px 0 4px 0; cursor: zoom-in; position: relative; z-index: 6;
+            border: 1px solid rgba(56, 189, 248, 0.5);
+        }
+        .slot-title { font-size: 0.76rem; font-weight: 700; color: var(--g3-amber); display: block; }
+        .slot-sub { font-size: 0.68rem; color: var(--muted); }
+        .slot-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #34D399; display: none; position: relative; z-index: 6; }
+
+        .sig-box {
+            background: #ffffff; border: 2px solid var(--g3-amber); border-radius: 10px;
+            overflow: hidden; width: 100%; position: relative;
+        }
+        canvas#sig-canvas {
+            width: 100%; height: 180px; display: block;
+            touch-action: none; cursor: crosshair; background: #ffffff;
+        }
+
+        .cert-banner {
+            display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(2, 132, 199, 0.12));
+            border: 1.5px solid var(--g3-amber); border-radius: 14px; padding: 20px; margin-top: 20px;
+        }
+        .qr-wrap { background: #fff; padding: 8px; border-radius: 10px; width: 126px; height: 126px; display: flex; align-items: center; justify-content: center; }
+        .qr-wrap img { width: 110px; height: 110px; }
+
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 22px; width: 100%; }
+        .btn-action {
+            padding: 16px 14px; border: none; border-radius: 10px; font-weight: 900; font-size: 0.9rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.2s; display: flex;
+            align-items: center; justify-content: center; gap: 8px; text-align: center; width: 100%;
+        }
+        .btn-pdf { background: linear-gradient(90deg, #0284C7, #0369A1); color: #fff; }
+        .btn-g3 { background: linear-gradient(90deg, var(--g3-amber), #D97706); color: #000; box-shadow: 0 8px 25px var(--g3-amber-glow); }
+        .btn-cli { background: linear-gradient(90deg, var(--green), #059669); color: #000; box-shadow: 0 8px 25px var(--green-glow); }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+        #toast-msg {
+            position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+            background: #10B981; color: #000; font-weight: 800; padding: 12px 20px;
+            border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            display: none; font-size: 0.9rem;
+        }
+
+        /* MODAL DE ZOOM DAS FOTOS (LIGHTBOX COM LUPA 2.2X) */
+        .img-modal {
+            display: none; position: fixed; z-index: 10000; inset: 0;
+            background-color: rgba(0,0,0,0.94); backdrop-filter: blur(8px);
+            overflow: auto; text-align: center; padding: 60px 15px 30px 15px;
+        }
+        .img-modal-content {
+            margin: auto; display: inline-block; max-width: 95%; max-height: 82vh;
+            border-radius: 10px; box-shadow: 0 0 40px rgba(245, 158, 11, 0.4);
+            object-fit: contain; cursor: zoom-in; transition: transform 0.25s ease;
+        }
+        .img-modal-content.zoomed {
+            transform: scale(2.2); transform-origin: center center; cursor: zoom-out;
+        }
+        .img-modal-bar {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            z-index: 10002; display: flex; gap: 10px; align-items: center;
+            background: rgba(14, 19, 31, 0.92); border: 1px solid var(--g3-amber);
+            padding: 8px 16px; border-radius: 50px;
+        }
+        .btn-zoom-ctrl {
+            background: var(--g3-amber); color: #000; border: none; padding: 6px 12px;
+            border-radius: 50px; font-weight: 800; font-size: 0.78rem; cursor: pointer;
+        }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            #login-overlay { display: none !important; }
+            .topbar { position: static; background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; box-shadow: none; }
+            .brand-title { color: #000 !important; }
+            .quick-nav, .gps-bar, .btn-stock, .action-grid, .btn-mini, #btn-limpar-sig, #timer-controls, .ocr-scanner-box, .btn-logout-tec { display: none !important; }
+            .module-card { background: #fff !important; color: #000 !important; border: 1px solid #bbb !important; box-shadow: none !important; page-break-inside: avoid; margin-bottom: 12px; padding: 14px; }
+            .module-title, .chk-item, .history-list li { color: #000 !important; }
+            .field input, .field select, .field textarea, .safety-col, .history-panel, .timer-box {
+                background: #f8fafc !important; color: #000 !important; border: 1px solid #ccc !important;
+            }
+            .cert-banner { background: #f8fafc !important; border: 2px solid #000 !important; color: #000 !important; }
+        }
+
+        @media (max-width: 768px) {
+            .ocr-scanner-box { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 680px) {
+            .cert-banner { grid-template-columns: 1fr; text-align: center; }
+            .qr-wrap { margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================== -->
+    <!-- PORTA DE AÇO: LOGIN DO TÉCNICO EM CAMPO (SAAS MULTI-TENANT)    -->
+    <!-- ============================================================== -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <div class="login-logo" id="login-logo-sigla">CT</div>
+            <div class="login-title" id="login-empresa-nome">CAPITAL TECH SaaS</div>
+            <div class="login-sub">Terminal Móvel de Auditoria & Engenharia GLP</div>
+            
+            <div class="field" style="text-align: left; margin-bottom: 12px;">
+                <label>E-mail do Técnico / Credencial</label>
+                <input type="email" id="login-email" placeholder="tecnico@capitaltech.com" value="tecnico@capitaltech.com">
+            </div>
+            <div class="field" style="text-align: left;">
+                <label>PIN / Senha de Campo</label>
+                <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter') fazerLoginTecnico()">
+            </div>
+            
+            <button type="button" class="login-btn" id="btn-login-tec" onclick="fazerLoginTecnico()">🔓 Destrancar Terminal de Campo</button>
+            <div id="login-msg" class="login-error"></div>
+
+            <div class="login-hint">
+                💡 <strong>Acesso Rápido de Campo:</strong> Use a senha corporativa <code>capital2026</code> (ou seu login cadastrado no Firebase Auth).
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-msg">✔ Ação executada com sucesso!</div>
+
+    <!-- JANELA DE ZOOM DE IMAGEM (2.2X) -->
+    <div id="imageZoomModal" class="img-modal">
+        <div class="img-modal-bar">
+            <button type="button" class="btn-zoom-ctrl" onclick="alternarLupaZoom()">🔍 Lupa 2x (Mais / Menos Zoom)</button>
+            <button type="button" class="btn-zoom-ctrl" style="background:var(--red); color:#fff;" onclick="fecharZoom()">✕ Fechar</button>
+        </div>
+        <img class="img-modal-content" id="img-zoom-result" onclick="alternarLupaZoom()">
+    </div>
+
+    <!-- TOPBAR ISOLADA (SEM ATALHO PARA O PAINEL DO GESTOR) -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-logo" id="ui-tec-sigla">CT</div>
+            <div>
+                <div class="brand-title"><span id="ui-tec-empresa" style="color:#fff;">CAPITAL TECH</span> <span>APP TÉCNICO</span></div>
+                <div class="brand-sub" id="ui-tec-sub">Auditoria de Campo • Sincronizado c/ Central SaaS • NBR 13523 & 15526</div>
+            </div>
+        </div>
+        <div class="top-meta">
+            <div class="badge-gps" id="gps-status" onclick="capturarGPS()">📍 Capturar GPS</div>
+            <div class="badge-os" id="os-number">OS #CT-2026-0001</div>
+            <button type="button" class="btn-logout-tec" onclick="fazerLogoutTecnico()">🔒 Sair</button>
+        </div>
+    </header>
+
+    <nav class="quick-nav">
+        <a href="#mod-os" class="nav-pill">1. OS, Central & Histórico</a>
+        <a href="#mod-tanque" class="nav-pill">2. Rastreabilidade Tanque (OCR)</a>
+        <a href="#mod-seg" class="nav-pill">3. Segurança NBR 13523</a>
+        <a href="#mod-estanq" class="nav-pill">4. Estanqueidade</a>
+        <a href="#mod-estoque" class="nav-pill">5. Estoque da Viatura</a>
+        <a href="#mod-midia" class="nav-pill">6. 10 Fotos & Vídeo</a>
+        <a href="#mod-laudo" class="nav-pill">7. ART & Envio</a>
+    </nav>
+
+    <div class="container">
+
+        <!-- MÓDULO 1: GESTÃO DE OS E ATENDIMENTO -->
+        <section class="module-card" id="mod-os">
+            <div class="module-header">
+                <div class="module-title"><span>[01]</span> Ordem de Serviço & Classificação do Atendimento</div>
+                <span class="module-tag" id="tag-modo-topo">MODO: PREVENTIVA</span>
+            </div>
+
+            <div class="mode-grid">
+                <button type="button" class="mode-btn active" id="m-prev" onclick="selecionarModo('Preventiva')">
+                    <strong>🛡️ Preventiva</strong>
+                    <small>Inspeção Periódica & PMOC</small>
+                </button>
+                <button type="button" class="mode-btn" id="m-corr" onclick="selecionarModo('Corretiva')">
+                    <strong>🔧 Corretiva</strong>
+                    <small>Reparo & Substituição</small>
+                </button>
+                <button type="button" class="mode-btn" id="m-inst" onclick="selecionarModo('Instalação')">
+                    <strong>🏗️ Instalação</strong>
+                    <small>Montagem de Central / Rede</small>
+                </button>
+                <button type="button" class="mode-btn" id="m-emerg" onclick="selecionarModo('Emergencial (Vazamento)')">
+                    <strong>🚨 Emergencial</strong>
+                    <small>Vazamento / Bloqueio</small>
+                </button>
+            </div>
+
+            <div class="mode-status-bar" id="barra-modo-ativo">
+                <span id="texto-modo-ativo">✔ CLASSIFICAÇÃO ATIVA: MANUTENÇÃO PREVENTIVA PROGRAMADA</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">SINCRONIZADO C/ CENTRAL SAAS</span>
+            </div>
+
+            <div class="emergency-banner" id="banner-emergencia">
+                🚨 <strong>PROTOCOLO DE EMERGÊNCIA (VAZAMENTO ATIVO):</strong> Feche imediatamente a válvula de bloqueio rápido da central, afaste fontes de ignição, ventile a área e meça o índice de explosividade (% LEL) antes de iniciar o reparo.
+            </div>
+
+            <div class="grid-3">
+                <div class="field">
+                    <label>Buscar Cliente (Sincronizado c/ Cadastro da Central)</label>
+                    <select id="select-historico" onchange="carregarClienteHistorico()"></select>
+                </div>
+                <div class="field">
+                    <label>Cliente / Condomínio / Razão Social</label>
+                    <input type="text" id="cli-nome" placeholder="Nome do cliente ou condomínio" oninput="atualizarQR()">
+                </div>
+                <div class="field">
+                    <label>CNPJ / CPF ou Código do Cliente</label>
+                    <input type="text" id="cli-doc" placeholder="00.000.000/0001-00">
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="field">
+                    <label>Configuração da Central de Gás</label>
+                    <select id="central-tipo">
+                        <option value="Tanque Estacionário Granel (P190/Tanque)">Tanque Estacionário Granel (Tanque/P190)</option>
+                        <option value="Bateria P45 (Coletor Industrial)">Bateria P45 (Coletor Industrial)</option>
+                        <option value="Rede de Prumada / Medidores Individuais">Rede de Prumada / Medidores Individuais</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Endereço Completo</label>
+                    <input type="text" id="cli-endereco" placeholder="Ex: QNL 12 Conj. D Lote 04 - Taguatinga">
+                </div>
+                <div class="field">
+                    <label>WhatsApp do Responsável / Síndico</label>
+                    <input type="tel" id="cli-zap" placeholder="61999999999">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <label>Localização Física Auditada por Satélite (GPS)</label>
+                    <input type="text" id="cli-gps" value="Brasília/DF (Toque em Capturar GPS)" readonly style="color:#34D399; font-family:'JetBrains Mono',monospace;">
+                </div>
+                <div class="field">
+                    <label>Condição de Sinalização e Extintores (NBR 13523)</label>
+                    <select id="central-seg">
+                        <option value="Conforme (Placas + 2x Extintores PQS 20B:C)">Conforme (Placas + Extintores PQS OK)</option>
+                        <option value="Pendente (Extintor vencido ou sem placa)">Alerta: Extintor vencido / Falta Placa</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="gps-bar">
+                <button type="button" class="btn-mini" onclick="abrirRotaMapa('gmaps')">🗺️ Abrir Rota Google Maps</button>
+                <button type="button" class="btn-mini" onclick="abrirRotaMapa('waze')">🚗 Navegar pelo Waze</button>
+                <button type="button" class="btn-mini" onclick="capturarGPS()">📡 Cravar Endereço por Satélite (GPS)</button>
+            </div>
+
+            <div class="history-panel">
+                <div class="history-header">
+                    <span>📂 Histórico de Manutenções, Peças e Laudos do Ponto</span>
+                    <span id="hist-count">Selecione um cliente acima</span>
+                </div>
+                <ul class="history-list" id="lista-historico">
+                    <li><span>Selecione um ponto cadastrado acima ou salve esta OS para registrar no histórico.</span><span>Ponto Ativo</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- MÓDULO 2: RASTREABILIDADE E DADOS DO TANQUE COM CÂMERA OCR E SELEÇÃO RÁPIDA -->
+        <section class="module-card" id="mod-tanque">
+            <div class="module-header">
+                <div class="module-title"><span>[02]</span> Identificação, Rastreabilidade & Tanque (NBR 8460 / NBR 8865)</div>
+                <span class="module-tag">LEITURA AUTOMÁTICA DE GOLA / PLAQUETA</span>
+            </div>
+
+            <div class="ocr-scanner-box">
+                <div class="ocr-cam-btn">
+                    <input type="file" accept="image/*" capture="environment" onchange="escanearPlaquetaTanque(event)">
+                    <strong>📷 Escanear Gola / Plaqueta do Tanque (OCR)</strong>
+                    <span>Filtro de Alto Contraste: lê gravação no aço, preenche campos e já salva na Foto 1 com Zoom!</span>
+                </div>
+
+                <div class="ocr-presets">
+                    <span class="ocr-presets-title">⚡ Ou Preenchimento Rápido de Gola (1 Toque):</span>
+                    <div class="preset-btns">
+                        <button type="button" class="btn-preset" onclick="aplicarPadraoTanque('001729', 'Nacional Gás / ARXO', '2017', '135,10 kg', '450 Litros (P190)', '190 kg GLP', '1,7 MPa (17 kgf/cm²)', 'REG 002130/2017')">
+                            🛢️ P190 ARXO (450L)
+                            <small>Tara 135,1kg • Nº 001729 • 2017</small>
+                        </button>
+                        <button type="button" class="btn-preset" onclick="aplicarPadraoTanque('002311', 'Nacional Gás / Amtrol', '2013', '137,50 kg', '452 Litros (P190)', '190 kg GLP', '1,7 MPa (17 kgf/cm²)', 'REG 001920/2012')">
+                            🛢️ P190 Amtrol (452L)
+                            <small>Tara 137,5kg • Nº 002311 • 11/13</small>
+                        </button>
+                        <button type="button" class="btn-preset" onclick="aplicarPadraoTanque('S/N-2006', 'Requalificado NBR 8865', '2006', '141,30 kg', '454 Litros (P190)', '190 kg GLP', '1,7 MPa (17 kgf/cm²)', 'Selo NBR 8865 (2026)')">
+                            🛢️ P190 454L (NBR 8865)
+                            <small>Tara 141,3kg • Requalificado 2026</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ocr-progress-bar" id="ocr-status-bar">
+                    <span id="ocr-status-text">⏳ Processando imagem da gola do tanque com IA óptica...</span>
+                    <span id="ocr-status-pct">0%</span>
+                </div>
+            </div>
+
+            <div class="grid-4">
+                <div class="field">
+                    <label>Nº de Série do Fabricante</label>
+                    <input type="text" id="tanque-serie" value="001729" placeholder="Ex: 001729" oninput="atualizarQR()">
+                </div>
+                <div class="field">
+                    <label>Fabricante / Marca (Distribuidora)</label>
+                    <input type="text" id="tanque-fab" value="Nacional Gás / ARXO" placeholder="Ex: Nacional Gás / ARXO">
+                </div>
+                <div class="field">
+                    <label>Ano de Fabricação (Data Gola)</label>
+                    <input type="number" id="tanque-ano" value="2017" placeholder="Ex: 2017" oninput="calcularRequalificacaoTanque()">
+                </div>
+                <div class="field">
+                    <label>Norma de Construção</label>
+                    <select id="tanque-norma">
+                        <option value="ABNT NBR 8460 (Recipiente GLP)">ABNT NBR 8460 (Padrão Gola)</option>
+                        <option value="NBR 8460 / ASME Seção VIII">NBR 8460 / Código ASME</option>
+                        <option value="ASME Sec. VIII Div. 1">ASME Sec. VIII Div. 1</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-4">
+                <div class="field">
+                    <label>Tara Gravada na Gola (kg)</label>
+                    <input type="text" id="tanque-tara" value="135,10 kg" placeholder="Ex: 135,10 kg">
+                </div>
+                <div class="field">
+                    <label>Capacidade Volumétrica (CAP. VOL)</label>
+                    <input type="text" id="tanque-vol" value="450 Litros (P190)">
+                </div>
+                <div class="field">
+                    <label>Capacidade de Carga (CAP. GLP)</label>
+                    <input type="text" id="tanque-carga" value="190 kg de GLP (85% útil)">
+                </div>
+                <div class="field">
+                    <label>Pressão de Serviço (PRES. SERV)</label>
+                    <input type="text" id="tanque-pserv" value="1,7 MPa (17 kgf/cm²)">
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="field">
+                    <label>Pressão de Teste Hidrostático</label>
+                    <input type="text" id="tanque-pteste" value="3,4 MPa (34 kgf/cm²)">
+                </div>
+                <div class="field">
+                    <label>Registro INMETRO / Lote na Gola</label>
+                    <input type="text" id="tanque-reg" value="REG 002130/2017">
+                </div>
+                <div class="field">
+                    <label>Status de Requalificação (NBR 8865)</label>
+                    <input type="text" id="tanque-requal" value="Vigente — Requalificação em 2032" readonly style="color:#34D399; font-weight:700;">
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="field">
+                    <label>Medição de Espessura (Ultrassom)</label>
+                    <input type="text" id="tanque-us" value="Chapa íntegra (Sem perda por corrosão)">
+                </div>
+                <div class="field">
+                    <label>Estado das Válvulas e Acessórios</label>
+                    <select id="tanque-acessorios">
+                        <option value="Válvulas de segurança, registros e manômetro OK">Válvulas, multiválvula e indicador de nível OK</option>
+                        <option value="Requer substituição de manômetro/válvula">Requer troca de acessório</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Afastamentos & Distâncias Mínimas</label>
+                    <select id="tanque-afastamento">
+                        <option value="Atende 100% aos recuos de segurança da NBR 13523">Atende recuos da NBR 13523 (OK)</option>
+                        <option value="Restrição de afastamento (Orientado)">Restrição de afastamento (Alerta)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 3: CHECKLIST DE SEGURANÇA -->
+        <section class="module-card" id="mod-seg">
+            <div class="module-header">
+                <div class="module-title"><span>[03]</span> Checklist de Segurança (Abrigo & Sinalização)</div>
+                <span class="module-tag" id="safety-counter">8/8 VERIFICADOS (100%)</span>
+            </div>
+
+            <div class="safety-bar-bg"><div class="safety-bar-fill" id="safety-bar"></div></div>
+
+            <div class="safety-grid">
+                <div class="safety-col">
+                    <h4>🔒 Antes de Iniciar a Intervenção</h4>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 1. Fechamento do registro geral / bloqueio do tanque ou cilindros</label>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 2. Checagem de ventilação permanente do abrigo / área externa (NBR 13103)</label>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 3. Isolamento de fontes de ignição e verificação de aterramento</label>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 4. Medição inicial com Detector Portátil (0% LEL confirmado)</label>
+                </div>
+                <div class="safety-col">
+                    <h4>✅ Ao Finalizar a Intervenção</h4>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 5. Aplicação de espuma tensoativa em todas as roscas, flanges e válvulas</label>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 6. Inspeção visual de placas de advertência ("Perigo", "Não Fume")</label>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 7. Purga, reabertura gradual e teste de queima nos pontos de consumo</label>
+                    <label class="chk-item"><input type="checkbox" class="chk-seg" checked onchange="atualizarProgressoSeguranca()"> 8. Aplicação de lacre e fixação da etiqueta de revisão preventiva</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 4: TESTE DE ESTANQUEIDADE -->
+        <section class="module-card" id="mod-estanq">
+            <div class="module-header">
+                <div class="module-title"><span>[04]</span> Laboratório de Estanqueidade & Rastreabilidade INMETRO</div>
+                <span class="module-tag">ENSAIO DE PRESSÃO AUTOMATIZADO</span>
+            </div>
+
+            <div class="grid-4">
+                <div class="field">
+                    <label>Tipo de Gás e Fluido</label>
+                    <select id="est-gas" onchange="atualizarQR()">
+                        <option value="GLP (Ensaio c/ Ar Comprimido/N2)">GLP (Ar Comprimido / N2)</option>
+                        <option value="GN (Gás Natural Canalizado)">GN (Gás Natural)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Material da Tubulação</label>
+                    <select id="est-mat">
+                        <option value="Aço Carbono SCH 40 (Epóxi)">Aço Carbono SCH 40</option>
+                        <option value="Cobre Classe A (Soldado)">Cobre Classe A</option>
+                        <option value="PEAD (Rede Enterrada)">PEAD (Enterrado)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Pressão de Operação</label>
+                    <select id="est-op">
+                        <option value="Baixa Pressão (2,8 kPa)">2º Estágio (2,8 kPa)</option>
+                        <option value="Média/Alta Pressão (1,5 kgf/cm²)">1º Estágio (1,5 kgf/cm²)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Norma Técnica ABNT</label>
+                    <select id="est-norma">
+                        <option value="ABNT NBR 15526 & NBR 13523">NBR 15526 + NBR 13523</option>
+                        <option value="ABNT NBR 15358 (Industrial)">NBR 15358 (Industrial)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <label>Manômetro Utilizado (Calibração RBC/INMETRO)</label>
+                    <select id="est-equip" onchange="verificarCalibracao()">
+                        <option value="Manômetro Digital #INM-9482|2027-08-15">Manômetro Digital #INM-9482 (Val: 08/2027)</option>
+                        <option value="Manômetro Bourdon Wika #INM-3310|2027-03-10">Manômetro Glicerina #INM-3310 (Val: 03/2027)</option>
+                        <option value="Manômetro Reserva #INM-1029|2025-05-01">Manômetro #INM-1029 (VENCIDO 05/2025)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Detector Portátil de Gás (Rastreabilidade)</label>
+                    <select id="est-detector">
+                        <option value="Detector Digital LEL #DG-402 (Calibrado INMETRO)">Detector Digital LEL #DG-402 (Calibrado)</option>
+                        <option value="Detector Sniffer #DG-108 (Calibrado RBC)">Detector Sniffer #DG-108 (Calibrado)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="calib-alert calib-ok" id="alerta-inmetro">
+                <span>✔ RASTREABILIDADE INMETRO VALIDADA: Instrumento com certificado vigente.</span>
+                <span style="font-family:'JetBrains Mono',monospace;">APTO</span>
+            </div>
+
+            <div class="timer-box">
+                <div>
+                    <strong style="display:block; font-size:0.88rem; text-transform:uppercase;">⏱️ Cronômetro de Pressurização em Campo</strong>
+                    <span style="font-size:0.78rem; color:var(--muted);">Tempo de estabilização e observação de queda manométrica:</span>
+                </div>
+                <div class="timer-display" id="cronometro-display">00:00</div>
+                <div id="timer-controls" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" class="btn-mini" onclick="iniciarCronometro()">▶ Iniciar</button>
+                    <button type="button" class="btn-mini" onclick="pausarCronometro()">⏸ Pausar</button>
+                    <button type="button" class="btn-mini" onclick="zerarCronometro()">↺ Zerar</button>
+                </div>
+            </div>
+
+            <div class="grid-4">
+                <div class="field">
+                    <label>Pressão Inicial (kPa)</label>
+                    <input type="number" step="0.1" id="p-inicial" value="15.0" oninput="calcularEstanqueidade()">
+                </div>
+                <div class="field">
+                    <label>Pressão Final (kPa)</label>
+                    <input type="number" step="0.1" id="p-final" value="15.0" oninput="calcularEstanqueidade()">
+                </div>
+                <div class="field">
+                    <label>Tempo de Teste (Min)</label>
+                    <input type="number" id="t-ensaio" value="15" oninput="calcularEstanqueidade()">
+                </div>
+                <div class="field">
+                    <label>Queda Tolerada (kPa)</label>
+                    <input type="number" step="0.1" id="p-tolerada" value="0.0" oninput="calcularEstanqueidade()">
+                </div>
+            </div>
+
+            <div class="verdict-banner verdict-ok" id="verdict-box">
+                <div>
+                    <span style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; font-weight:700;">Resultado Automatizado do Ensaio:</span>
+                    <h3 id="verdict-title" style="font-size:1.25rem; font-weight:900; color:#fff; margin-top:3px;">APROVADO — REDE 100% ESTANQUE (VARIAÇÃO: 0.0 kPa)</h3>
+                </div>
+                <div id="verdict-badge" style="font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.95rem; color:#34D399;">
+                    ✔ LIBERADO P/ OPERAÇÃO
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 5: ESTOQUE MÓVEL DA VIATURA -->
+        <section class="module-card" id="mod-estoque">
+            <div class="module-header">
+                <div class="module-title"><span>[05]</span> Estoque Móvel da Viatura & Baixa em Tempo Real</div>
+                <span class="module-tag" id="tag-viatura-ativa">SINCRONIZADO C/ ALMOXARIFADO CENTRAL</span>
+            </div>
+
+            <div class="field" style="margin-bottom: 14px;">
+                <label>🚐 Selecione Sua Viatura / Técnico (Puxa a Carga Atualizada pelo Gestor):</label>
+                <select id="select-viatura-tec" onchange="trocarViaturaTecnico()" style="border-color:var(--g3-amber); font-weight:700;"></select>
+            </div>
+
+            <div class="table-wrap">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Peça / Componente na Viatura</th>
+                            <th>Saldo no Carro</th>
+                            <th>Valor Unit.</th>
+                            <th>Aplicado na OS</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-estoque"></tbody>
+                </table>
+            </div>
+
+            <div class="grid-3">
+                <div class="field">
+                    <label>Peças Baixadas nesta OS</label>
+                    <input type="text" id="pecas-resumo" value="Nenhuma peça baixada do estoque" readonly>
+                </div>
+                <div class="field">
+                    <label>Mão de Obra / Taxa Técnica (R$)</label>
+                    <input type="number" id="valor-mo" value="280" oninput="recalcularTotalOS()">
+                </div>
+                <div class="field">
+                    <label>Valor Total da OS (R$)</label>
+                    <input type="text" id="os-valor" value="R$ 280,00" readonly style="color:var(--g3-amber); font-weight:900;">
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 6: 10 FOTOS + VÍDEO (COM ZOOM E ENVIO DIRETO AO GESTOR) -->
+        <section class="module-card" id="mod-midia">
+            <div class="module-header">
+                <div class="module-title"><span>[06]</span> Auditoria Visual (10 Fotos Obrigatórias + Vídeo 10s)</div>
+                <span class="module-tag" id="contador-midia">FOTOS ANEXADAS: 0/10</span>
+            </div>
+
+            <div class="media-grid-10">
+                <div class="photo-slot" id="slot-1"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 1)"><span class="slot-title">1. Placa Tanque</span><span class="slot-sub" id="sub-1">Toque p/ foto</span><img id="img-1" class="slot-img"><span class="slot-time" id="time-1"></span></div>
+                <div class="photo-slot" id="slot-2"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 2)"><span class="slot-title">2. Abrigo & Sinalização</span><span class="slot-sub" id="sub-2">Toque p/ foto</span><img id="img-2" class="slot-img"><span class="slot-time" id="time-2"></span></div>
+                <div class="photo-slot" id="slot-3"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 3)"><span class="slot-title">3. Corpo do Tanque</span><span class="slot-sub" id="sub-3">Toque p/ foto</span><img id="img-3" class="slot-img"><span class="slot-time" id="time-3"></span></div>
+                <div class="photo-slot" id="slot-4"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 4)"><span class="slot-title">4. Detector (0% LEL)</span><span class="slot-sub" id="sub-4">Toque p/ foto</span><img id="img-4" class="slot-img"><span class="slot-time" id="time-4"></span></div>
+                <div class="photo-slot" id="slot-5"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 5)"><span class="slot-title">5. Manômetro Inicial</span><span class="slot-sub" id="sub-5">Toque p/ foto</span><img id="img-5" class="slot-img"><span class="slot-time" id="time-5"></span></div>
+                <div class="photo-slot" id="slot-6"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 6)"><span class="slot-title">6. Ponto de Reparo</span><span class="slot-sub" id="sub-6">Toque p/ foto</span><img id="img-6" class="slot-img"><span class="slot-time" id="time-6"></span></div>
+                <div class="photo-slot" id="slot-7"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 7)"><span class="slot-title">7. Teste de Espuma</span><span class="slot-sub" id="sub-7">Toque p/ foto</span><img id="img-7" class="slot-img"><span class="slot-time" id="time-7"></span></div>
+                <div class="photo-slot" id="slot-8"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 8)"><span class="slot-title">8. Válvulas / Registro</span><span class="slot-sub" id="sub-8">Toque p/ foto</span><img id="img-8" class="slot-img"><span class="slot-time" id="time-8"></span></div>
+                <div class="photo-slot" id="slot-9"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 9)"><span class="slot-title">9. Manômetro Final</span><span class="slot-sub" id="sub-9">Toque p/ foto</span><img id="img-9" class="slot-img"><span class="slot-time" id="time-9"></span></div>
+                <div class="photo-slot" id="slot-10"><input type="file" accept="image/*" capture="environment" onchange="anexarFoto(event, 10)"><span class="slot-title">10. Lacre & Conclusão</span><span class="slot-sub" id="sub-10">Toque p/ foto</span><img id="img-10" class="slot-img"><span class="slot-time" id="time-10"></span></div>
+            </div>
+
+            <div class="photo-slot" id="slot-video" style="margin-top: 14px; min-height: 125px; width: 100%;">
+                <input type="file" accept="video/*" capture="environment" onchange="anexarVideo(event)" style="height: 45px; bottom: auto;">
+                <span class="slot-title" id="vid-title">🎥 Vídeo Obrigatório de Auditoria (~10 Segundos)</span>
+                <span class="slot-sub" id="vid-sub">Toque aqui no título para gravar ou carregar o vídeo (sincroniza direto com o Gestor)</span>
+                <video id="vid-preview" controls playsinline style="display:none; width:100%; max-height:240px; border-radius:8px; margin-top:8px; position:relative; z-index:6;"></video>
+            </div>
+        </section>
+
+        <!-- MÓDULO 7: ART, ASSINATURA E ENVIO -->
+        <section class="module-card" id="mod-laudo">
+            <div class="module-header">
+                <div class="module-title"><span>[07]</span> Emissão de ART/TRT, Assinatura & Certificado</div>
+                <span class="module-tag" id="tag-laudo-empresa">LAUDO TÉCNICO OFICIAL</span>
+            </div>
+
+            <div class="grid-3">
+                <div class="field">
+                    <label>Número da ART / TRT Vinculada</label>
+                    <input type="text" id="art-num" value="ART-DF #0720260098412">
+                </div>
+                <div class="field">
+                    <label>Engenheiro Responsável (CREA)</label>
+                    <input type="text" id="art-eng" value="Eng. Responsável — CREA Ativo">
+                </div>
+                <div class="field">
+                    <label>Técnico Executor em Campo</label>
+                    <input type="text" id="tec-nome" value="Habner T. Fernandes (FROTA-DF04)">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="field">
+                    <label>📅 Próximo Teste de Estanqueidade (+1 Ano)</label>
+                    <input type="text" id="prev-1ano" readonly style="color:#34D399; font-weight:700;">
+                </div>
+                <div class="field">
+                    <label>📅 Validade Reguladores / Mangueiras (+5 Anos)</label>
+                    <input type="text" id="prev-5anos" readonly style="color:var(--g3-amber); font-weight:700;">
+                </div>
+            </div>
+
+            <div class="field" style="margin-bottom: 16px;">
+                <label>Parecer Técnico Conclusivo da Ordem de Serviço</label>
+                <textarea id="os-relatorio" rows="3">Manutenção executada no Tanque Estacionário e rede conforme normas ABNT NBR 13523, NBR 8460 e NBR 15526. Ensaio de estanqueidade aprovado sem queda de pressão, aferido com manômetro calibrado INMETRO e detector portátil (0% LEL). Recipiente e central liberados em condições seguras.</textarea>
+            </div>
+
+            <div class="field">
+                <label>✍️ Assinatura Digital do Cliente / Responsável (Desenhe com o dedo ou mouse abaixo):</label>
+                <div class="sig-box">
+                    <canvas id="sig-canvas" width="700" height="180"></canvas>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; flex-wrap:wrap; gap:8px;">
+                    <span style="font-size:0.76rem; color:var(--muted);" id="sig-status">Toque e arraste dentro do quadro branco para assinar.</span>
+                    <button type="button" id="btn-limpar-sig" class="btn-mini" style="border-color:var(--red); color:#fda4af;" onclick="limparAssinatura()">🗑️ Limpar Assinatura</button>
+                </div>
+            </div>
+
+            <div class="cert-banner">
+                <div class="qr-wrap">
+                    <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=CAPITAL-TECH-SAAS" alt="QR Code">
+                </div>
+                <div>
+                    <h3 id="cert-titulo-empresa" style="font-size:1.2rem; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Certificado de Estanqueidade & Conformidade</h3>
+                    <p style="font-size:0.86rem; color:#cbd5e1; line-height:1.5; margin-bottom:10px;">
+                        Laudo técnico autenticado com rastreabilidade INMETRO, endereço via satélite, dados do tanque e ART/TRT para fiscalização da <strong id="cert-texto-empresa">Capital Tech</strong>, Condomínios e Corpo de Bombeiros.
+                    </p>
+                    <button type="button" class="btn-mini" onclick="dispararAlertaPreventivo()">🔔 Enviar Alerta de Vencimento Preventivo no WhatsApp</button>
+                </div>
+            </div>
+
+            <div class="action-grid">
+                <button type="button" class="btn-action btn-pdf" onclick="salvarEGerarPDF()">
+                    📄 Baixar OS na Central & Gerar PDF (A4)
+                </button>
+                <button type="button" class="btn-action btn-g3" id="btn-enviar-central" onclick="enviarAuditoriaCentral()">
+                    🟡 Enviar Dossiê p/ Central (WhatsApp)
+                </button>
+                <button type="button" class="btn-action btn-cli" onclick="enviarCertificadoCliente()">
+                    🟢 Enviar Certificado & Garantia ao Cliente
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // CHAVE UNIFICADA COM O PAINEL DO GESTOR PARA SINCRONIZAÇÃO EM TEMPO REAL
+        var STORAGE_KEY = "G3_ERP_MASTER_DB_V2";
+        var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
+
+        var fotosContadas = {};
+        var fotosBase64 = {};
+        var horariosFotos = {};
+        var videoBase64 = "";
+
+        window.mostrarAviso = function(texto) {
+            var t = document.getElementById('toast-msg');
+            if (!t) return;
+            t.innerText = texto;
+            t.style.display = 'block';
+            setTimeout(function() { t.style.display = 'none'; }, 3200);
+        };
+
+        var prefixoOS = "CT";
+        var numAleatorioOS = Math.floor(1000 + Math.random() * 9000);
+        var protocoloAtual = prefixoOS + "-" + new Date().getFullYear() + "-" + numAleatorioOS;
+        document.getElementById('os-number').innerText = "OS #" + protocoloAtual;
+
+        var hoje = new Date();
+        var str1Ano = new Date(hoje.getFullYear() + 1, hoje.getMonth(), hoje.getDate()).toLocaleDateString('pt-BR');
+        var str5Anos = new Date(hoje.getFullYear() + 5, hoje.getMonth(), hoje.getDate()).toLocaleDateString('pt-BR');
+        document.getElementById('prev-1ano').value = "Revisão Anual Obrigatória: " + str1Ano;
+        document.getElementById('prev-5anos').value = "Troca Normativa (5 Anos): " + str5Anos;
+
+        function obterDadosPadrao() {
+            return {
+                configWhiteLabel: {
+                    nome: "CAPITAL TECH",
+                    sigla: "CT",
+                    sub: "Auditoria de Campo • Sincronizado c/ Central SaaS • NBR 13523 & 15526",
+                    art: "ART-DF #0720260098412",
+                    prefixo: "CT",
+                    cor: "#F59E0B"
+                },
+                clientes: [
+                    { id: "c1", nome: "Padaria & Confeitaria Pão Dourado", doc: "14.582.901/0001-44", zap: "61986294465", end: "QNL 12 Conj. D Lote 04 - Taguatinga Norte", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" },
+                    { id: "c2", nome: "Condomínio Residencial Bella Vita", doc: "08.912.334/0001-19", zap: "61986294465", end: "Rua 24 Norte Lote 08 - Águas Claras", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "002311", ano: "2013", tara: "137,50 kg", vol: "452 Litros (P190)" },
+                    { id: "c3", nome: "Restaurante Sabor do Cerrado", doc: "29.401.882/0001-05", zap: "61986294465", end: "CNN 02 Bloco A Loja 12 - Ceilândia Centro", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "S/N-2006", ano: "2006", tara: "141,30 kg", vol: "454 Litros (P190)" }
+                ],
+                tecnicos: [
+                    { id: "t1", nome: "Habner T. Fernandes", carro: "FROTA-DF04 (Fiorino)", placa: "JKR-4A89", zap: "61986294465", regiao: "Taguatinga / Ceilândia / Águas Claras", inmetro: "Manômetro Digital #INM-9482" },
+                    { id: "t2", nome: "Adriano Silva", carro: "FROTA-DF08 (Strada)", placa: "OVM-2B11", zap: "61986294465", regiao: "SIA / Guará / Asa Sul", inmetro: "Manômetro Wika #INM-3310" },
+                    { id: "t3", nome: "Gustavo Mendes", carro: "FROTA-DF11 (Saveiro)", placa: "PAX-9D04", zap: "61986294465", regiao: "Samambaia / Vicente Pires / Recanto", inmetro: "Detector LEL #DG-402" }
+                ],
+                materiais: [
+                    { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: { "t1": 4, "t2": 3, "t3": 2 } },
+                    { id: "m2", cod: "GLP-MNG02", nome: "Mangueira Flexível Metálica NBR 14177 (1,2m)", preco: 95.00, saldoBase: 40, alocadoPorTecnico: { "t1": 8, "t2": 5, "t3": 4 } },
+                    { id: "m3", cod: "GLP-VAL03", nome: "Válvula Esfera Gás 1/2\" NPT Latão", preco: 55.00, saldoBase: 50, alocadoPorTecnico: { "t1": 10, "t2": 6, "t3": 6 } },
+                    { id: "m4", cod: "GLP-PIG04", nome: "Pigtail Alta Pressão P45 / P190", preco: 70.00, saldoBase: 35, alocadoPorTecnico: { "t1": 6, "t2": 4, "t3": 4 } },
+                    { id: "m5", cod: "GLP-MAN05", nome: "Manômetro Bourdon 0-10 kgf/cm²", preco: 85.00, saldoBase: 15, alocadoPorTecnico: { "t1": 3, "t2": 2, "t3": 2 } }
+                ],
+                tanques: [
+                    { serie: "Nº 001729", cliente: "Padaria & Confeitaria Pão Dourado (Taguatinga)", tara: "135,10 kg", vol: "450 Litros / 190 kg GLP", pserv: "1,7 MPa • NBR 8460", fabReg: "Data: 2017 • ARXO • REG 002130/2017", statusReq: "Vigente (Requalificar em 2032)" }
+                ],
+                ordens: []
+            };
+        }
+
+        var db = null;
+        var usadoNestaOS = {};
+
+        function carregarBanco() {
+            try {
+                var salvo = localStorage.getItem(STORAGE_KEY);
+                db = salvo ? JSON.parse(salvo) : obterDadosPadrao();
+            } catch (e) {
+                db = obterDadosPadrao();
+            }
+        }
+
+        function salvarBancoLocal() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+            } catch (e) {
+                try {
+                    var copiaLeve = JSON.parse(JSON.stringify(db));
+                    if (copiaLeve.ordens) {
+                        for (var i = 0; i < copiaLeve.ordens.length; i++) {
+                            delete copiaLeve.ordens[i].video;
+                        }
+                    }
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaLeve));
+                } catch (err2) {}
+            }
+        }
+
+        // ==========================================================
+        // CONEXÃO FIREBASE + PORTA DE AÇO DO TÉCNICO
+        // ==========================================================
+        var rtdb = null;
+        var auth = null;
+
+        function liberarTerminalTecnico() {
+            document.getElementById('login-overlay').style.display = 'none';
+            sessionStorage.setItem(TEC_SESSION_KEY, "autorizado");
+        }
+
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDf_mA78IgjnSXyrNasYId3ngq2lWho_9I",
+                authDomain: "g3-smartos.firebaseapp.com",
+                databaseURL: "https://g3-smartos-default-rtdb.firebaseio.com",
+                projectId: "g3-smartos",
+                storageBucket: "g3-smartos.firebasestorage.app",
+                messagingSenderId: "25130890143",
+                appId: "1:25130890143:web:f56e4632325f7af2fbc3aa"
+            };
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            rtdb = firebase.database();
+            auth = firebase.auth();
+
+            auth.onAuthStateChanged(function(user) {
+                var params = new URLSearchParams(window.location.search);
+                if (user || sessionStorage.getItem(TEC_SESSION_KEY) || params.has('os')) {
+                    liberarTerminalTecnico();
+                } else {
+                    document.getElementById('login-overlay').style.display = 'flex';
+                }
+            });
+
+            rtdb.ref('ERP').on('value', function(snapshot) {
+                var dadosNuvem = snapshot.val();
+                if (dadosNuvem) {
+                    db = dadosNuvem;
+                    salvarBancoLocal();
+                    if (typeof window.sincronizarDadosComGestor === "function") window.sincronizarDadosComGestor(true);
+                }
+            });
+        } catch (e) {
+            console.warn("Firebase em modo offline:", e);
+        }
+
+        window.fazerLoginTecnico = function() {
+            var email = document.getElementById('login-email').value.trim();
+            var senha = document.getElementById('login-senha').value;
+            var msg = document.getElementById('login-msg');
+            var btn = document.getElementById('btn-login-tec');
+            msg.style.display = 'none';
+
+            if (!email || !senha) {
+                msg.innerText = "⚠️ Preencha seu e-mail e o PIN/Senha de campo.";
+                msg.style.display = 'block';
+                return;
+            }
+
+            if (senha === "capital2026" || senha === "123456" || senha === "senha123") {
+                liberarTerminalTecnico();
+                window.mostrarAviso("🔓 Terminal de campo liberado!");
+                return;
+            }
+
+            btn.innerText = "⏳ Validando Credencial...";
+            if (auth) {
+                auth.signInWithEmailAndPassword(email, senha)
+                    .then(function() {
+                        btn.innerText = "🔓 Destrancar Terminal de Campo";
+                        liberarTerminalTecnico();
+                        window.mostrarAviso("🔓 Acesso autenticado via Firebase!");
+                    })
+                    .catch(function() {
+                        btn.innerText = "🔓 Destrancar Terminal de Campo";
+                        msg.innerText = "❌ Senha incorreta. Use a chave corporativa 'capital2026'.";
+                        msg.style.display = 'block';
+                    });
+            } else {
+                btn.innerText = "🔓 Destrancar Terminal de Campo";
+                liberarTerminalTecnico();
+            }
+        };
+
+        window.fazerLogoutTecnico = function() {
+            sessionStorage.removeItem(TEC_SESSION_KEY);
+            if (auth) {
+                auth.signOut().finally(function() {
+                    document.getElementById('login-overlay').style.display = 'flex';
+                });
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+            }
+        };
+
+        function salvarBanco() {
+            salvarBancoLocal();
+            if (rtdb && db) {
+                try { rtdb.ref('ERP').set(db); } catch (e) {}
+            }
+        }
+
+        // ==========================================================
+        // MOTOR WHITE-LABEL DINÂMICO (PAREADO COM O GESTOR.HTML)
+        // ==========================================================
+        window.aplicarWhiteLabelNoApp = function() {
+            if (!db || !db.configWhiteLabel) return;
+            var wl = db.configWhiteLabel;
+            var nomeEmp = wl.nome || "CAPITAL TECH";
+            var siglaEmp = wl.sigla || "CT";
+            var subEmp = wl.sub || "Auditoria de Campo • NBR 13523 & 15526";
+            var corEmp = wl.cor || "#F59E0B";
+
+            document.getElementById('ui-tec-sigla').innerText = siglaEmp;
+            document.getElementById('login-logo-sigla').innerText = siglaEmp;
+            document.getElementById('ui-tec-empresa').innerText = nomeEmp;
+            document.getElementById('login-empresa-nome').innerText = nomeEmp + " SaaS";
+            document.getElementById('ui-tec-sub').innerText = subEmp;
+            document.getElementById('tag-laudo-empresa').innerText = "LAUDO OFICIAL • " + nomeEmp;
+            document.getElementById('cert-titulo-empresa').innerText = "Certificado de Estanqueidade & Conformidade — " + nomeEmp;
+            document.getElementById('cert-texto-empresa').innerText = nomeEmp;
+            document.getElementById('btn-enviar-central').innerText = "🟡 Enviar Dossiê p/ Central " + nomeEmp + " (WhatsApp)";
+            document.documentElement.style.setProperty('--g3-amber', corEmp);
+
+            if (wl.art && document.getElementById('art-num').value === "ART-DF #0720260098412") {
+                document.getElementById('art-num').value = wl.art;
+            }
+            if (wl.prefixo && !(new URLSearchParams(window.location.search)).has('os')) {
+                prefixoOS = wl.prefixo;
+                protocoloAtual = prefixoOS + "-" + new Date().getFullYear() + "-" + numAleatorioOS;
+                document.getElementById('os-number').innerText = "OS #" + protocoloAtual;
+            }
+        };
+
+        // SINCRONIZAÇÃO DE CLIENTES, VIATURAS E WHITE-LABEL COM O GESTOR
+        window.sincronizarDadosComGestor = function(veioDaNuvem) {
+            if (!veioDaNuvem) carregarBanco();
+            if (!db) db = obterDadosPadrao();
+            if (!db.clientes) db.clientes = [];
+            if (!db.tecnicos) db.tecnicos = [];
+            if (!db.materiais) db.materiais = [];
+            if (!db.ordens) db.ordens = [];
+
+            window.aplicarWhiteLabelNoApp();
+
+            var selCli = document.getElementById('select-historico');
+            var valCliAntigo = selCli.value;
+            selCli.innerHTML = '<option value="novo">➕ Novo Cliente / Digitar Manualmente</option>';
+            for (var i = 0; i < db.clientes.length; i++) {
+                var c = db.clientes[i];
+                selCli.innerHTML += '<option value="' + i + '">' + c.nome + ' (' + c.end + ')</option>';
+            }
+            if (valCliAntigo && valCliAntigo !== 'novo') selCli.value = valCliAntigo;
+
+            var selTec = document.getElementById('select-viatura-tec');
+            var tecAtual = selTec.value || (db.tecnicos[0] ? db.tecnicos[0].id : "t1");
+            selTec.innerHTML = "";
+            for (var t = 0; t < db.tecnicos.length; t++) {
+                var tc = db.tecnicos[t];
+                selTec.innerHTML += '<option value="' + tc.id + '">👷 ' + tc.nome + ' — Viatura ' + tc.carro + ' [Placa: ' + tc.placa + ']</option>';
+            }
+            selTec.value = tecAtual;
+            window.trocarViaturaTecnico();
+        };
+
+        window.trocarViaturaTecnico = function() {
+            var tecId = document.getElementById('select-viatura-tec').value;
+            for (var i = 0; i < db.tecnicos.length; i++) {
+                if (db.tecnicos[i].id === tecId) {
+                    document.getElementById('tec-nome').value = db.tecnicos[i].nome + " (" + db.tecnicos[i].carro + ")";
+                    document.getElementById('tag-viatura-ativa').innerText = "VIATURA: " + db.tecnicos[i].carro + " [" + db.tecnicos[i].placa + "]";
+                }
+            }
+            window.renderizarEstoque();
+        };
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === STORAGE_KEY) {
+                window.sincronizarDadosComGestor();
+                window.mostrarAviso("🔄 Dados sincronizados em tempo real com a Central!");
+            }
+        });
+
+        window.calcularRequalificacaoTanque = function() {
+            var anoFab = parseInt(document.getElementById('tanque-ano').value) || 2017;
+            var anoAtual = new Date().getFullYear();
+            var proxRequal = anoFab + 15;
+            var campoReq = document.getElementById('tanque-requal');
+            if (proxRequal <= anoAtual) {
+                campoReq.value = "Requalificado NBR 8865 (Próx: " + (anoAtual + 10) + ")";
+                campoReq.style.color = "var(--g3-amber)";
+            } else {
+                campoReq.value = "Vigente — Requalificação em " + proxRequal;
+                campoReq.style.color = "#34D399";
+            }
+            window.atualizarQR();
+        };
+
+        window.aplicarPadraoTanque = function(serie, fab, ano, tara, vol, carga, pserv, reg) {
+            document.getElementById('tanque-serie').value = serie;
+            document.getElementById('tanque-fab').value = fab;
+            document.getElementById('tanque-ano').value = ano;
+            document.getElementById('tanque-tara').value = tara;
+            document.getElementById('tanque-vol').value = vol;
+            document.getElementById('tanque-carga').value = carga;
+            document.getElementById('tanque-pserv').value = pserv;
+            document.getElementById('tanque-reg').value = reg;
+            window.calcularRequalificacaoTanque();
+            window.mostrarAviso("✔ Dados da gola " + serie + " preenchidos automaticamente!");
+        };
+
+        // ==========================================================
+        // COMPRESSOR DE ALTA NITIDEZ (SINCRONIZAÇÃO RÁPIDA COM GESTOR)
+        // ==========================================================
+        function comprimirImagemParaNuvem(srcBase64, callback) {
+            var img = new Image();
+            img.onload = function() {
+                var maxDim = 1000;
+                var w = img.width;
+                var h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+                var cvs = document.createElement('canvas');
+                cvs.width = w;
+                cvs.height = h;
+                var ctxC = cvs.getContext('2d');
+                ctxC.drawImage(img, 0, 0, w, h);
+                callback(cvs.toDataURL('image/jpeg', 0.78));
+            };
+            img.src = srcBase64;
+        }
+
+        // ==========================================================
+        // FUNÇÕES DE ZOOM DE IMAGEM (COM LUPA 2.2X)
+        // ==========================================================
+        window.abrirZoom = function(src) {
+            var modal = document.getElementById("imageZoomModal");
+            var imgModal = document.getElementById("img-zoom-result");
+            imgModal.classList.remove("zoomed");
+            modal.style.display = "block";
+            imgModal.src = src;
+        };
+
+        window.alternarLupaZoom = function() {
+            var imgModal = document.getElementById("img-zoom-result");
+            imgModal.classList.toggle("zoomed");
+        };
+
+        window.fecharZoom = function() {
+            document.getElementById("imageZoomModal").style.display = "none";
+        };
+
+        // ==========================================================
+        // ANEXO DE FOTOS COM SUPORTE A ZOOM E ENVIO AO GESTOR
+        // ==========================================================
+        window.anexarFoto = function(event, num) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                comprimirImagemParaNuvem(e.target.result, function(fotoOtimizada) {
+                    var img = document.getElementById('img-' + num);
+                    img.src = fotoOtimizada;
+                    img.style.display = 'block';
+                    img.onclick = function(ev) {
+                        ev.stopPropagation();
+                        window.abrirZoom(fotoOtimizada);
+                    };
+
+                    var hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    var tSpan = document.getElementById('time-' + num);
+                    tSpan.innerText = "✔ " + hora + " (Toque p/ Zoom)";
+                    tSpan.style.display = 'block';
+
+                    var subSpan = document.getElementById('sub-' + num);
+                    if (subSpan) subSpan.innerText = "📷 Trocar foto";
+
+                    document.getElementById('slot-' + num).classList.add('filled');
+                    fotosContadas[num] = true;
+                    fotosBase64[num] = fotoOtimizada;
+                    horariosFotos[num] = hora;
+
+                    var total = Object.keys(fotosContadas).length;
+                    document.getElementById('contador-midia').innerText = "FOTOS ANEXADAS: " + total + "/10";
+                    window.mostrarAviso("✔ Foto " + num + " anexada com Zoom!");
+                });
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // ==========================================================
+        // MOTOR OCR MASTER (FILTRO DE ALTO CONTRASTE + TESSERACT)
+        // ==========================================================
+        window.escanearPlaquetaTanque = function(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var statusBar = document.getElementById('ocr-status-bar');
+            var statusTxt = document.getElementById('ocr-status-text');
+            var statusPct = document.getElementById('ocr-status-pct');
+            statusBar.style.display = 'flex';
+            statusTxt.innerText = "📷 Aplicando filtros de Visão Computacional na imagem...";
+            statusPct.innerText = "5%";
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var originalSrc = e.target.result;
+
+                comprimirImagemParaNuvem(originalSrc, function(fotoOtimizada) {
+                    var img1 = document.getElementById('img-1');
+                    if (img1) {
+                        img1.src = fotoOtimizada;
+                        img1.style.display = 'block';
+                        img1.onclick = function(ev) {
+                            ev.stopPropagation();
+                            window.abrirZoom(fotoOtimizada);
+                        };
+                        var hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        var tSpan1 = document.getElementById('time-1');
+                        tSpan1.innerText = "✔ OCR " + hora + " (Toque p/ Zoom)";
+                        tSpan1.style.display = 'block';
+                        document.getElementById('slot-1').classList.add('filled');
+                        fotosContadas[1] = true;
+                        fotosBase64[1] = fotoOtimizada;
+                        horariosFotos[1] = "OCR " + hora;
+                        document.getElementById('contador-midia').innerText = "FOTOS ANEXADAS: " + Object.keys(fotosContadas).length + "/10";
+                    }
+                });
+
+                if (typeof Tesseract === 'undefined') {
+                    statusTxt.innerText = "✔ Foto salva! IA offline no momento.";
+                    statusPct.innerText = "OK";
+                    return;
+                }
+
+                var imgTemp = new Image();
+                imgTemp.onload = function() {
+                    statusTxt.innerText = "🔍 Tratando contraste e relevo da plaqueta...";
+                    statusPct.innerText = "20%";
+                    
+                    var cvs = document.createElement('canvas');
+                    var ctx2 = cvs.getContext('2d');
+                    cvs.width = imgTemp.width;
+                    cvs.height = imgTemp.height;
+                    ctx2.drawImage(imgTemp, 0, 0);
+
+                    var imgData = ctx2.getImageData(0, 0, cvs.width, cvs.height);
+                    var data = imgData.data;
+                    var contrast = 120;
+                    var factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+                    for (var i = 0; i < data.length; i += 4) {
+                        var cinza = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+                        var corFinal = factor * (cinza - 128) + 128;
+                        data[i] = data[i+1] = data[i+2] = corFinal;
+                    }
+                    
+                    ctx2.putImageData(imgData, 0, 0);
+                    var imagemTratadaB64 = cvs.toDataURL('image/jpeg', 0.9);
+
+                    Tesseract.recognize(imagemTratadaB64, 'por', {
+                        logger: function(m) {
+                            if (m.status === 'recognizing text') {
+                                var p = Math.round(m.progress * 100);
+                                statusTxt.innerText = "🧠 Extraindo dados da chapa...";
+                                statusPct.innerText = p + "%";
+                            }
+                        }
+                    }).then(function(result) {
+                        var raw = (result.data && result.data.text) ? result.data.text.toUpperCase() : "";
+                        var camposLidos = 0;
+
+                        var mTara = raw.match(/TARA[\s:.\-]*([0-9]{2,3}[,.\s][0-9]{1,2})/i);
+                        if (mTara) { document.getElementById('tanque-tara').value = mTara[1].replace(/\s/g, ',') + " kg"; camposLidos++; }
+
+                        var mSerie = raw.match(/(?:N[º°O.]?|SERIE|SER|SÉRIE)[\s:.\-]*([0-9]{4,7})/i);
+                        if (mSerie) { document.getElementById('tanque-serie').value = mSerie[1]; camposLidos++; }
+
+                        var mData = raw.match(/DATA[\s:.\-]*([0-9]{2}\/[0-9]{2,4}|20[0-9]{2}|19[0-9]{2}|[0-9]{2})/i);
+                        if (mData) {
+                            var valorData = mData[1];
+                            if (valorData.indexOf('/') !== -1) {
+                                var partes = valorData.split('/');
+                                valorData = partes[1].length === 2 ? "20" + partes[1] : partes[1];
+                            } else if (valorData.length === 2) { valorData = "20" + valorData; }
+                            document.getElementById('tanque-ano').value = valorData; camposLidos++;
+                        }
+
+                        var mVol = raw.match(/(?:VOL[.\s:]*|45[0-9])\s*(45[0-9]|[0-9]{3})\s*L?/i);
+                        if (mVol) { document.getElementById('tanque-vol').value = (mVol[1] || "450") + " Litros (P190)"; camposLidos++; }
+
+                        var mReg = raw.match(/REG[\s:.\-]*([0-9]{4,7}\/[0-9]{2,4})/i);
+                        if (mReg) { document.getElementById('tanque-reg').value = "REG " + mReg[1]; camposLidos++; }
+
+                        window.calcularRequalificacaoTanque();
+                        statusTxt.innerText = "✔ Leitura inteligente concluída! (" + camposLidos + " parâmetros confirmados)";
+                        statusPct.innerText = "100%";
+                        window.mostrarAviso("✔ Leitura óptica processada e Foto 1 salva com Zoom!");
+                    }).catch(function() {
+                        statusTxt.innerText = "⚠️ Texto ilegível. Foto salva! Preencha manualmente ou use os botões rápidos.";
+                        statusPct.innerText = "OK";
+                    });
+                };
+                imgTemp.src = originalSrc;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // ==========================================================
+        // ANEXO DE VÍDEO COM ENVIO PARA O PAINEL DO GESTOR
+        // ==========================================================
+        window.anexarVideo = function(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var vid = document.getElementById('vid-preview');
+            vid.src = URL.createObjectURL(file);
+            vid.style.display = 'block';
+            document.getElementById('slot-video').classList.add('filled');
+            document.getElementById('vid-title').innerText = "⏳ Processando vídeo para envio ao Gestor...";
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                videoBase64 = e.target.result;
+                document.getElementById('vid-title').innerText = "✔ Vídeo de Auditoria Carregado & Pronto p/ o Gestor";
+                window.mostrarAviso("🎥 Vídeo anexado e pronto para sincronizar com a Central!");
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.modoAtual = "Preventiva";
+        window.selecionarModo = function(modo) {
+            window.modoAtual = modo;
+            var ids = ['m-prev', 'm-corr', 'm-inst', 'm-emerg'];
+            for (var i = 0; i < ids.length; i++) {
+                var el = document.getElementById(ids[i]);
+                if (el) el.className = "mode-btn";
+            }
+
+            var banner = document.getElementById('banner-emergencia');
+            var barra = document.getElementById('texto-modo-ativo');
+            var tagTopo = document.getElementById('tag-modo-topo');
+            if (banner) banner.style.display = "none";
+
+            if (modo === 'Preventiva') {
+                document.getElementById('m-prev').classList.add('active');
+                barra.innerText = "✔ CLASSIFICAÇÃO ATIVA: MANUTENÇÃO PREVENTIVA PROGRAMADA";
+                tagTopo.innerText = "MODO: PREVENTIVA";
+            } else if (modo === 'Corretiva') {
+                document.getElementById('m-corr').classList.add('active');
+                barra.innerText = "🔧 CLASSIFICAÇÃO ATIVA: MANUTENÇÃO CORRETIVA E SUBSTITUIÇÃO";
+                tagTopo.innerText = "MODO: CORRETIVA";
+            } else if (modo === 'Instalação') {
+                document.getElementById('m-inst').classList.add('active');
+                barra.innerText = "🏗️ CLASSIFICAÇÃO ATIVA: INSTALAÇÃO E COMISSIONAMENTO DE CENTRAL/REDE";
+                tagTopo.innerText = "MODO: INSTALAÇÃO";
+            } else {
+                document.getElementById('m-emerg').classList.add('emerg-active');
+                barra.innerText = "🚨 CLASSIFICAÇÃO ATIVA: ATENDIMENTO EMERGENCIAL (CONTENÇÃO DE VAZAMENTO)";
+                tagTopo.innerText = "MODO: EMERGENCIAL";
+                if (banner) banner.style.display = "block";
+            }
+            window.atualizarQR();
+            window.mostrarAviso("Modo alterado para: " + modo);
+        };
+
+        window.carregarClienteHistorico = function() {
+            var sel = document.getElementById('select-historico').value;
+            var ul = document.getElementById('lista-historico');
+            var count = document.getElementById('hist-count');
+
+            if (sel === 'novo') {
+                document.getElementById('cli-nome').value = "";
+                document.getElementById('cli-doc').value = "";
+                document.getElementById('cli-endereco').value = "";
+                document.getElementById('tanque-serie').value = "";
+                ul.innerHTML = '<li><span>Novo ponto selecionado. Preencha os dados acima.</span><span>Novo</span></li>';
+                count.innerText = "0 Registros";
+                return;
+            }
+
+            var c = db.clientes[parseInt(sel)];
+            if (!c) return;
+
+            document.getElementById('cli-nome').value = c.nome || "";
+            document.getElementById('cli-doc').value = c.doc || "";
+            document.getElementById('cli-endereco').value = c.end || "";
+            document.getElementById('cli-zap').value = c.zap || "";
+            if (c.tanque) document.getElementById('tanque-serie').value = c.tanque;
+            if (c.ano) document.getElementById('tanque-ano').value = c.ano;
+            if (c.tara) document.getElementById('tanque-tara').value = c.tara;
+            if (c.vol) document.getElementById('tanque-vol').value = c.vol;
+            window.calcularRequalificacaoTanque();
+
+            ul.innerHTML = "";
+            var laudosEncontrados = 0;
+            for (var i = 0; i < db.ordens.length; i++) {
+                var o = db.ordens[i];
+                if ((o.cliente || "").toLowerCase().indexOf(c.nome.toLowerCase().substring(0, 10)) !== -1) {
+                    laudosEncontrados++;
+                    var li = document.createElement('li');
+                    li.innerHTML = '<span><strong>[' + o.data + ' • ' + o.modo + ']</strong> — Peças: ' + o.pecas + '</span><span style="color:var(--g3-amber); font-family:monospace;">OS #' + o.protocolo + ' (' + o.statusEst + ')</span>';
+                    ul.appendChild(li);
+                }
+            }
+            if (laudosEncontrados === 0) {
+                ul.innerHTML = '<li><span>Cliente cadastrado pela Central. Primeira vistoria em andamento.</span><span>Ativo</span></li>';
+            }
+            count.innerText = laudosEncontrados + " Laudos Anteriores";
+            window.atualizarQR();
+            window.mostrarAviso("Cliente carregado: " + c.nome);
+        };
+
+        // ==========================================================
+        // GPS COM GEOCODIFICAÇÃO REVERSA (NOME DE RUA, Nº E BAIRRO)
+        // ==========================================================
+        window.capturarGPS = function() {
+            var status = document.getElementById('gps-status');
+            var inputGps = document.getElementById('cli-gps');
+            status.innerText = "📡 Buscando Satélite...";
+
+            if (!navigator.geolocation) {
+                if (inputGps) inputGps.value = "Geolocalização não suportada no navegador.";
+                status.innerText = "❌ Erro GPS";
+                return;
+            }
+
+            var opcoesGPS = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
+
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                
+                if (inputGps) inputGps.value = "Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5);
+                status.innerText = "🔄 Lendo Endereço...";
+
+                var urlGeo = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + lat + "&lon=" + lng + "&zoom=18&addressdetails=1";
+
+                fetch(urlGeo)
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data && data.address) {
+                            var rua = data.address.road || data.address.pedestrian || "Quadra/Via Local";
+                            var numero = data.address.house_number || "S/N";
+                            var bairro = data.address.suburb || data.address.neighbourhood || data.address.city_district || "";
+                            var cidade = data.address.city || data.address.town || data.address.municipality || "Brasília";
+                            var estado = data.address.state || "DF";
+
+                            var enderecoFormatado = rua + ", " + numero + (bairro ? " - " + bairro : "") + " | " + cidade + "/" + estado;
+                            
+                            if (inputGps) inputGps.value = enderecoFormatado + " (Lat: " + lat.toFixed(4) + ")";
+                            status.innerText = "✔ Endereço Capturado";
+                            window.mostrarAviso("📍 Endereço físico cravado pelo satélite!");
+                            window.atualizarQR();
+                        } else {
+                            status.innerText = "✔ GPS (Sem mapa)";
+                        }
+                    })
+                    .catch(function() {
+                        status.innerText = "✔ GPS Auditado (Offline)";
+                        window.mostrarAviso("Coordenada salva! Sem internet para ler o nome da rua.");
+                    });
+
+            }, function() {
+                if (inputGps) inputGps.value = "Setor P Sul / Taguatinga — Brasília/DF (Lat: -15.8312)";
+                status.innerText = "✔ GPS Regional";
+                window.mostrarAviso("📍 Localização regional aplicada!");
+            }, opcoesGPS);
+        };
+
+        window.abrirRotaMapa = function(app) {
+            var end = document.getElementById('cli-endereco').value || "Taguatinga, Brasília - DF";
+            var url = app === 'waze'
+                ? "https://waze.com/ul?q=" + encodeURIComponent(end)
+                : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(end);
+            window.open(url, '_blank');
+        };
+
+        window.atualizarProgressoSeguranca = function() {
+            var checks = document.querySelectorAll('.chk-seg');
+            var marcados = 0;
+            for (var i = 0; i < checks.length; i++) {
+                if (checks[i].checked) marcados++;
+            }
+            var pct = Math.round((marcados / checks.length) * 100);
+            document.getElementById('safety-bar').style.width = pct + "%";
+            document.getElementById('safety-counter').innerText = marcados + "/" + checks.length + " VERIFICADOS (" + pct + "%)";
+        };
+
+        window.verificarCalibracao = function() {
+            var val = document.getElementById('est-equip').value.split('|')[1];
+            var dataCalib = new Date(val);
+            var alerta = document.getElementById('alerta-inmetro');
+            if (dataCalib < new Date()) {
+                alerta.className = "calib-alert calib-err";
+                alerta.innerHTML = "<span>🚨 ALERTA INMETRO: Manômetro com calibração VENCIDA!</span><span>BLOQUEADO</span>";
+            } else {
+                alerta.className = "calib-alert calib-ok";
+                alerta.innerHTML = "<span>✔ RASTREABILIDADE INMETRO VALIDADA: Calibração vigente até " + dataCalib.toLocaleDateString('pt-BR') + ".</span><span>APTO</span>";
+            }
+        };
+
+        var segCronometro = 0;
+        var intCronometro = null;
+        window.iniciarCronometro = function() {
+            if (intCronometro) return;
+            intCronometro = setInterval(function() {
+                segCronometro++;
+                var m = String(Math.floor(segCronometro / 60)).padStart(2, '0');
+                var s = String(segCronometro % 60).padStart(2, '0');
+                document.getElementById('cronometro-display').innerText = m + ":" + s;
+            }, 1000);
+        };
+        window.pausarCronometro = function() { clearInterval(intCronometro); intCronometro = null; };
+        window.zerarCronometro = function() { window.pausarCronometro(); segCronometro = 0; document.getElementById('cronometro-display').innerText = "00:00"; };
+
+        window.statusEstanqueidade = "APROVADO (Queda: 0.0 kPa)";
+        window.calcularEstanqueidade = function() {
+            var pIni = parseFloat(document.getElementById('p-inicial').value) || 0;
+            var pFim = parseFloat(document.getElementById('p-final').value) || 0;
+            var pTol = parseFloat(document.getElementById('p-tolerada').value) || 0;
+            var queda = +(pIni - pFim).toFixed(2);
+
+            var box = document.getElementById('verdict-box');
+            var title = document.getElementById('verdict-title');
+            var badge = document.getElementById('verdict-badge');
+
+            if (queda <= pTol && pFim > 0) {
+                window.statusEstanqueidade = "APROVADO (Queda: " + queda + " kPa)";
+                box.className = "verdict-banner verdict-ok";
+                title.innerText = "APROVADO — REDE ESTANQUE (VARIAÇÃO: " + queda + " kPa)";
+                badge.innerText = "✔ LIBERADO P/ OPERAÇÃO";
+                badge.style.color = "#34D399";
+            } else {
+                window.statusEstanqueidade = "REPROVADO (Fuga de " + queda + " kPa)";
+                box.className = "verdict-banner verdict-fail";
+                title.innerText = "REPROVADO — QUEDA DE " + queda + " kPa ACIMA DA TOLERÂNCIA";
+                badge.innerText = "🚨 BLOQUEAR REGISTRO";
+                badge.style.color = "#fda4af";
+            }
+            window.atualizarQR();
+        };
+
+        window.renderizarEstoque = function() {
+            var tbody = document.getElementById('tabela-estoque');
+            if (!tbody || !db) return;
+            var tecId = document.getElementById('select-viatura-tec').value || "t1";
+            tbody.innerHTML = "";
+
+            for (var i = 0; i < db.materiais.length; i++) {
+                var item = db.materiais[i];
+                var saldoCarro = (item.alocadoPorTecnico && item.alocadoPorTecnico[tecId]) ? item.alocadoPorTecnico[tecId] : 0;
+                var aplicado = usadoNestaOS[item.id] || 0;
+
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td><strong>' + item.cod + '</strong> — ' + item.nome + '</td>' +
+                               '<td><span class="stock-qty">' + saldoCarro + ' un.</span></td>' +
+                               '<td>R$ ' + item.preco.toFixed(2).replace('.', ',') + '</td>' +
+                               '<td><strong style="color:var(--g3-amber);">' + aplicado + ' un.</strong></td>' +
+                               '<td><button type="button" class="btn-stock" onclick="usarPecaEstoque(' + i + ')">+ Baixar p/ OS</button></td>';
+                tbody.appendChild(tr);
+            }
+            window.recalcularTotalOS();
+        };
+
+        window.usarPecaEstoque = function(matIdx) {
+            var tecId = document.getElementById('select-viatura-tec').value || "t1";
+            var item = db.materiais[matIdx];
+            if (!item.alocadoPorTecnico) item.alocadoPorTecnico = {};
+            var saldoCarro = item.alocadoPorTecnico[tecId] || 0;
+
+            if (saldoCarro > 0) {
+                item.alocadoPorTecnico[tecId] = saldoCarro - 1;
+                usadoNestaOS[item.id] = (usadoNestaOS[item.id] || 0) + 1;
+                salvarBanco();
+                window.renderizarEstoque();
+                window.mostrarAviso("✔ Baixado do carro: " + item.nome);
+            } else {
+                window.mostrarAviso("⚠️ Saldo zerado nesta viatura! Solicite transferência ao Gestor.");
+            }
+        };
+
+        window.recalcularTotalOS = function() {
+            var mo = parseFloat(document.getElementById('valor-mo').value) || 0;
+            var totalPecas = 0;
+            var nomesPecas = [];
+            for (var i = 0; i < db.materiais.length; i++) {
+                var item = db.materiais[i];
+                var q = usadoNestaOS[item.id] || 0;
+                if (q > 0) {
+                    totalPecas += q * item.preco;
+                    nomesPecas.push(q + "x " + item.nome);
+                }
+            }
+            document.getElementById('pecas-resumo').value = nomesPecas.length ? nomesPecas.join(", ") : "Nenhuma peça baixada do estoque";
+            var soma = mo + totalPecas;
+            document.getElementById('os-valor').value = "R$ " + soma.toFixed(2).replace('.', ',');
+            window.atualizarQR();
+        };
+
+        var canvas = document.getElementById('sig-canvas');
+        var ctx = canvas.getContext('2d');
+        var desenhando = false;
+        var temAssinatura = false;
+
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        function obterCoordenadasCanvas(e) {
+            var rect = canvas.getBoundingClientRect();
+            var clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+            var clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+            var scaleX = canvas.width / rect.width;
+            var scaleY = canvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function iniciarDesenho(e) {
+            e.preventDefault();
+            desenhando = true;
+            temAssinatura = true;
+            var pos = obterCoordenadasCanvas(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(pos.x + 0.5, pos.y + 0.5);
+            ctx.stroke();
+            document.getElementById('sig-status').innerText = "✔ Assinatura capturada na tela.";
+        }
+
+        function moverDesenho(e) {
+            if (!desenhando) return;
+            e.preventDefault();
+            var pos = obterCoordenadasCanvas(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+
+        function pararDesenho() { desenhando = false; }
+
+        canvas.addEventListener('mousedown', iniciarDesenho);
+        canvas.addEventListener('mousemove', moverDesenho);
+        window.addEventListener('mouseup', pararDesenho);
+        canvas.addEventListener('touchstart', iniciarDesenho, { passive: false });
+        canvas.addEventListener('touchmove', moverDesenho, { passive: false });
+        window.addEventListener('touchend', pararDesenho);
+
+        window.limparAssinatura = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            temAssinatura = false;
+            document.getElementById('sig-status').innerText = "Quadro limpo. Assine novamente acima.";
+            window.mostrarAviso("Assinatura limpa!");
+        };
+
+        window.atualizarQR = function() {
+            try {
+                var nomeEmp = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
+                var cli = document.getElementById('cli-nome').value || "PontoConsumo";
+                var art = document.getElementById('art-num').value;
+                var serie = document.getElementById('tanque-serie').value;
+                var tara = document.getElementById('tanque-tara').value;
+                var dados = "CERTIFICADO " + nomeEmp + " | " + protocoloAtual + " | " + cli + " | Tanque SN:" + serie + " (Tara:" + tara + ") | " + window.modoAtual + " | " + window.statusEstanqueidade + " | " + art;
+                document.getElementById('qr-img').src = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=" + encodeURIComponent(dados);
+            } catch (err) {}
+        };
+
+        // ==========================================================
+        // REGISTRA E DÁ BAIXA NA OS COM FOTOS, VÍDEO E ASSINATURA
+        // ==========================================================
+        function registrarOSNoBancoCentral() {
+            if (!db) carregarBanco();
+            var cli = document.getElementById('cli-nome').value.trim() || "Cliente Auditado em Campo";
+            var end = document.getElementById('cli-endereco').value.trim() || "Distrito Federal";
+            var serie = document.getElementById('tanque-serie').value.trim() || "P190";
+            var tara = document.getElementById('tanque-tara').value.trim() || "135,10 kg";
+            var pIni = document.getElementById('p-inicial').value;
+            var pFim = document.getElementById('p-final').value;
+            var tEns = document.getElementById('t-ensaio').value;
+            var equip = document.getElementById('est-equip').value.split('|')[0];
+            var art = document.getElementById('art-num').value;
+            var tec = document.getElementById('tec-nome').value;
+            var pecas = document.getElementById('pecas-resumo').value;
+            var parecer = document.getElementById('os-relatorio').value;
+            var gps = document.getElementById('cli-gps').value;
+            var valorTexto = document.getElementById('os-valor').value;
+            var valorNum = parseFloat(valorTexto.replace(/[^\d,]/g, '').replace(',', '.')) || 280;
+            var assinaturaImg = temAssinatura ? canvas.toDataURL('image/png') : "";
+
+            var novaOS = {
+                protocolo: protocoloAtual,
+                data: new Date().toLocaleDateString('pt-BR') + " " + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+                cliente: cli,
+                local: end,
+                gps: gps,
+                modo: window.modoAtual,
+                tanque: "Nº " + serie + " • Tara " + tara,
+                pressao: pIni + " kPa -> " + pFim + " kPa (" + tEns + " min)",
+                statusEst: "BAIXADA: " + window.statusEstanqueidade,
+                equip: equip,
+                art: art,
+                tecnico: tec,
+                pecas: pecas,
+                parecer: parecer,
+                valorNum: valorNum,
+                fotos: fotosBase64,
+                horariosFotos: horariosFotos,
+                qtdFotos: Object.keys(fotosBase64).length,
+                video: videoBase64,
+                temVideo: !!videoBase64,
+                assinatura: assinaturaImg
+            };
+
+            var idxExistente = -1;
+            for (var i = 0; i < db.ordens.length; i++) {
+                if (db.ordens[i].protocolo === protocoloAtual) {
+                    idxExistente = i;
+                    break;
+                }
+            }
+            if (idxExistente !== -1) {
+                db.ordens[idxExistente] = novaOS;
+            } else {
+                db.ordens.unshift(novaOS);
+            }
+
+            salvarBanco();
+        }
+
+        window.salvarEGerarPDF = function() {
+            try {
+                registrarOSNoBancoCentral();
+                var ul = document.getElementById('lista-historico');
+                var pecas = document.getElementById('pecas-resumo').value;
+                var li = document.createElement('li');
+                li.innerHTML = '<span><strong>[' + hoje.toLocaleDateString('pt-BR') + ' • ' + window.modoAtual + ']</strong> — Peças: ' + pecas + '</span><span style="color:#34D399; font-family:monospace;">OS #' + protocoloAtual + ' (BAIXADA: ' + window.statusEstanqueidade + ')</span>';
+                ul.prepend(li);
+                window.mostrarAviso("✔ OS BAIXADA na Central com Fotos e Vídeo! Abrindo PDF...");
+                setTimeout(function() { window.print(); }, 400);
+            } catch (err) {
+                window.print();
+            }
+        };
+
+        window.dispararAlertaPreventivo = function() {
+            var nomeEmp = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
+            var cli = document.getElementById('cli-nome').value || "Prezado Cliente";
+            var zapRaw = document.getElementById('cli-zap').value.replace(/\D/g, '');
+            var destino = zapRaw ? "55" + zapRaw : "";
+            var msg = "📅 *PROGRAMAÇÃO PREVENTIVA — " + nomeEmp + "*\n\n" +
+                      "Olá, *" + cli + "*! O cronograma normativo da sua central e tanque de gás foi atualizado:\n\n" +
+                      "🔹 *Próximo Teste de Estanqueidade (NBR 15526):* " + str1Ano + "\n" +
+                      "🔹 *Validade de Reguladores e Mangueiras (5 Anos):* " + str5Anos + "\n\n" +
+                      "Conte com a engenharia da " + nomeEmp + " para manter sua operação 100% segura.";
+            var url = destino ? "https://wa.me/" + destino + "?text=" + encodeURIComponent(msg) : "https://wa.me/?text=" + encodeURIComponent(msg);
+            window.open(url, '_blank') || (window.location.href = url);
+        };
+
+        window.enviarAuditoriaCentral = function() {
+            registrarOSNoBancoCentral();
+            var nomeEmp = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
+            var cli = document.getElementById('cli-nome').value || "Cliente em Campo";
+            var serieTanque = document.getElementById('tanque-serie').value || "Não informado";
+            var taraTanque = document.getElementById('tanque-tara').value || "-";
+            var anoTanque = document.getElementById('tanque-ano').value || "-";
+            var volTanque = document.getElementById('tanque-vol').value || "-";
+            var central = document.getElementById('central-tipo').value;
+            var end = document.getElementById('cli-endereco').value || "DF";
+            var gps = document.getElementById('cli-gps').value;
+            var gas = document.getElementById('est-gas').value;
+            var mat = document.getElementById('est-mat').value;
+            var equip = document.getElementById('est-equip').value.split('|')[0];
+            var pIni = document.getElementById('p-inicial').value;
+            var pFim = document.getElementById('p-final').value;
+            var tEns = document.getElementById('t-ensaio').value;
+            var pecas = document.getElementById('pecas-resumo').value;
+            var art = document.getElementById('art-num').value;
+            var totalFotos = Object.keys(fotosContadas).length;
+
+            var msg = "🟡 *DOSSIÊ DE AUDITORIA EM TEMPO REAL — " + nomeEmp + "* 🟡\n" +
+                      "📋 *Protocolo:* #" + protocoloAtual + " | *Status:* BAIXADA (" + window.modoAtual + ")\n" +
+                      "📑 *ART/TRT:* " + art + "\n\n" +
+                      "🏢 *Cliente:* " + cli + "\n" +
+                      "🛢️ *Tanque (NBR 8460):* Série " + serieTanque + " | Ano: " + anoTanque + " | Tara: " + taraTanque + " | Vol: " + volTanque + "\n" +
+                      "⚙️ *Central:* " + central + "\n" +
+                      "📍 *Local:* " + end + "\n" +
+                      "📡 *GPS:* " + gps + "\n\n" +
+                      "🧪 *ENSAIO DE ESTANQUEIDADE (NBR 13523 & 15526):*\n" +
+                      "• *Rede:* " + gas + " | *Tubulação:* " + mat + "\n" +
+                      "• *Pressão Inicial:* " + pIni + " kPa | *Final:* " + pFim + " kPa (" + tEns + " min)\n" +
+                      "• *Instrumento INMETRO:* " + equip + "\n" +
+                      "• *Resultado:* " + window.statusEstanqueidade + "\n\n" +
+                      "📦 *Baixa Estoque Viatura:* " + pecas + "\n" +
+                      "📸 *Mídia Sincronizada no Painel Gestor:* " + totalFotos + "/10 fotos com Zoom + " + (videoBase64 ? "Vídeo 10s anexado" : "Sem vídeo");
+
+            var url = "https://wa.me/5561986294465?text=" + encodeURIComponent(msg);
+            window.open(url, '_blank') || (window.location.href = url);
+        };
+
+        window.enviarCertificadoCliente = function() {
+            registrarOSNoBancoCentral();
+            var nomeEmp = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
+            var cli = document.getElementById('cli-nome').value || "Prezado Cliente";
+            var central = document.getElementById('central-tipo').value;
+            var serieTanque = document.getElementById('tanque-serie').value;
+            var art = document.getElementById('art-num').value;
+            var valor = document.getElementById('os-valor').value;
+            var zapRaw = document.getElementById('cli-zap').value.replace(/\D/g, '');
+            var destino = zapRaw ? "55" + zapRaw : "";
+
+            var msg = "🔥 *CERTIFICADO DE ESTANQUEIDADE & GARANTIA — " + nomeEmp + "* 🔥\n" +
+                      "📄 *OS:* #" + protocoloAtual + " | *ART/TRT:* " + art + "\n\n" +
+                      "Olá, *" + cli + "*! O serviço de *" + window.modoAtual + "* na sua central (*" + central + " • Tanque Nº " + serieTanque + "*) foi concluído sob rigor das normas ABNT NBR 13523, NBR 8460 e NBR 15526.\n\n" +
+                      "✅ *Laudo de Estanqueidade:* " + window.statusEstanqueidade + "\n" +
+                      "💰 *Valor Total:* " + valor + "\n" +
+                      "📅 *Próxima Revisão Anual:* " + str1Ano + "\n" +
+                      "📅 *Validade Regulador/Mangueira:* " + str5Anos + "\n\n" +
+                      "_Documento assinado digitalmente em campo com rastreabilidade INMETRO._";
+
+            var url = destino ? "https://wa.me/" + destino + "?text=" + encodeURIComponent(msg) : "https://wa.me/?text=" + encodeURIComponent(msg);
+            window.open(url, '_blank') || (window.location.href = url);
+        };
+
+        function verificarDespachoViaURL() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('os')) {
+                protocoloAtual = params.get('os');
+                document.getElementById('os-number').innerText = "OS #" + protocoloAtual;
+                liberarTerminalTecnico();
+            }
+            if (params.has('modo')) {
+                window.selecionarModo(params.get('modo'));
+            }
+            if (params.has('cli')) {
+                document.getElementById('cli-nome').value = params.get('cli');
+            }
+            if (params.has('end')) {
+                document.getElementById('cli-endereco').value = params.get('end');
+            }
+            if (params.has('tq')) {
+                document.getElementById('tanque-serie').value = params.get('tq');
+            }
+            if (params.has('tecId')) {
+                document.getElementById('select-viatura-tec').value = params.get('tecId');
+                window.trocarViaturaTecnico();
+            }
+        }
+
+        window.sincronizarDadosComGestor();
+        verificarDespachoViaURL();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,8 +1,9 @@
-const CACHE_NAME = 'capital-tech-saas-v1.0';
+const CACHE_NAME = 'capital-tech-saas-v2.0';
 
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
+    './app.html',
     './gestor.html',
     './manifest.json'
 ];

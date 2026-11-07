@@ -2,7 +2,7 @@
   "name": "Capital Tech SaaS | App do Técnico",
   "short_name": "Capital Tech",
   "description": "Terminal Móvel de Auditoria & Engenharia GLP",
-  "start_url": "./index.html",
+  "start_url": "./app.html",
   "display": "standalone",
   "background_color": "#05070B",
   "theme_color": "#38BDF8",
