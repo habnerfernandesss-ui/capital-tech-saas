@@ -2243,155 +2243,35 @@
     .btn-van-act:hover { border-color: #F59E0B; color: #F59E0B; }
 </style>
 
-<div class="tower-wrapper" id="torre-controle-frota">
-    <div class="tower-shell" id="tower-box-main">
-        <div class="tower-header">
-            <div class="tower-title-group">
-                <div class="radar-beacon"></div>
-                <div>
-                    <div class="tower-title">📡 Torre de Controle da Frota & Fila Co-Piloto (Ao Vivo)</div>
-                    <div class="tower-sub">Sincronização em Tempo Real com o Radar iFood dos Técnicos em Campo</div>
-                </div>
-            </div>
-
-            <div class="tower-kpis">
-                <span class="t-pill green" id="tw-kpi-disp">🟢 0 Disponíveis</span>
-                <span class="t-pill cyan" id="tw-kpi-rota">🚗 0 Em Rota</span>
-                <span class="t-pill amber" id="tw-kpi-vist">🔧 0 Em Vistoria</span>
-                <span class="t-pill" id="tw-kpi-fila">📋 0 OSs na Fila</span>
-                <button type="button" class="btn-tv-mode" onclick="alternarModoTVTorre()">🖥️ Modo TV</button>
-            </div>
-        </div>
-
-        <div class="fleet-live-grid" id="grid-viaturas-ao-vivo"></div>
-    </div>
-</div>
-
 <!-- ====================================================================
-     TORRE DE CONTROLE AO VIVO + FECHAMENTO DIÁRIO DE PRODUTIVIDADE (DRE)
+     BLOCO FINAL UNIFICADO: TORRE DE CONTROLE + DRE + LOGIN AUTOMÁTICO
      ==================================================================== -->
 <style>
+    /* Alinhamento 100% idêntico à Central de Comando Operacional */
     .tower-wrapper {
-        max-width: 1560px; margin: 18px auto 0 auto; padding: 0 24px;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 18px 0 !important;
+        padding: 0 !important;
     }
     .tower-shell {
         background: linear-gradient(145deg, #090E1A 0%, #050811 100%);
         border: 1.5px solid rgba(56, 189, 248, 0.28);
-        border-radius: 20px; padding: 22px 24px;
-        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75);
-        position: relative; overflow: hidden;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.65);
+        width: 100%;
     }
     .tower-shell.fullscreen-tv {
         position: fixed; inset: 0; z-index: 99998;
         border-radius: 0; padding: 32px; overflow-y: auto;
         background: #030509;
     }
-    .tower-header {
-        display: flex; justify-content: space-between; align-items: center;
-        flex-wrap: wrap; gap: 14px; padding-bottom: 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px;
-    }
-    .tower-title-group { display: flex; align-items: center; gap: 12px; }
-    .radar-beacon {
-        width: 14px; height: 14px; border-radius: 50%;
-        background: #10B981; box-shadow: 0 0 16px #10B981;
-        animation: towerPulse 1.4s infinite;
-    }
-    @keyframes towerPulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.35); opacity: 0.45; }
-    }
-    .tower-title {
-        font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 900;
-        text-transform: uppercase; letter-spacing: 0.5px; color: #fff;
-    }
-    .tower-sub {
-        font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
-        color: #38BDF8; text-transform: uppercase;
-    }
 
-    .tower-kpis { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .t-pill {
-        background: #0F172A; border: 1px solid rgba(255,255,255,0.1);
-        padding: 7px 12px; border-radius: 50px; font-family: 'JetBrains Mono', monospace;
-        font-size: 0.72rem; font-weight: 800; color: #E2E8F0;
-        display: inline-flex; align-items: center; gap: 6px;
-    }
-    .t-pill.green { border-color: #10B981; color: #34D399; background: rgba(16,185,129,0.1); }
-    .t-pill.cyan { border-color: #38BDF8; color: #38BDF8; background: rgba(56,189,248,0.1); }
-    .t-pill.amber { border-color: #F59E0B; color: #FBBF24; background: rgba(245,158,11,0.1); }
+    /* Oculta definitivamente a segunda tela azul de login */
+    #login-overlay { display: none !important; }
 
-    .btn-tower-action {
-        background: linear-gradient(135deg, #F59E0B, #D97706); color: #000;
-        font-weight: 900; font-size: 0.75rem; padding: 8px 14px;
-        border-radius: 8px; border: none; cursor: pointer; text-transform: uppercase;
-        display: inline-flex; align-items: center; gap: 6px;
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25); transition: 0.2s;
-    }
-    .btn-tower-action:hover { transform: translateY(-1px); filter: brightness(1.08); }
-    .btn-tv-mode {
-        background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; color: #38BDF8;
-        font-weight: 800; font-size: 0.74rem; padding: 7px 12px;
-        border-radius: 8px; cursor: pointer; text-transform: uppercase;
-    }
-
-    /* GRID DE VIATURAS AO VIVO */
-    .fleet-live-grid {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 16px;
-    }
-    .van-card {
-        background: #0D1424; border: 1.5px solid rgba(255,255,255,0.08);
-        border-top: 4px solid #10B981; border-radius: 16px; padding: 18px;
-        display: flex; flex-direction: column; justify-content: space-between;
-        gap: 14px; transition: 0.25s;
-    }
-    .van-card.st-rota { border-top-color: #38BDF8; box-shadow: 0 10px 30px rgba(56,189,248,0.12); }
-    .van-card.st-vistoria { border-top-color: #F59E0B; box-shadow: 0 10px 30px rgba(245,158,11,0.12); }
-
-    .van-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-    .van-name { font-size: 1.02rem; font-weight: 900; color: #fff; }
-    .van-plate {
-        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
-        color: #94A3B8; margin-top: 2px;
-    }
-    .van-status-badge {
-        font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900;
-        padding: 5px 10px; border-radius: 50px; white-space: nowrap;
-    }
-    .vs-disp { background: rgba(16,185,129,0.16); color: #34D399; border: 1px solid #10B981; }
-    .vs-rota { background: rgba(56,189,248,0.16); color: #38BDF8; border: 1px solid #38BDF8; }
-    .vs-vist { background: rgba(245,158,11,0.16); color: #FBBF24; border: 1px solid #F59E0B; }
-
-    .van-active-box {
-        background: #060911; border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 12px; padding: 12px; font-size: 0.82rem;
-    }
-    .van-queue-list {
-        display: flex; flex-direction: column; gap: 6px;
-        max-height: 125px; overflow-y: auto;
-    }
-    .vq-item {
-        background: rgba(255,255,255,0.03); border-left: 3px solid #F59E0B;
-        padding: 6px 10px; border-radius: 6px; font-size: 0.76rem;
-        display: flex; justify-content: space-between; align-items: center;
-    }
-    .vq-item.urg { border-left-color: #F43F5E; background: rgba(244,63,94,0.12); }
-
-    .van-actions {
-        display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06);
-        padding-top: 12px;
-    }
-    .btn-van-act {
-        flex: 1; padding: 8px 10px; border-radius: 8px; font-size: 0.73rem;
-        font-weight: 800; cursor: pointer; border: 1px solid rgba(255,255,255,0.12);
-        background: #131C31; color: #fff; text-align: center; text-decoration: none;
-    }
-    .btn-van-act:hover { border-color: #F59E0B; color: #F59E0B; }
-
-    /* ====================================================================
-       MODAL EXECUTIVO DE FECHAMENTO DO DIA (PRODUTIVIDADE & FATURAMENTO)
-       ==================================================================== */
+    /* Modal do Fechamento Diário (DRE) */
     #modal-fechamento-dia {
         position: fixed; inset: 0; z-index: 99999;
         background: rgba(2, 4, 9, 0.9); backdrop-filter: blur(14px);
@@ -2438,9 +2318,15 @@
         height: 100%; background: linear-gradient(90deg, #F59E0B, #10B981);
         border-radius: 50px;
     }
+    .btn-tower-action {
+        background: linear-gradient(135deg, #F59E0B, #D97706); color: #000;
+        font-weight: 900; font-size: 0.75rem; padding: 8px 14px;
+        border-radius: 8px; border: none; cursor: pointer; text-transform: uppercase;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
 </style>
 
-<!-- ESTRUTURA PRINCIPAL DA TORRE DE CONTROLE -->
+<!-- ESTRUTURA ÚNICA DA TORRE DE CONTROLE -->
 <div class="tower-wrapper" id="torre-controle-frota">
     <div class="tower-shell" id="tower-box-main">
         <div class="tower-header">
@@ -2457,9 +2343,7 @@
                 <span class="t-pill cyan" id="tw-kpi-rota">🚗 0 Em Rota</span>
                 <span class="t-pill amber" id="tw-kpi-vist">🔧 0 Em Vistoria</span>
                 <span class="t-pill" id="tw-kpi-fila">📋 0 OSs na Fila</span>
-                <button type="button" class="btn-tower-action" onclick="abrirFechamentoProdutividadeDia()">
-                    📊 Fechamento do Dia
-                </button>
+                <button type="button" class="btn-tower-action" onclick="abrirFechamentoProdutividadeDia()">📊 Fechamento do Dia</button>
                 <button type="button" class="btn-tv-mode" onclick="alternarModoTVTorre()">🖥️ Modo TV</button>
             </div>
         </div>
@@ -2468,7 +2352,7 @@
     </div>
 </div>
 
-<!-- MODAL DE FECHAMENTO DIÁRIO DE PRODUTIVIDADE E FATURAMENTO POR TÉCNICO -->
+<!-- MODAL EXECUTIVO DE FECHAMENTO DO DIA (DRE) -->
 <div id="modal-fechamento-dia">
     <div class="dre-modal-card">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:16px;">
@@ -2530,19 +2414,47 @@
 </div>
 
 <script>
-    // Posiciona a Torre de Controle logo abaixo do cabeçalho principal do Gestor
+    // 1. REMOVE DUPLICATAS E ENCAIXA A TORRE NA MESMA LARGURA DA CENTRAL DE COMANDO
     window.addEventListener('DOMContentLoaded', function() {
-        var tower = document.getElementById('torre-controle-frota');
-        var header = document.querySelector('header');
-        if (tower && header && header.parentNode) {
-            header.parentNode.insertBefore(tower, header.nextSibling);
+        // Destranca a sessão sem exibir a tela azul de login
+        var emailLogado = localStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || sessionStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || "admin@capitaltech.com";
+        localStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
+        sessionStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
+        sessionStorage.setItem("CAPITAL_TECH_TEC_SESSION", emailLogado);
+
+        var boxAzul = document.getElementById('login-overlay');
+        if (boxAzul) {
+            var campoEmail = boxAzul.querySelector('input[type="email"], input[type="text"]');
+            var campoSenha = boxAzul.querySelector('input[type="password"]');
+            if (campoEmail) campoEmail.value = emailLogado;
+            if (campoSenha) campoSenha.value = "capital2026";
+            var btnEntrar = boxAzul.querySelector('button');
+            if (btnEntrar) btnEntrar.click();
+            boxAzul.style.setProperty('display', 'none', 'important');
         }
+
+        // Se existir mais de uma Torre no HTML, apaga as antigas e mantém apenas esta completa
+        var todasTorres = document.querySelectorAll('.tower-wrapper');
+        if (todasTorres.length > 1) {
+            for (var i = 0; i < todasTorres.length - 1; i++) {
+                todasTorres[i].remove();
+            }
+        }
+
+        // Move a Torre única para dentro de .content (logo acima da Central de Comando Operacional)
+        var torreUnica = document.getElementById('torre-controle-frota');
+        var containerPrincipal = document.querySelector('.content');
+        if (torreUnica && containerPrincipal) {
+            containerPrincipal.insertBefore(torreUnica, containerPrincipal.firstChild);
+        }
+
         setTimeout(window.renderizarTorreDeControle, 600);
     });
 
+    // 2. FUNÇÕES DA TORRE DE CONTROLE E MODO TV
     window.alternarModoTVTorre = function() {
         var box = document.getElementById('tower-box-main');
-        box.classList.toggle('fullscreen-tv');
+        if (box) box.classList.toggle('fullscreen-tv');
     };
 
     window.forcarStatusViaturaMatriz = function(idxTec) {
@@ -2554,7 +2466,6 @@
         window.renderizarTorreDeControle();
     };
 
-    // Extrai o valor financeiro real da OS (ou aplica o ticket base de laudo R$ 280 se não preenchido)
     function extrairValorFinanceiroOS(os) {
         if (!os) return 0;
         var bruto = os.valorTotal || os.valor || os.preco || os.total;
@@ -2675,15 +2586,13 @@
             grid.appendChild(card);
         }
 
-        document.getElementById('tw-kpi-disp').innerText = "🟢 " + cDisp + " Disponíveis";
-        document.getElementById('tw-kpi-rota').innerText = "🚗 " + cRota + " Em Rota";
-        document.getElementById('tw-kpi-vist').innerText = "🔧 " + cVist + " Em Vistoria";
-        document.getElementById('tw-kpi-fila').innerText = "📋 " + cFilaTotal + " OSs na Fila";
+        var elDisp = document.getElementById('tw-kpi-disp'); if (elDisp) elDisp.innerText = "🟢 " + cDisp + " Disponíveis";
+        var elRota = document.getElementById('tw-kpi-rota'); if (elRota) elRota.innerText = "🚗 " + cRota + " Em Rota";
+        var elVist = document.getElementById('tw-kpi-vist'); if (elVist) elVist.innerText = "🔧 " + cVist + " Em Vistoria";
+        var elFila = document.getElementById('tw-kpi-fila'); if (elFila) elFila.innerText = "📋 " + cFilaTotal + " OSs na Fila";
     };
 
-    // ====================================================================
-    // MOTOR DE CÁLCULO DO FECHAMENTO DO DIA (RANKING & FATURAMENTO)
-    // ====================================================================
+    // 3. MOTOR DE CÁLCULO DO FECHAMENTO DO DIA (RANKING & FATURAMENTO)
     var ultimoResumoDRETexto = "";
 
     window.abrirFechamentoProdutividadeDia = function() {
@@ -2736,7 +2645,6 @@
             });
         }
 
-        // Ordena do maior faturamento para o menor
         ranking.sort(function(a, b) { return b.receita - a.receita; });
 
         var ticketMedioCarro = ranking.length > 0 ? (faturamentoGlobal / ranking.length) : 0;
@@ -2790,7 +2698,7 @@
         window.print();
     };
 
-    // Engloba o renderizarTudo original para atualizar a Torre sempre que o Firebase mudar
+    // 4. INTEGRAÇÃO COM DESPACHO E ATUALIZAÇÃO AUTOMÁTICA (SEM DUPLICIDADE)
     var renderizarTudoOriginalTower = window.renderizarTudo;
     window.renderizarTudo = function() {
         if (typeof renderizarTudoOriginalTower === 'function') {
@@ -2799,7 +2707,6 @@
         window.renderizarTorreDeControle();
     };
 
-    // Engloba o despacho de OS para perguntar se é URGENTE e atualizar a Torre na hora
     var confirmarDespachoOriginal = window.confirmarDespachoOS;
     window.confirmarDespachoOS = function() {
         var ehUrgente = confirm("⚡ DESPACHO CO-PILOTO:\n\nClique em [OK] se esta OS for uma 🚨 URGÊNCIA (Fura a fila para a Posição #1)\nOu clique em [Cancelar] para Fila Normal.");
@@ -2818,51 +2725,6 @@
     };
 
     setInterval(window.renderizarTorreDeControle, 3000);
-</script>
-<style>
-    /* OCULTA DEFINITIVAMENTE A SEGUNDA TELA AZUL DE LOGIN */
-    #login-overlay { display: none !important; }
-</style>
-<script>
-    window.addEventListener('DOMContentLoaded', function() {
-        var emailLogado = localStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || sessionStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || "admin@capitaltech.com";
-        
-        // Garante que a chave fique salva para não cair ao trocar de tela
-        localStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
-        sessionStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
-        sessionStorage.setItem("CAPITAL_TECH_TEC_SESSION", emailLogado);
-
-        // Preenche e destranca a gaveta da empresa em segundo plano sem mostrar a tela azul
-        var boxAzul = document.getElementById('login-overlay');
-        if (boxAzul) {
-            var campoEmail = boxAzul.querySelector('input[type="email"], input[type="text"]');
-            var campoSenha = boxAzul.querySelector('input[type="password"]');
-            if (campoEmail) campoEmail.value = emailLogado;
-            if (campoSenha) campoSenha.value = "capital2026";
-            
-            var btnEntrar = boxAzul.querySelector('button');
-            if (btnEntrar) btnEntrar.click();
-            boxAzul.style.setProperty('display', 'none', 'important');
-        }
-    });
-</script>
-<script>
-    // Envia toda nova OS despachada direto para o Radar Inteligente e Fila do Técnico na nuvem
-    var confirmarDespachoOriginal = window.confirmarDespachoOS;
-    window.confirmarDespachoOS = function() {
-        var ehUrgente = confirm("⚡ DESPACHO INTELIGENTE CO-PILOTO:\n\nClique em [OK] se esta OS for uma 🚨 URGÊNCIA (Fura a fila para a Posição #1)\nOu clique em [Cancelar] para Despacho Normal (Entra na sequência da fila do técnico).");
-        
-        if (typeof confirmarDespachoOriginal === 'function') {
-            confirmarDespachoOriginal();
-        }
-
-        if (typeof db !== 'undefined' && db && db.ordens && db.ordens.length > 0) {
-            db.ordens[0].prioridade = ehUrgente ? "URGENTE" : "NORMAL";
-            db.ordens[0].endereco = document.getElementById('desp-end') ? document.getElementById('desp-end').value : "Brasília - DF";
-            db.ordens[0].servico = document.getElementById('desp-serv') ? document.getElementById('desp-serv').value : "Vistoria & Estanqueidade NBR 15526";
-            if (typeof salvarBanco === 'function') salvarBanco();
-        }
-    };
 </script>
 
 </body>
