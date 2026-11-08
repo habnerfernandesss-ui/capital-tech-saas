@@ -883,10 +883,12 @@
             document.getElementById('modal-login').style.display = 'none';
         };
 
-        window.acessarModuloDireto = function(destino) {
+       window.acessarModuloDireto = function(destino) {
             var email = document.getElementById('login-quick-email').value.trim() || "admin@capitaltech.com";
-            sessionStorage.setItem(SESSION_AUTH_KEY, email);
-            sessionStorage.setItem(TEC_SESSION_KEY, email);
+            localStorage.setItem("CAPITAL_TECH_AUTH_SESSION", email);
+            localStorage.setItem("CAPITAL_TECH_TEC_SESSION", email);
+            sessionStorage.setItem("CAPITAL_TECH_AUTH_SESSION", email);
+            sessionStorage.setItem("CAPITAL_TECH_TEC_SESSION", email);
             window.location.href = destino;
         };
 

@@ -2819,5 +2819,51 @@
 
     setInterval(window.renderizarTorreDeControle, 3000);
 </script>
+<style>
+    /* OCULTA DEFINITIVAMENTE A SEGUNDA TELA AZUL DE LOGIN */
+    #login-overlay { display: none !important; }
+</style>
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        var emailLogado = localStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || sessionStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || "admin@capitaltech.com";
+        
+        // Garante que a chave fique salva para não cair ao trocar de tela
+        localStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
+        sessionStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
+        sessionStorage.setItem("CAPITAL_TECH_TEC_SESSION", emailLogado);
+
+        // Preenche e destranca a gaveta da empresa em segundo plano sem mostrar a tela azul
+        var boxAzul = document.getElementById('login-overlay');
+        if (boxAzul) {
+            var campoEmail = boxAzul.querySelector('input[type="email"], input[type="text"]');
+            var campoSenha = boxAzul.querySelector('input[type="password"]');
+            if (campoEmail) campoEmail.value = emailLogado;
+            if (campoSenha) campoSenha.value = "capital2026";
+            
+            var btnEntrar = boxAzul.querySelector('button');
+            if (btnEntrar) btnEntrar.click();
+            boxAzul.style.setProperty('display', 'none', 'important');
+        }
+    });
+</script>
+<script>
+    // Envia toda nova OS despachada direto para o Radar Inteligente e Fila do Técnico na nuvem
+    var confirmarDespachoOriginal = window.confirmarDespachoOS;
+    window.confirmarDespachoOS = function() {
+        var ehUrgente = confirm("⚡ DESPACHO INTELIGENTE CO-PILOTO:\n\nClique em [OK] se esta OS for uma 🚨 URGÊNCIA (Fura a fila para a Posição #1)\nOu clique em [Cancelar] para Despacho Normal (Entra na sequência da fila do técnico).");
+        
+        if (typeof confirmarDespachoOriginal === 'function') {
+            confirmarDespachoOriginal();
+        }
+
+        if (typeof db !== 'undefined' && db && db.ordens && db.ordens.length > 0) {
+            db.ordens[0].prioridade = ehUrgente ? "URGENTE" : "NORMAL";
+            db.ordens[0].endereco = document.getElementById('desp-end') ? document.getElementById('desp-end').value : "Brasília - DF";
+            db.ordens[0].servico = document.getElementById('desp-serv') ? document.getElementById('desp-serv').value : "Vistoria & Estanqueidade NBR 15526";
+            if (typeof salvarBanco === 'function') salvarBanco();
+        }
+    };
+</script>
+
 </body>
 </html>
