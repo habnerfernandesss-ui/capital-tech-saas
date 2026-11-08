@@ -2414,9 +2414,9 @@
 </div>
 
 <script>
-    // 1. REMOVE DUPLICATAS E ENCAIXA A TORRE NA MESMA LARGURA DA CENTRAL DE COMANDO
+(function() {
+    // BLINDAGEM DE EXECUÇÃO: Garante que os dados carregam sem afetar o restante do script
     window.addEventListener('DOMContentLoaded', function() {
-        // Destranca a sessão sem exibir a tela azul de login
         var emailLogado = localStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || sessionStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || "admin@capitaltech.com";
         localStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
         sessionStorage.setItem("CAPITAL_TECH_AUTH_SESSION", emailLogado);
@@ -2424,34 +2424,41 @@
 
         var boxAzul = document.getElementById('login-overlay');
         if (boxAzul) {
-            var campoEmail = boxAzul.querySelector('input[type="email"], input[type="text"]');
-            var campoSenha = boxAzul.querySelector('input[type="password"]');
-            if (campoEmail) campoEmail.value = emailLogado;
-            if (campoSenha) campoSenha.value = "capital2026";
-            var btnEntrar = boxAzul.querySelector('button');
-            if (btnEntrar) btnEntrar.click();
             boxAzul.style.setProperty('display', 'none', 'important');
         }
 
-        // Se existir mais de uma Torre no HTML, apaga as antigas e mantém apenas esta completa
+        setTimeout(function() {
+            if (document.getElementById('login-email')) document.getElementById('login-email').value = emailLogado;
+            if (document.getElementById('login-senha')) document.getElementById('login-senha').value = "capital2026";
+
+            if (typeof autenticarGestor === 'function') {
+                autenticarGestor();
+            } else if (typeof fazerLogin === 'function') {
+                try { fazerLogin(); } catch(e) {}
+            } else if (boxAzul) {
+                var btnEntrar = boxAzul.querySelector('button');
+                if (btnEntrar) btnEntrar.click();
+            }
+
+            if (typeof renderizarTudo === 'function') renderizarTudo();
+            if (typeof renderizarTorreDeControle === 'function') renderizarTorreDeControle();
+        }, 350);
+
+        // Remove torres duplicadas e posiciona a única torre no topo do .content
         var todasTorres = document.querySelectorAll('.tower-wrapper');
         if (todasTorres.length > 1) {
             for (var i = 0; i < todasTorres.length - 1; i++) {
                 todasTorres[i].remove();
             }
         }
-
-        // Move a Torre única para dentro de .content (logo acima da Central de Comando Operacional)
         var torreUnica = document.getElementById('torre-controle-frota');
         var containerPrincipal = document.querySelector('.content');
         if (torreUnica && containerPrincipal) {
             containerPrincipal.insertBefore(torreUnica, containerPrincipal.firstChild);
         }
-
-        setTimeout(window.renderizarTorreDeControle, 600);
     });
 
-    // 2. FUNÇÕES DA TORRE DE CONTROLE E MODO TV
+    // MODO TV DA TORRE
     window.alternarModoTVTorre = function() {
         var box = document.getElementById('tower-box-main');
         if (box) box.classList.toggle('fullscreen-tv');
@@ -2527,7 +2534,7 @@
             if (osEmDeslocamento) {
                 htmlAtendimentoAtual =
                     '<div class="van-active-box" style="border-color:#38BDF8;">' +
-                        '<div style="font-size:0.68rem; color:#38BDF8; font-weight:900; font-family:monospace;">🎯 ATENDIMENTO EM CURSO (' + (osEmDeslocamento.horarioAceite || 'Agora') + ')</div>' +
+                        '<div style="font-size:0.68rem; color:#38BDF8; font-weight:900; font-family:monospace;">🎯 ATENDIMENTO EM CURSO</div>' +
                         '<div style="font-weight:800; color:#fff; margin-top:3px;">' + (osEmDeslocamento.cliente || '') + '</div>' +
                         '<div style="font-size:0.74rem; color:#94A3B8;">📍 ' + (osEmDeslocamento.endereco || 'Em campo') + ' • <strong>#' + (osEmDeslocamento.protocolo || '') + '</strong></div>' +
                     '</div>';
@@ -2535,20 +2542,20 @@
                 htmlAtendimentoAtual =
                     '<div class="van-active-box" style="border-color:#F59E0B;">' +
                         '<div style="font-size:0.68rem; color:#FBBF24; font-weight:900; font-family:monospace;">🔒 MODO NÃO PERTURBE ATIVO</div>' +
-                        '<div style="color:#E2E8F0; font-size:0.78rem; margin-top:3px;">Técnico executando ensaio de estanqueidade / fotos. Novas OSs entram silenciosamente na fila abaixo.</div>' +
+                        '<div style="color:#E2E8F0; font-size:0.78rem; margin-top:3px;">Técnico executando ensaio de estanqueidade / fotos.</div>' +
                     '</div>';
             } else {
                 htmlAtendimentoAtual =
                     '<div class="van-active-box">' +
-                        '<div style="font-size:0.74rem; color:#34D399; font-weight:800;">⚡ Pronto para receber chamada imediata no Radar</div>' +
+                        '<div style="font-size:0.74rem; color:#34D399; font-weight:800;">⚡ Pronto para receber chamada no Radar</div>' +
                     '</div>';
             }
 
             var htmlFila = "";
             if (filaEspera.length === 0) {
-                htmlFila = '<div style="font-size:0.75rem; color:#64748B; font-family:monospace;">✔ Fila livre (0 OSs aguardando)</div>';
+                htmlFila = '<div style="font-size:0.75rem; color:#64748B; font-family:monospace;">✔ Fila livre (0 OSs)</div>';
             } else {
-                htmlFila = '<div style="font-size:0.7rem; color:#F59E0B; font-weight:900; font-family:monospace; margin-bottom:4px;">📋 FILA DE ESPERA (' + filaEspera.length + ' OS):</div><div class="van-queue-list">';
+                htmlFila = '<div style="font-size:0.7rem; color:#F59E0B; font-weight:900; font-family:monospace; margin-bottom:4px;">📋 FILA DE ESPERA (' + filaEspera.length + '):</div><div class="van-queue-list">';
                 for (var f = 0; f < filaEspera.length; f++) {
                     var itemOS = filaEspera[f];
                     var ehUrg = itemOS.prioridade === 'URGENTE';
@@ -2562,7 +2569,7 @@
             }
 
             var zapLimpo = (t.zap || "61986294465").replace(/\D/g, '');
-            var linkRadioZap = "https://wa.me/55" + zapLimpo + "?text=" + encodeURIComponent("📡 *CENTRAL DE OPERAÇÕES:* Olá " + t.nome + ", você possui " + filaEspera.length + " OS(s) na sua fila do aplicativo.");
+            var linkRadioZap = "https://wa.me/55" + zapLimpo + "?text=" + encodeURIComponent("📡 Olá " + t.nome + ", você possui " + filaEspera.length + " OS(s) na fila.");
 
             var card = document.createElement('div');
             card.className = classeCard;
@@ -2580,7 +2587,7 @@
                 '</div>' +
                 '<div class="van-actions">' +
                     '<button type="button" class="btn-van-act" onclick="forcarStatusViaturaMatriz(' + i + ')">🔄 Status</button>' +
-                    '<a href="' + linkRadioZap + '" target="_blank" class="btn-van-act">📲 Acionar Rádio/Zap</a>' +
+                    '<a href="' + linkRadioZap + '" target="_blank" class="btn-van-act">📲 Rádio/Zap</a>' +
                 '</div>';
 
             grid.appendChild(card);
@@ -2592,7 +2599,7 @@
         var elFila = document.getElementById('tw-kpi-fila'); if (elFila) elFila.innerText = "📋 " + cFilaTotal + " OSs na Fila";
     };
 
-    // 3. MOTOR DE CÁLCULO DO FECHAMENTO DO DIA (RANKING & FATURAMENTO)
+    // MODAL DRE / FECHAMENTO DO DIA
     var ultimoResumoDRETexto = "";
 
     window.abrirFechamentoProdutividadeDia = function() {
@@ -2604,9 +2611,7 @@
         var tecnicos = db.tecnicos || [];
         var ordens = db.ordens || [];
 
-        var faturamentoGlobal = 0;
-        var concluidasGlobal = 0;
-        var filaGlobal = 0;
+        var faturamentoGlobal = 0, concluidasGlobal = 0, filaGlobal = 0;
         var ranking = [];
 
         for (var i = 0; i < tecnicos.length; i++) {
@@ -2615,19 +2620,12 @@
                 return (o.tecnico && o.tecnico.indexOf(t.nome) !== -1) || tecnicos.length === 1;
             });
 
-            var concluidas = 0;
-            var naFila = 0;
-            var receitaTec = 0;
-
+            var concluidas = 0, naFila = 0, receitaTec = 0;
             for (var j = 0; j < osDoTec.length; j++) {
                 var o = osDoTec[j];
                 var ehPendente = (o.status === "Pendente" || o.status === "Na Fila" || o.status === "Em Deslocamento");
-                if (ehPendente) {
-                    naFila++;
-                } else {
-                    concluidas++;
-                    receitaTec += extrairValorFinanceiroOS(o);
-                }
+                if (ehPendente) naFila++;
+                else { concluidas++; receitaTec += extrairValorFinanceiroOS(o); }
             }
 
             faturamentoGlobal += receitaTec;
@@ -2646,7 +2644,6 @@
         }
 
         ranking.sort(function(a, b) { return b.receita - a.receita; });
-
         var ticketMedioCarro = ranking.length > 0 ? (faturamentoGlobal / ranking.length) : 0;
 
         document.getElementById('dre-val-total').innerText = "R$ " + faturamentoGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
@@ -2657,11 +2654,7 @@
         var tbody = document.getElementById('dre-tbody-tecnicos');
         tbody.innerHTML = "";
 
-        var textoZap = "📊 *FECHAMENTO DIÁRIO DE FROTA — " + nomeEmp + "*\n" +
-                       "📅 *Data:* " + dataHoje + "\n" +
-                       "💰 *Faturamento Produzido:* R$ " + faturamentoGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + "\n" +
-                       "✔ *OSs Concluídas:* " + concluidasGlobal + " | 📋 *Na Fila:* " + filaGlobal + "\n\n" +
-                       "🏆 *RANKING POR VIATURA:*\n";
+        var textoZap = "📊 *FECHAMENTO DIÁRIO DE FROTA — " + nomeEmp + "*\n📅 *Data:* " + dataHoje + "\n💰 *Faturamento:* R$ " + faturamentoGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + "\n\n";
 
         for (var r = 0; r < ranking.length; r++) {
             var item = ranking[r];
@@ -2670,15 +2663,15 @@
 
             var tr = document.createElement('tr');
             tr.innerHTML =
-                '<td><strong>' + medalha + ' — ' + item.nome + '</strong><br><span style="font-size:0.72rem; color:#94A3B8; font-family:monospace;">' + item.carro + ' (' + item.placa + ')</span></td>' +
-                '<td><span style="font-family:monospace; font-size:0.74rem; color:#38BDF8;">' + item.status + '</span></td>' +
+                '<td><strong>' + medalha + ' — ' + item.nome + '</strong><br><span style="font-size:0.72rem; color:#94A3B8;">' + item.carro + '</span></td>' +
+                '<td><span style="color:#38BDF8;">' + item.status + '</span></td>' +
                 '<td><strong style="color:#10B981;">' + item.concluidas + ' Concluída(s)</strong></td>' +
-                '<td><span style="color:#F59E0B; font-weight:700;">' + item.naFila + ' Pendente(s)</span></td>' +
-                '<td><div style="font-size:0.72rem; font-family:monospace;">' + percMeta + '% da meta</div><div class="meta-bar-bg"><div class="meta-bar-fill" style="width:' + percMeta + '%;"></div></div></td>' +
-                '<td><strong style="font-family:monospace; font-size:0.98rem; color:#10B981;">R$ ' + item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</strong></td>';
+                '<td><span style="color:#F59E0B;">' + item.naFila + ' Pendente(s)</span></td>' +
+                '<td><div style="font-size:0.72rem;">' + percMeta + '%</div><div class="meta-bar-bg"><div class="meta-bar-fill" style="width:' + percMeta + '%;"></div></div></td>' +
+                '<td><strong style="color:#10B981;">R$ ' + item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</strong></td>';
             tbody.appendChild(tr);
 
-            textoZap += medalha + " *" + item.nome + "* (" + item.carro + "): " + item.concluidas + " OS | *R$ " + item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + "*\n";
+            textoZap += medalha + " *" + item.nome + "*: " + item.concluidas + " OS | *R$ " + item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + "*\n";
         }
 
         ultimoResumoDRETexto = textoZap;
@@ -2690,42 +2683,13 @@
     };
 
     window.dispararFechamentoWhatsAppDiretoria = function() {
-        var zapDestino = "5561986294465";
-        window.open("https://wa.me/" + zapDestino + "?text=" + encodeURIComponent(ultimoResumoDRETexto), '_blank');
+        window.open("https://wa.me/5561986294465?text=" + encodeURIComponent(ultimoResumoDRETexto), '_blank');
     };
 
     window.imprimirRelatorioDREA4 = function() {
         window.print();
     };
 
-    // 4. INTEGRAÇÃO COM DESPACHO E ATUALIZAÇÃO AUTOMÁTICA (SEM DUPLICIDADE)
-    var renderizarTudoOriginalTower = window.renderizarTudo;
-    window.renderizarTudo = function() {
-        if (typeof renderizarTudoOriginalTower === 'function') {
-            renderizarTudoOriginalTower();
-        }
-        window.renderizarTorreDeControle();
-    };
-
-    var confirmarDespachoOriginal = window.confirmarDespachoOS;
-    window.confirmarDespachoOS = function() {
-        var ehUrgente = confirm("⚡ DESPACHO CO-PILOTO:\n\nClique em [OK] se esta OS for uma 🚨 URGÊNCIA (Fura a fila para a Posição #1)\nOu clique em [Cancelar] para Fila Normal.");
-        
-        if (typeof confirmarDespachoOriginal === 'function') {
-            confirmarDespachoOriginal();
-        }
-
-        if (typeof db !== 'undefined' && db && db.ordens && db.ordens.length > 0) {
-            db.ordens[0].prioridade = ehUrgente ? "URGENTE" : "NORMAL";
-            db.ordens[0].endereco = document.getElementById('desp-end') ? document.getElementById('desp-end').value : "Brasília - DF";
-            db.ordens[0].servico = document.getElementById('desp-serv') ? document.getElementById('desp-serv').value : "Vistoria & Estanqueidade NBR 15526";
-            if (typeof salvarBanco === 'function') salvarBanco();
-            window.renderizarTorreDeControle();
-        }
-    };
-
     setInterval(window.renderizarTorreDeControle, 3000);
+})();
 </script>
-
-</body>
-</html>
