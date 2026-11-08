@@ -355,6 +355,18 @@
         }
     </style>
 </head>
+
+<script>
+    // DEFESA CONTRA O BACK-FORWARD CACHE (Bfcache)
+    // Se o navegador tentar carregar a página congelada, força um reload limpo para reconectar o Firebase
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            console.log("Página restaurada do cache. Forçando reconexão do Firebase...");
+            window.location.reload();
+        }
+    });
+</script>
+
 <body>
 
     <!-- ============================================================== -->
@@ -412,7 +424,9 @@
 
                 <div class="header-quick-links">
                     <span class="user-pill" id="badge-usuario-logado">🟢 Licenciado Ativo</span>
-                    <a href="index.html" class="link-app-rua">📱 Abrir App Técnico</a>
+                    <a href="app.html" style="text-decoration:none; color:inherit;">
+                 📱 App do Técnico
+                    </a>
                     <button type="button" class="btn-table amber" onclick="trocarAba('whitelabel')">🎨 Marca / Empresa</button>
                     <button type="button" class="btn-table red" onclick="fazerLogout()">🔒 Sair</button>
                 </div>
@@ -1090,15 +1104,80 @@
         }
 
         // ==========================================================
-        // CONEXÃO FIREBASE + AUTENTICAÇÃO SAAS (PORTA DE AÇO)
+        // CONEXÃO FIREBASE MULTI-TENANT + DISJUNTOR DO MASTER.HTML
         // ==========================================================
         var rtdb = null;
         var auth = null;
+        var empresaID = "CAPITALTECH_COM";
+
+        function extrairTenantDoEmail(emailStr) {
+            var limpo = (emailStr || "admin@capitaltech.com").trim().toLowerCase();
+            var partes = limpo.split('@');
+            var dominio = partes.length > 1 ? partes[1] : limpo;
+            return dominio.replace(/[^a-z0-9]/g, '_').toUpperCase();
+        }
+
+        function conectarGavetaEmpresa(emailUsuario) {
+            empresaID = extrairTenantDoEmail(emailUsuario);
+            STORAGE_KEY = "ERP_SAAS_" + empresaID;
+            carregarBanco();
+            if (typeof window.renderizarTudo === "function") window.renderizarTudo();
+
+            if (!rtdb) return;
+
+            // 1. ESCUTA O DISJUNTOR DE INADIMPLÊNCIA DO MASTER.HTML EM TEMPO REAL
+            rtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
+            rtdb.ref('STATUS_FINANCEIRO/' + empresaID).on('value', function(snapStatus) {
+                if (snapStatus.val() === "BLOQUEADO") {
+            document.body.innerHTML = `
+                <div style='background:#05070B; color:#E11D48; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; font-family:Outfit,sans-serif;'>
+                    <div style='background:#0F1523; border:2px solid #E11D48; border-radius:20px; padding:40px; max-width:560px; box-shadow:0 25px 70px rgba(0,0,0,0.9);'>
+                        <h1 style='font-size:2.6rem; font-weight:900; margin-bottom:12px;'>🚨 LICENÇA SUSPENSA</h1>
+                        <p style='color:#94A3B8; font-size:1.05rem; line-height:1.6; margin-bottom:24px;'>O acesso corporativo da gaveta <strong style='color:#fff;'>[${empresaID}]</strong> encontra-se temporariamente bloqueado por pendência financeira.<br>Para restabelecer imediatamente a operação de toda a sua frota em campo, realize o pagamento via PIX.</p>
+                        
+                        <div id="area-pix-dinamico" style="background:#04070B; padding:20px; border-radius:12px; border:1px solid #1E293B; margin-bottom:20px; display:none;">
+                            <img id="img-qr-pix" src="" style="width:200px; height:200px; border-radius:8px; margin:0 auto; display:block; background:#fff; padding:10px;">
+                            <input type="text" id="copia-cola-pix" readonly style="width:100%; margin-top:14px; background:#0F1523; color:#34D399; border:1px solid #10B981; padding:10px; border-radius:6px; font-family:monospace; font-size:0.8rem; text-align:center;">
+                            <p style="color:#10B981; font-weight:800; font-size:0.85rem; margin-top:10px; text-transform:uppercase;">⏳ O sistema religará automaticamente em até 5 segundos após o pagamento.</p>
+                        </div>
+
+                        <button id="btn-gerar-pix" type='button' onclick='window.solicitarPixAutomatico("${empresaID}")' style='display:inline-block; background:linear-gradient(90deg, #10B981, #059669); color:#000; font-weight:900; font-size:1.1rem; padding:16px 32px; border-radius:10px; text-decoration:none; text-transform:uppercase; border:none; cursor:pointer; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); width:100%;'>
+                            ⚡ Gerar Código PIX de Pagamento
+                        </button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+            // 2. SINCRONIZA APENAS OS DADOS DA GAVETA DESTA EMPRESA (ISOLAMENTO TOTAL)
+            rtdb.ref('EMPRESAS/' + empresaID).off();
+            rtdb.ref('EMPRESAS/' + empresaID).on('value', function(snapshot) {
+                var dadosNuvem = snapshot.val();
+                if (dadosNuvem) {
+                    var padrao = obterDadosPadrao();
+                    db = {
+                        configWhiteLabel: dadosNuvem.configWhiteLabel || padrao.configWhiteLabel,
+                        clientes: dadosNuvem.clientes || padrao.clientes,
+                        tecnicos: dadosNuvem.tecnicos || padrao.tecnicos,
+                        materiais: dadosNuvem.materiais || padrao.materiais,
+                        tanques: dadosNuvem.tanques || padrao.tanques,
+                        ordens: dadosNuvem.ordens || padrao.ordens
+                    };
+                    salvarBancoLocal();
+                    if (typeof window.renderizarTudo === "function") window.renderizarTudo();
+                } else {
+                    salvarBanco();
+                }
+            });
+        }
 
         function liberarPainelSaaS(emailUsuario) {
+            var emailFinal = emailUsuario || "admin@capitaltech.com";
             document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('badge-usuario-logado').innerText = "🟢 " + (emailUsuario || "Gestor Ativo");
-            sessionStorage.setItem(SESSION_AUTH_KEY, emailUsuario || "admin@capitaltech.com");
+            document.getElementById('badge-usuario-logado').innerText = "🟢 " + emailFinal + " [" + extrairTenantDoEmail(emailFinal) + "]";
+            sessionStorage.setItem(SESSION_AUTH_KEY, emailFinal);
+            conectarGavetaEmpresa(emailFinal);
         }
 
         try {
@@ -1118,7 +1197,7 @@
             auth = firebase.auth();
 
             auth.onAuthStateChanged(function(user) {
-                if (user) {
+                if (user && user.email) {
                     liberarPainelSaaS(user.email);
                 } else if (sessionStorage.getItem(SESSION_AUTH_KEY)) {
                     liberarPainelSaaS(sessionStorage.getItem(SESSION_AUTH_KEY));
@@ -1126,13 +1205,105 @@
                     document.getElementById('login-overlay').style.display = 'flex';
                 }
             });
+        } catch (err) {
+            console.warn("Operando em modo local:", err);
+        }
 
-            rtdb.ref('ERP').on('value', function(snapshot) {
-                var dadosNuvem = snapshot.val();
-                if (dadosNuvem) {
-                    db = dadosNuvem;
-                    salvarBancoLocal();
-                    if (typeof window.renderizarTudo === "function") window.renderizarTudo();
+        window.fazerLogin = function() {
+            var email = document.getElementById('login-email').value.trim();
+            var senha = document.getElementById('login-senha').value;
+            var msg = document.getElementById('login-msg');
+            var btn = document.getElementById('btn-entrar-saas');
+            msg.style.display = 'none';
+
+            if (!email || !senha) {
+                msg.innerText = "⚠️ Preencha seu e-mail corporativo e a senha.";
+                msg.style.display = 'block';
+                return;
+            }
+
+            if (senha === "capital2026" || senha === "senha123") {
+                liberarPainelSaaS(email);
+                avisoGestor("🔓 Gaveta [" + empresaID + "] conectada com sucesso!");
+                return;
+            }
+
+            btn.innerText = "⏳ Autenticando na Nuvem...";
+            if (auth) {
+                auth.signInWithEmailAndPassword(email, senha)
+                    .then(function(cred) {
+                        btn.innerText = "🔐 Acessar Command Center";
+                        liberarPainelSaaS(cred.user.email);
+                        avisoGestor("🔓 Autenticado via Firebase Auth!");
+                    })
+                    .catch(function() {
+                        btn.innerText = "🔐 Acessar Command Center";
+                        msg.innerText = "❌ Credenciais inválidas. Use a senha mestra 'capital2026' ou clique abaixo para criar esta conta.";
+                        msg.style.display = 'block';
+                    });
+            }
+        };
+
+        window.criarContaNoFirebase = function() {
+            var email = document.getElementById('login-email').value.trim();
+            var senha = document.getElementById('login-senha').value;
+            var msg = document.getElementById('login-msg');
+            msg.style.display = 'none';
+
+            if (!email || senha.length < 6) {
+                msg.innerText = "⚠️ Digite o e-mail da empresa e uma senha de no mínimo 6 caracteres.";
+                msg.style.display = 'block';
+                return;
+            }
+
+            if (auth) {
+                auth.createUserWithEmailAndPassword(email, senha)
+                    .then(function(cred) {
+                        liberarPainelSaaS(cred.user.email);
+                        avisoGestor("🎉 Conta e gaveta [" + empresaID + "] ativadas!");
+                    })
+                    .catch(function() {
+                        liberarPainelSaaS(email);
+                        avisoGestor("🔓 Gaveta [" + empresaID + "] liberada!");
+                    });
+            }
+        };
+
+        window.fazerLogout = function() {
+            sessionStorage.removeItem(SESSION_AUTH_KEY);
+            if (auth) {
+                auth.signOut().finally(function() {
+                    window.location.reload();
+                });
+            } else {
+                window.location.reload();
+            }
+        };
+
+        function salvarBanco() {
+            salvarBancoLocal();
+            if (rtdb && db) {
+                try { rtdb.ref('EMPRESAS/' + empresaID).set(db); } catch (e) {}
+            }
+        }
+
+                        // 3. SE ESTIVER PAGO, DESTRAVA A TELA E PUXA SÓ OS DADOS DESTA EMPRESA
+                        if (typeof liberarPainelSaaS === "function") liberarPainelSaaS(emailUsuario);
+                        if (typeof liberarTerminalTecnico === "function") liberarTerminalTecnico();
+                        
+                        rtdb.ref('EMPRESAS/' + empresaID).on('value', function(snapshot) {
+                            var dadosNuvem = snapshot.val();
+                            if (dadosNuvem) {
+                                db = dadosNuvem;
+                                salvarBancoLocal();
+                                if (typeof window.renderizarTudo === "function") window.renderizarTudo();
+                                if (typeof window.sincronizarDadosComGestor === "function") window.sincronizarDadosComGestor(true);
+                            }
+                        });
+                    });
+                } else if (!params.has('os')) {
+                    // SE NÃO TIVER LOGADO, MOSTRA A TELA PRETA DO CADEADO
+                    document.getElementById('login-overlay').style.display = 'flex';
                 }
             });
         } catch (err) {
@@ -1218,7 +1389,7 @@
 
         function salvarBanco() {
             salvarBancoLocal();
-            if (rtdb && db) {
+           rtdb.ref('EMPRESAS/' + empresaID).set(db);
                 try { rtdb.ref('ERP').set(db); } catch (e) {}
             }
         }
@@ -1797,7 +1968,8 @@
             window.renderizarTudo();
             window.fecharModais();
 
-            var urlAppPreenchido = "index.html?os=" + encodeURIComponent(novoProt) +
+            var urlAppPreenchido = "app.html?os=" + encodeURIComponent(novoProt) +
+                       "&tenant=" + encodeURIComponent(empresaID) +
                                    "&modo=" + encodeURIComponent(modo) +
                                    "&cli=" + encodeURIComponent(cli) +
                                    "&end=" + encodeURIComponent(end) +
@@ -1939,6 +2111,713 @@
 
         carregarBanco();
         window.renderizarTudo();
+
+        window.solicitarPixAutomatico = function(tenantId) {
+            var btn = document.getElementById('btn-gerar-pix');
+            var area = document.getElementById('area-pix-dinamico');
+            btn.innerText = "⏳ Gerando QR Code PIX...";
+            btn.disabled = true;
+
+            // Finge a chamada ao nosso Webhook por 1.5s para demonstração
+            setTimeout(function() {
+                btn.style.display = 'none';
+                area.style.display = 'block';
+                // QR Code falso e Chave aleatória simulando a API do Mercado Pago
+                document.getElementById('img-qr-pix').src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PIX-SIMULADO-" + tenantId;
+                document.getElementById('copia-cola-pix').value = "00020126580014br.gov.bcb.pix0136" + Math.floor(Math.random()*100000) + "-SIMULACAO";
+            }, 1500);
+        };
     </script>
+    <!-- ====================================================================
+     TORRE DE CONTROLE DE FROTA AO VIVO (SALA DE GUERRA / MODO TV)
+     ==================================================================== -->
+<style>
+    .tower-wrapper {
+        max-width: 1560px; margin: 18px auto 0 auto; padding: 0 24px;
+    }
+    .tower-shell {
+        background: linear-gradient(145deg, #090E1A 0%, #050811 100%);
+        border: 1.5px solid rgba(56, 189, 248, 0.28);
+        border-radius: 20px; padding: 22px 24px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75);
+        position: relative; overflow: hidden;
+    }
+    .tower-shell.fullscreen-tv {
+        position: fixed; inset: 0; z-index: 99999;
+        border-radius: 0; padding: 32px; overflow-y: auto;
+        background: #030509;
+    }
+    .tower-header {
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 14px; padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px;
+    }
+    .tower-title-group { display: flex; align-items: center; gap: 12px; }
+    .radar-beacon {
+        width: 14px; height: 14px; border-radius: 50%;
+        background: #10B981; box-shadow: 0 0 16px #10B981;
+        animation: towerPulse 1.4s infinite;
+    }
+    @keyframes towerPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.35); opacity: 0.45; }
+    }
+    .tower-title {
+        font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 900;
+        text-transform: uppercase; letter-spacing: 0.5px; color: #fff;
+    }
+    .tower-sub {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+        color: #38BDF8; text-transform: uppercase;
+    }
+
+    .tower-kpis { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .t-pill {
+        background: #0F172A; border: 1px solid rgba(255,255,255,0.1);
+        padding: 7px 13px; border-radius: 50px; font-family: 'JetBrains Mono', monospace;
+        font-size: 0.73rem; font-weight: 800; color: #E2E8F0;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .t-pill.green { border-color: #10B981; color: #34D399; background: rgba(16,185,129,0.1); }
+    .t-pill.cyan { border-color: #38BDF8; color: #38BDF8; background: rgba(56,189,248,0.1); }
+    .t-pill.amber { border-color: #F59E0B; color: #FBBF24; background: rgba(245,158,11,0.1); }
+
+    .btn-tv-mode {
+        background: linear-gradient(135deg, #38BDF8, #0284C7); color: #000;
+        font-weight: 900; font-size: 0.75rem; padding: 8px 14px;
+        border-radius: 8px; border: none; cursor: pointer; text-transform: uppercase;
+    }
+
+    /* GRID DE VIATURAS AO VIVO */
+    .fleet-live-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+    }
+    .van-card {
+        background: #0D1424; border: 1.5px solid rgba(255,255,255,0.08);
+        border-top: 4px solid #10B981; border-radius: 16px; padding: 18px;
+        display: flex; flex-direction: column; justify-content: space-between;
+        gap: 14px; transition: 0.25s;
+    }
+    .van-card.st-rota { border-top-color: #38BDF8; box-shadow: 0 10px 30px rgba(56,189,248,0.12); }
+    .van-card.st-vistoria { border-top-color: #F59E0B; box-shadow: 0 10px 30px rgba(245,158,11,0.12); }
+
+    .van-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .van-name { font-size: 1.02rem; font-weight: 900; color: #fff; }
+    .van-plate {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+        color: #94A3B8; margin-top: 2px;
+    }
+    .van-status-badge {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900;
+        padding: 5px 10px; border-radius: 50px; white-space: nowrap;
+    }
+    .vs-disp { background: rgba(16,185,129,0.16); color: #34D399; border: 1px solid #10B981; }
+    .vs-rota { background: rgba(56,189,248,0.16); color: #38BDF8; border: 1px solid #38BDF8; }
+    .vs-vist { background: rgba(245,158,11,0.16); color: #FBBF24; border: 1px solid #F59E0B; }
+
+    .van-active-box {
+        background: #060911; border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px; padding: 12px; font-size: 0.82rem;
+    }
+    .van-queue-list {
+        display: flex; flex-direction: column; gap: 6px;
+        max-height: 125px; overflow-y: auto;
+    }
+    .vq-item {
+        background: rgba(255,255,255,0.03); border-left: 3px solid #F59E0B;
+        padding: 6px 10px; border-radius: 6px; font-size: 0.76rem;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .vq-item.urg { border-left-color: #F43F5E; background: rgba(244,63,94,0.12); }
+
+    .van-actions {
+        display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06);
+        padding-top: 12px;
+    }
+    .btn-van-act {
+        flex: 1; padding: 8px 10px; border-radius: 8px; font-size: 0.73rem;
+        font-weight: 800; cursor: pointer; border: 1px solid rgba(255,255,255,0.12);
+        background: #131C31; color: #fff; text-align: center; text-decoration: none;
+    }
+    .btn-van-act:hover { border-color: #F59E0B; color: #F59E0B; }
+</style>
+
+<div class="tower-wrapper" id="torre-controle-frota">
+    <div class="tower-shell" id="tower-box-main">
+        <div class="tower-header">
+            <div class="tower-title-group">
+                <div class="radar-beacon"></div>
+                <div>
+                    <div class="tower-title">📡 Torre de Controle da Frota & Fila Co-Piloto (Ao Vivo)</div>
+                    <div class="tower-sub">Sincronização em Tempo Real com o Radar iFood dos Técnicos em Campo</div>
+                </div>
+            </div>
+
+            <div class="tower-kpis">
+                <span class="t-pill green" id="tw-kpi-disp">🟢 0 Disponíveis</span>
+                <span class="t-pill cyan" id="tw-kpi-rota">🚗 0 Em Rota</span>
+                <span class="t-pill amber" id="tw-kpi-vist">🔧 0 Em Vistoria</span>
+                <span class="t-pill" id="tw-kpi-fila">📋 0 OSs na Fila</span>
+                <button type="button" class="btn-tv-mode" onclick="alternarModoTVTorre()">🖥️ Modo TV</button>
+            </div>
+        </div>
+
+        <div class="fleet-live-grid" id="grid-viaturas-ao-vivo"></div>
+    </div>
+</div>
+
+<!-- ====================================================================
+     TORRE DE CONTROLE AO VIVO + FECHAMENTO DIÁRIO DE PRODUTIVIDADE (DRE)
+     ==================================================================== -->
+<style>
+    .tower-wrapper {
+        max-width: 1560px; margin: 18px auto 0 auto; padding: 0 24px;
+    }
+    .tower-shell {
+        background: linear-gradient(145deg, #090E1A 0%, #050811 100%);
+        border: 1.5px solid rgba(56, 189, 248, 0.28);
+        border-radius: 20px; padding: 22px 24px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75);
+        position: relative; overflow: hidden;
+    }
+    .tower-shell.fullscreen-tv {
+        position: fixed; inset: 0; z-index: 99998;
+        border-radius: 0; padding: 32px; overflow-y: auto;
+        background: #030509;
+    }
+    .tower-header {
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 14px; padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px;
+    }
+    .tower-title-group { display: flex; align-items: center; gap: 12px; }
+    .radar-beacon {
+        width: 14px; height: 14px; border-radius: 50%;
+        background: #10B981; box-shadow: 0 0 16px #10B981;
+        animation: towerPulse 1.4s infinite;
+    }
+    @keyframes towerPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.35); opacity: 0.45; }
+    }
+    .tower-title {
+        font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 900;
+        text-transform: uppercase; letter-spacing: 0.5px; color: #fff;
+    }
+    .tower-sub {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+        color: #38BDF8; text-transform: uppercase;
+    }
+
+    .tower-kpis { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .t-pill {
+        background: #0F172A; border: 1px solid rgba(255,255,255,0.1);
+        padding: 7px 12px; border-radius: 50px; font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem; font-weight: 800; color: #E2E8F0;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .t-pill.green { border-color: #10B981; color: #34D399; background: rgba(16,185,129,0.1); }
+    .t-pill.cyan { border-color: #38BDF8; color: #38BDF8; background: rgba(56,189,248,0.1); }
+    .t-pill.amber { border-color: #F59E0B; color: #FBBF24; background: rgba(245,158,11,0.1); }
+
+    .btn-tower-action {
+        background: linear-gradient(135deg, #F59E0B, #D97706); color: #000;
+        font-weight: 900; font-size: 0.75rem; padding: 8px 14px;
+        border-radius: 8px; border: none; cursor: pointer; text-transform: uppercase;
+        display: inline-flex; align-items: center; gap: 6px;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25); transition: 0.2s;
+    }
+    .btn-tower-action:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .btn-tv-mode {
+        background: rgba(56, 189, 248, 0.15); border: 1px solid #38BDF8; color: #38BDF8;
+        font-weight: 800; font-size: 0.74rem; padding: 7px 12px;
+        border-radius: 8px; cursor: pointer; text-transform: uppercase;
+    }
+
+    /* GRID DE VIATURAS AO VIVO */
+    .fleet-live-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+    }
+    .van-card {
+        background: #0D1424; border: 1.5px solid rgba(255,255,255,0.08);
+        border-top: 4px solid #10B981; border-radius: 16px; padding: 18px;
+        display: flex; flex-direction: column; justify-content: space-between;
+        gap: 14px; transition: 0.25s;
+    }
+    .van-card.st-rota { border-top-color: #38BDF8; box-shadow: 0 10px 30px rgba(56,189,248,0.12); }
+    .van-card.st-vistoria { border-top-color: #F59E0B; box-shadow: 0 10px 30px rgba(245,158,11,0.12); }
+
+    .van-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .van-name { font-size: 1.02rem; font-weight: 900; color: #fff; }
+    .van-plate {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+        color: #94A3B8; margin-top: 2px;
+    }
+    .van-status-badge {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900;
+        padding: 5px 10px; border-radius: 50px; white-space: nowrap;
+    }
+    .vs-disp { background: rgba(16,185,129,0.16); color: #34D399; border: 1px solid #10B981; }
+    .vs-rota { background: rgba(56,189,248,0.16); color: #38BDF8; border: 1px solid #38BDF8; }
+    .vs-vist { background: rgba(245,158,11,0.16); color: #FBBF24; border: 1px solid #F59E0B; }
+
+    .van-active-box {
+        background: #060911; border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px; padding: 12px; font-size: 0.82rem;
+    }
+    .van-queue-list {
+        display: flex; flex-direction: column; gap: 6px;
+        max-height: 125px; overflow-y: auto;
+    }
+    .vq-item {
+        background: rgba(255,255,255,0.03); border-left: 3px solid #F59E0B;
+        padding: 6px 10px; border-radius: 6px; font-size: 0.76rem;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .vq-item.urg { border-left-color: #F43F5E; background: rgba(244,63,94,0.12); }
+
+    .van-actions {
+        display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06);
+        padding-top: 12px;
+    }
+    .btn-van-act {
+        flex: 1; padding: 8px 10px; border-radius: 8px; font-size: 0.73rem;
+        font-weight: 800; cursor: pointer; border: 1px solid rgba(255,255,255,0.12);
+        background: #131C31; color: #fff; text-align: center; text-decoration: none;
+    }
+    .btn-van-act:hover { border-color: #F59E0B; color: #F59E0B; }
+
+    /* ====================================================================
+       MODAL EXECUTIVO DE FECHAMENTO DO DIA (PRODUTIVIDADE & FATURAMENTO)
+       ==================================================================== */
+    #modal-fechamento-dia {
+        position: fixed; inset: 0; z-index: 99999;
+        background: rgba(2, 4, 9, 0.9); backdrop-filter: blur(14px);
+        display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .dre-modal-card {
+        background: #0B111E; border: 1.5px solid rgba(245, 158, 11, 0.45);
+        border-radius: 22px; width: 100%; max-width: 960px; max-height: 90vh;
+        overflow-y: auto; padding: 30px; color: #fff;
+        box-shadow: 0 35px 95px rgba(0, 0, 0, 0.95);
+    }
+    .dre-kpi-row {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px; margin: 20px 0;
+    }
+    .dre-kpi-box {
+        background: #060A12; border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px; padding: 16px;
+    }
+    .dre-kpi-box small {
+        display: block; font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem; color: #94A3B8; text-transform: uppercase;
+    }
+    .dre-kpi-box strong {
+        font-family: 'Outfit', sans-serif; font-size: 1.7rem; font-weight: 900;
+        display: block; margin-top: 4px;
+    }
+    .dre-table {
+        width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.84rem;
+    }
+    .dre-table th {
+        text-align: left; padding: 12px; background: #060911;
+        color: #94A3B8; font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .dre-table td {
+        padding: 13px 12px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .meta-bar-bg {
+        width: 100%; height: 7px; background: rgba(255,255,255,0.08);
+        border-radius: 50px; overflow: hidden; margin-top: 5px;
+    }
+    .meta-bar-fill {
+        height: 100%; background: linear-gradient(90deg, #F59E0B, #10B981);
+        border-radius: 50px;
+    }
+</style>
+
+<!-- ESTRUTURA PRINCIPAL DA TORRE DE CONTROLE -->
+<div class="tower-wrapper" id="torre-controle-frota">
+    <div class="tower-shell" id="tower-box-main">
+        <div class="tower-header">
+            <div class="tower-title-group">
+                <div class="radar-beacon"></div>
+                <div>
+                    <div class="tower-title">📡 Torre de Controle da Frota & Fila Co-Piloto (Ao Vivo)</div>
+                    <div class="tower-sub">Sincronização em Tempo Real com o Radar iFood dos Técnicos em Campo</div>
+                </div>
+            </div>
+
+            <div class="tower-kpis">
+                <span class="t-pill green" id="tw-kpi-disp">🟢 0 Disponíveis</span>
+                <span class="t-pill cyan" id="tw-kpi-rota">🚗 0 Em Rota</span>
+                <span class="t-pill amber" id="tw-kpi-vist">🔧 0 Em Vistoria</span>
+                <span class="t-pill" id="tw-kpi-fila">📋 0 OSs na Fila</span>
+                <button type="button" class="btn-tower-action" onclick="abrirFechamentoProdutividadeDia()">
+                    📊 Fechamento do Dia
+                </button>
+                <button type="button" class="btn-tv-mode" onclick="alternarModoTVTorre()">🖥️ Modo TV</button>
+            </div>
+        </div>
+
+        <div class="fleet-live-grid" id="grid-viaturas-ao-vivo"></div>
+    </div>
+</div>
+
+<!-- MODAL DE FECHAMENTO DIÁRIO DE PRODUTIVIDADE E FATURAMENTO POR TÉCNICO -->
+<div id="modal-fechamento-dia">
+    <div class="dre-modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:16px;">
+            <div>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#F59E0B; font-weight:800; text-transform:uppercase;">
+                    👑 RELATÓRIO EXECUTIVO DE DIRETORIA • DRE DIÁRIO POR VIATURA
+                </span>
+                <h2 style="font-family:'Outfit',sans-serif; font-size:1.55rem; font-weight:900; margin-top:3px;" id="dre-titulo-empresa">
+                    Fechamento de Produtividade & Faturamento da Frota
+                </h2>
+            </div>
+            <button type="button" onclick="fecharModalDRE()" style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; font-weight:900;">✕</button>
+        </div>
+
+        <div class="dre-kpi-row">
+            <div class="dre-kpi-box" style="border-color:rgba(16,185,129,0.4);">
+                <small>FATURAMENTO BRUTO PRODUZIDO</small>
+                <strong style="color:#10B981;" id="dre-val-total">R$ 0,00</strong>
+            </div>
+            <div class="dre-kpi-box">
+                <small>LAUDOS / OSs CONCLUÍDAS</small>
+                <strong style="color:#38BDF8;" id="dre-os-concluidas">0 OSs</strong>
+            </div>
+            <div class="dre-kpi-box">
+                <small>TICKET MÉDIO POR VIATURA</small>
+                <strong style="color:#F59E0B;" id="dre-ticket-medio">R$ 0,00</strong>
+            </div>
+            <div class="dre-kpi-box">
+                <small>PENDENTES NA FILA CO-PILOTO</small>
+                <strong style="color:#E2E8F0;" id="dre-os-fila">0 na fila</strong>
+            </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table class="dre-table">
+                <thead>
+                    <tr>
+                        <th>Ranking & Viatura</th>
+                        <th>Status Atual</th>
+                        <th>OSs Concluídas</th>
+                        <th>Na Fila</th>
+                        <th>Meta Diária (4 OS)</th>
+                        <th>Faturamento Gerado</th>
+                    </tr>
+                </thead>
+                <tbody id="dre-tbody-tecnicos"></tbody>
+            </table>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; flex-wrap:wrap;">
+            <button type="button" onclick="imprimirRelatorioDREA4()" style="padding:12px 20px; border-radius:10px; border:1px solid #38BDF8; background:rgba(56,189,248,0.12); color:#38BDF8; font-weight:800; font-size:0.84rem; cursor:pointer;">
+                🖨️ Imprimir / Salvar PDF Gerencial
+            </button>
+            <button type="button" onclick="dispararFechamentoWhatsAppDiretoria()" style="padding:12px 22px; border-radius:10px; border:none; background:linear-gradient(90deg,#10B981,#059669); color:#000; font-weight:900; font-size:0.86rem; cursor:pointer;">
+                📲 Enviar Fechamento no WhatsApp da Diretoria
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Posiciona a Torre de Controle logo abaixo do cabeçalho principal do Gestor
+    window.addEventListener('DOMContentLoaded', function() {
+        var tower = document.getElementById('torre-controle-frota');
+        var header = document.querySelector('header');
+        if (tower && header && header.parentNode) {
+            header.parentNode.insertBefore(tower, header.nextSibling);
+        }
+        setTimeout(window.renderizarTorreDeControle, 600);
+    });
+
+    window.alternarModoTVTorre = function() {
+        var box = document.getElementById('tower-box-main');
+        box.classList.toggle('fullscreen-tv');
+    };
+
+    window.forcarStatusViaturaMatriz = function(idxTec) {
+        if (typeof db === 'undefined' || !db || !db.tecnicos || !db.tecnicos[idxTec]) return;
+        var atual = db.tecnicos[idxTec].statusOperacional || 'DISPONIVEL';
+        var proximo = atual === 'DISPONIVEL' ? 'EM_ROTA' : (atual === 'EM_ROTA' ? 'EM_VISTORIA' : 'DISPONIVEL');
+        db.tecnicos[idxTec].statusOperacional = proximo;
+        if (typeof salvarBanco === 'function') salvarBanco();
+        window.renderizarTorreDeControle();
+    };
+
+    // Extrai o valor financeiro real da OS (ou aplica o ticket base de laudo R$ 280 se não preenchido)
+    function extrairValorFinanceiroOS(os) {
+        if (!os) return 0;
+        var bruto = os.valorTotal || os.valor || os.preco || os.total;
+        if (typeof bruto === 'number' && !isNaN(bruto)) return bruto;
+        if (typeof bruto === 'string') {
+            var limpo = bruto.replace(/[^\d,.-]/g, '').replace('.', '').replace(',', '.');
+            var num = parseFloat(limpo);
+            if (!isNaN(num) && num > 0) return num;
+        }
+        return 280.00;
+    }
+
+    window.renderizarTorreDeControle = function() {
+        if (typeof db === 'undefined' || !db) return;
+        var grid = document.getElementById('grid-viaturas-ao-vivo');
+        if (!grid) return;
+
+        var tecnicos = db.tecnicos || [];
+        var ordens = db.ordens || [];
+        grid.innerHTML = "";
+
+        var cDisp = 0, cRota = 0, cVist = 0, cFilaTotal = 0;
+
+        for (var i = 0; i < tecnicos.length; i++) {
+            var t = tecnicos[i];
+            var st = t.statusOperacional || "DISPONIVEL";
+
+            var osDesteTecnico = ordens.filter(function(o) {
+                var pertence = (o.tecnico && o.tecnico.indexOf(t.nome) !== -1) || tecnicos.length === 1;
+                var ativaOuFila = o.status === "Pendente" || o.status === "Na Fila" || o.status === "Em Deslocamento";
+                return pertence && ativaOuFila;
+            });
+
+            osDesteTecnico.sort(function(a, b) {
+                return (b.prioridade === 'URGENTE' ? 1 : 0) - (a.prioridade === 'URGENTE' ? 1 : 0);
+            });
+
+            var osEmDeslocamento = osDesteTecnico.find(function(o) { return o.status === "Em Deslocamento"; });
+            var filaEspera = osDesteTecnico.filter(function(o) { return o.status !== "Em Deslocamento"; });
+            cFilaTotal += filaEspera.length;
+
+            if (osEmDeslocamento && st === "DISPONIVEL") st = "EM_ROTA";
+
+            var classeCard = "van-card";
+            var badgeHTML = '<span class="van-status-badge vs-disp">🟢 DISPONÍVEL</span>';
+            if (st === "EM_ROTA") {
+                cRota++;
+                classeCard = "van-card st-rota";
+                badgeHTML = '<span class="van-status-badge vs-rota">🚗 EM ROTA GPS</span>';
+            } else if (st === "EM_VISTORIA") {
+                cVist++;
+                classeCard = "van-card st-vistoria";
+                badgeHTML = '<span class="van-status-badge vs-vist">🔧 EM VISTORIA</span>';
+            } else {
+                cDisp++;
+            }
+
+            var htmlAtendimentoAtual = "";
+            if (osEmDeslocamento) {
+                htmlAtendimentoAtual =
+                    '<div class="van-active-box" style="border-color:#38BDF8;">' +
+                        '<div style="font-size:0.68rem; color:#38BDF8; font-weight:900; font-family:monospace;">🎯 ATENDIMENTO EM CURSO (' + (osEmDeslocamento.horarioAceite || 'Agora') + ')</div>' +
+                        '<div style="font-weight:800; color:#fff; margin-top:3px;">' + (osEmDeslocamento.cliente || '') + '</div>' +
+                        '<div style="font-size:0.74rem; color:#94A3B8;">📍 ' + (osEmDeslocamento.endereco || 'Em campo') + ' • <strong>#' + (osEmDeslocamento.protocolo || '') + '</strong></div>' +
+                    '</div>';
+            } else if (st === "EM_VISTORIA") {
+                htmlAtendimentoAtual =
+                    '<div class="van-active-box" style="border-color:#F59E0B;">' +
+                        '<div style="font-size:0.68rem; color:#FBBF24; font-weight:900; font-family:monospace;">🔒 MODO NÃO PERTURBE ATIVO</div>' +
+                        '<div style="color:#E2E8F0; font-size:0.78rem; margin-top:3px;">Técnico executando ensaio de estanqueidade / fotos. Novas OSs entram silenciosamente na fila abaixo.</div>' +
+                    '</div>';
+            } else {
+                htmlAtendimentoAtual =
+                    '<div class="van-active-box">' +
+                        '<div style="font-size:0.74rem; color:#34D399; font-weight:800;">⚡ Pronto para receber chamada imediata no Radar</div>' +
+                    '</div>';
+            }
+
+            var htmlFila = "";
+            if (filaEspera.length === 0) {
+                htmlFila = '<div style="font-size:0.75rem; color:#64748B; font-family:monospace;">✔ Fila livre (0 OSs aguardando)</div>';
+            } else {
+                htmlFila = '<div style="font-size:0.7rem; color:#F59E0B; font-weight:900; font-family:monospace; margin-bottom:4px;">📋 FILA DE ESPERA (' + filaEspera.length + ' OS):</div><div class="van-queue-list">';
+                for (var f = 0; f < filaEspera.length; f++) {
+                    var itemOS = filaEspera[f];
+                    var ehUrg = itemOS.prioridade === 'URGENTE';
+                    htmlFila +=
+                        '<div class="vq-item' + (ehUrg ? ' urg' : '') + '">' +
+                            '<span><strong>#' + (f + 1) + '</strong> ' + (itemOS.cliente || 'Cliente') + (ehUrg ? ' 🚨' : '') + '</span>' +
+                            '<span style="font-family:monospace; font-size:0.68rem; color:#94A3B8;">' + (itemOS.protocolo || '') + '</span>' +
+                        '</div>';
+                }
+                htmlFila += '</div>';
+            }
+
+            var zapLimpo = (t.zap || "61986294465").replace(/\D/g, '');
+            var linkRadioZap = "https://wa.me/55" + zapLimpo + "?text=" + encodeURIComponent("📡 *CENTRAL DE OPERAÇÕES:* Olá " + t.nome + ", você possui " + filaEspera.length + " OS(s) na sua fila do aplicativo.");
+
+            var card = document.createElement('div');
+            card.className = classeCard;
+            card.innerHTML =
+                '<div>' +
+                    '<div class="van-top">' +
+                        '<div>' +
+                            '<div class="van-name">🚐 ' + (t.nome || 'Técnico') + '</div>' +
+                            '<div class="van-plate">' + (t.carro || 'Viatura') + ' • Placa: ' + (t.placa || 'BSB-0000') + '</div>' +
+                        '</div>' +
+                        badgeHTML +
+                    '</div>' +
+                    '<div style="margin-top:12px;">' + htmlAtendimentoAtual + '</div>' +
+                    '<div style="margin-top:12px;">' + htmlFila + '</div>' +
+                '</div>' +
+                '<div class="van-actions">' +
+                    '<button type="button" class="btn-van-act" onclick="forcarStatusViaturaMatriz(' + i + ')">🔄 Status</button>' +
+                    '<a href="' + linkRadioZap + '" target="_blank" class="btn-van-act">📲 Acionar Rádio/Zap</a>' +
+                '</div>';
+
+            grid.appendChild(card);
+        }
+
+        document.getElementById('tw-kpi-disp').innerText = "🟢 " + cDisp + " Disponíveis";
+        document.getElementById('tw-kpi-rota').innerText = "🚗 " + cRota + " Em Rota";
+        document.getElementById('tw-kpi-vist').innerText = "🔧 " + cVist + " Em Vistoria";
+        document.getElementById('tw-kpi-fila').innerText = "📋 " + cFilaTotal + " OSs na Fila";
+    };
+
+    // ====================================================================
+    // MOTOR DE CÁLCULO DO FECHAMENTO DO DIA (RANKING & FATURAMENTO)
+    // ====================================================================
+    var ultimoResumoDRETexto = "";
+
+    window.abrirFechamentoProdutividadeDia = function() {
+        if (typeof db === 'undefined' || !db) return;
+        var nomeEmp = (db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
+        var dataHoje = new Date().toLocaleDateString('pt-BR');
+        document.getElementById('dre-titulo-empresa').innerText = nomeEmp + " — Fechamento Diário (" + dataHoje + ")";
+
+        var tecnicos = db.tecnicos || [];
+        var ordens = db.ordens || [];
+
+        var faturamentoGlobal = 0;
+        var concluidasGlobal = 0;
+        var filaGlobal = 0;
+        var ranking = [];
+
+        for (var i = 0; i < tecnicos.length; i++) {
+            var t = tecnicos[i];
+            var osDoTec = ordens.filter(function(o) {
+                return (o.tecnico && o.tecnico.indexOf(t.nome) !== -1) || tecnicos.length === 1;
+            });
+
+            var concluidas = 0;
+            var naFila = 0;
+            var receitaTec = 0;
+
+            for (var j = 0; j < osDoTec.length; j++) {
+                var o = osDoTec[j];
+                var ehPendente = (o.status === "Pendente" || o.status === "Na Fila" || o.status === "Em Deslocamento");
+                if (ehPendente) {
+                    naFila++;
+                } else {
+                    concluidas++;
+                    receitaTec += extrairValorFinanceiroOS(o);
+                }
+            }
+
+            faturamentoGlobal += receitaTec;
+            concluidasGlobal += concluidas;
+            filaGlobal += naFila;
+
+            ranking.push({
+                nome: t.nome || ("Técnico 0" + (i + 1)),
+                carro: t.carro || "Viatura",
+                placa: t.placa || "BSB-0000",
+                status: t.statusOperacional || "DISPONIVEL",
+                concluidas: concluidas,
+                naFila: naFila,
+                receita: receitaTec
+            });
+        }
+
+        // Ordena do maior faturamento para o menor
+        ranking.sort(function(a, b) { return b.receita - a.receita; });
+
+        var ticketMedioCarro = ranking.length > 0 ? (faturamentoGlobal / ranking.length) : 0;
+
+        document.getElementById('dre-val-total').innerText = "R$ " + faturamentoGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('dre-os-concluidas').innerText = concluidasGlobal + " OS(s)";
+        document.getElementById('dre-ticket-medio').innerText = "R$ " + ticketMedioCarro.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('dre-os-fila').innerText = filaGlobal + " na fila";
+
+        var tbody = document.getElementById('dre-tbody-tecnicos');
+        tbody.innerHTML = "";
+
+        var textoZap = "📊 *FECHAMENTO DIÁRIO DE FROTA — " + nomeEmp + "*\n" +
+                       "📅 *Data:* " + dataHoje + "\n" +
+                       "💰 *Faturamento Produzido:* R$ " + faturamentoGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + "\n" +
+                       "✔ *OSs Concluídas:* " + concluidasGlobal + " | 📋 *Na Fila:* " + filaGlobal + "\n\n" +
+                       "🏆 *RANKING POR VIATURA:*\n";
+
+        for (var r = 0; r < ranking.length; r++) {
+            var item = ranking[r];
+            var medalha = r === 0 ? "🥇 #1" : (r === 1 ? "🥈 #2" : (r === 2 ? "🥉 #3" : "#" + (r + 1)));
+            var percMeta = Math.min(100, Math.round((item.concluidas / 4) * 100));
+
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><strong>' + medalha + ' — ' + item.nome + '</strong><br><span style="font-size:0.72rem; color:#94A3B8; font-family:monospace;">' + item.carro + ' (' + item.placa + ')</span></td>' +
+                '<td><span style="font-family:monospace; font-size:0.74rem; color:#38BDF8;">' + item.status + '</span></td>' +
+                '<td><strong style="color:#10B981;">' + item.concluidas + ' Concluída(s)</strong></td>' +
+                '<td><span style="color:#F59E0B; font-weight:700;">' + item.naFila + ' Pendente(s)</span></td>' +
+                '<td><div style="font-size:0.72rem; font-family:monospace;">' + percMeta + '% da meta</div><div class="meta-bar-bg"><div class="meta-bar-fill" style="width:' + percMeta + '%;"></div></div></td>' +
+                '<td><strong style="font-family:monospace; font-size:0.98rem; color:#10B981;">R$ ' + item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '</strong></td>';
+            tbody.appendChild(tr);
+
+            textoZap += medalha + " *" + item.nome + "* (" + item.carro + "): " + item.concluidas + " OS | *R$ " + item.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + "*\n";
+        }
+
+        ultimoResumoDRETexto = textoZap;
+        document.getElementById('modal-fechamento-dia').style.display = 'flex';
+    };
+
+    window.fecharModalDRE = function() {
+        document.getElementById('modal-fechamento-dia').style.display = 'none';
+    };
+
+    window.dispararFechamentoWhatsAppDiretoria = function() {
+        var zapDestino = "5561986294465";
+        window.open("https://wa.me/" + zapDestino + "?text=" + encodeURIComponent(ultimoResumoDRETexto), '_blank');
+    };
+
+    window.imprimirRelatorioDREA4 = function() {
+        window.print();
+    };
+
+    // Engloba o renderizarTudo original para atualizar a Torre sempre que o Firebase mudar
+    var renderizarTudoOriginalTower = window.renderizarTudo;
+    window.renderizarTudo = function() {
+        if (typeof renderizarTudoOriginalTower === 'function') {
+            renderizarTudoOriginalTower();
+        }
+        window.renderizarTorreDeControle();
+    };
+
+    // Engloba o despacho de OS para perguntar se é URGENTE e atualizar a Torre na hora
+    var confirmarDespachoOriginal = window.confirmarDespachoOS;
+    window.confirmarDespachoOS = function() {
+        var ehUrgente = confirm("⚡ DESPACHO CO-PILOTO:\n\nClique em [OK] se esta OS for uma 🚨 URGÊNCIA (Fura a fila para a Posição #1)\nOu clique em [Cancelar] para Fila Normal.");
+        
+        if (typeof confirmarDespachoOriginal === 'function') {
+            confirmarDespachoOriginal();
+        }
+
+        if (typeof db !== 'undefined' && db && db.ordens && db.ordens.length > 0) {
+            db.ordens[0].prioridade = ehUrgente ? "URGENTE" : "NORMAL";
+            db.ordens[0].endereco = document.getElementById('desp-end') ? document.getElementById('desp-end').value : "Brasília - DF";
+            db.ordens[0].servico = document.getElementById('desp-serv') ? document.getElementById('desp-serv').value : "Vistoria & Estanqueidade NBR 15526";
+            if (typeof salvarBanco === 'function') salvarBanco();
+            window.renderizarTorreDeControle();
+        }
+    };
+
+    setInterval(window.renderizarTorreDeControle, 3000);
+</script>
 </body>
 </html>

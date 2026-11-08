@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Capital Tech Holding | CEO Command Center — Gestão SaaS, Faturamento & Disjuntor Global</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- MOTORES FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #030509;
+            --panel: #0B111E;
+            --card: #121A2D;
+            --gold: #F59E0B;
+            --gold-glow: rgba(245, 158, 11, 0.35);
+            --cyan: #38BDF8;
+            --cyan-glow: rgba(56, 189, 248, 0.3);
+            --green: #10B981;
+            --green-glow: rgba(16, 185, 129, 0.3);
+            --red: #E11D48;
+            --red-glow: rgba(225, 29, 72, 0.35);
+            --text: #F8FAFC;
+            --muted: #94A3B8;
+            --border: rgba(255, 255, 255, 0.09);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        html, body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+        /* TELA DE BLOQUEIO DO CEO (PIN MASTER) */
+        #ceo-lock-overlay {
+            position: fixed; inset: 0; z-index: 99999;
+            background: radial-gradient(circle at top, #0F172A 0%, #020408 100%);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .lock-box {
+            background: var(--panel); border: 2px solid var(--gold);
+            border-radius: 20px; padding: 38px 30px; width: 100%; max-width: 420px;
+            text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,0.95);
+        }
+        .lock-badge {
+            width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 16px auto;
+            background: linear-gradient(135deg, var(--gold), #D97706);
+            color: #000; font-weight: 900; font-size: 2rem;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px var(--gold-glow);
+        }
+
+        /* TOPBAR EXECUTIVA */
+        .master-header {
+            background: rgba(11, 17, 30, 0.96); backdrop-filter: blur(16px);
+            border-bottom: 2px solid var(--gold); padding: 14px 28px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; gap: 14px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.75);
+        }
+        .brand-row { display: flex; align-items: center; gap: 14px; }
+        .brand-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--gold), #B45309);
+            color: #000; font-weight: 900; font-size: 1.3rem;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+        .brand-title { font-size: 1.25rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+        .brand-title span { color: var(--gold); }
+        .brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; }
+
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .container { max-width: 1560px; margin: 0 auto; padding: 26px 28px; }
+
+        /* KPIS FINANCEIROS DO SAAS */
+        .kpi-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 16px; margin-bottom: 26px;
+        }
+        .kpi-card {
+            background: var(--panel); border: 1px solid var(--border);
+            border-top: 3px solid var(--gold); border-radius: 16px; padding: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+        }
+        .kpi-card.green { border-top-color: var(--green); }
+        .kpi-card.cyan { border-top-color: var(--cyan); }
+        .kpi-card.red { border-top-color: var(--red); }
+        .kpi-label { font-size: 0.73rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 1.95rem; font-weight: 900; color: #fff; margin: 8px 0 4px 0; }
+        .kpi-foot { font-size: 0.76rem; color: #34D399; font-weight: 600; }
+
+        /* PAINÉIS E FORMULÁRIOS */
+        .panel-box {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 18px; padding: 24px; margin-bottom: 26px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+        }
+        .panel-head {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 20px;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .panel-title { font-size: 1.08rem; font-weight: 900; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .panel-title span { color: var(--gold); font-family: 'JetBrains Mono', monospace; }
+
+        .form-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 14px; }
+        .form-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-bottom: 14px; }
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        .field label { font-size: 0.72rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+        .input-std, .select-std {
+            background: var(--card); border: 1px solid var(--border); color: #fff;
+            padding: 11px 13px; border-radius: 9px; font-size: 0.88rem; outline: none; width: 100%;
+        }
+        .input-std:focus, .select-std:focus { border-color: var(--gold); box-shadow: 0 0 12px rgba(245, 158, 11, 0.2); }
+
+        /* BOTÕES INTELIGENTES */
+        .btn {
+            padding: 11px 16px; border-radius: 9px; font-weight: 800; font-size: 0.82rem;
+            cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center;
+            gap: 7px; transition: 0.2s; text-decoration: none;
+        }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+        .btn-gold { background: linear-gradient(90deg, var(--gold), #D97706); color: #000; box-shadow: 0 4px 15px var(--gold-glow); }
+        .btn-green { background: linear-gradient(90deg, var(--green), #059669); color: #000; }
+        .btn-red { background: linear-gradient(90deg, var(--red), #BE123C); color: #fff; }
+        .btn-cyan { background: linear-gradient(90deg, var(--cyan), #0284C7); color: #000; }
+        .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--text); }
+
+        .btn-sm {
+            padding: 6px 10px; border-radius: 6px; font-size: 0.73rem; font-weight: 700;
+            cursor: pointer; border: 1px solid var(--border); background: var(--card); color: #fff;
+            transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn-sm:hover { border-color: var(--gold); color: var(--gold); }
+        .btn-sm.wa { background: rgba(16, 185, 129, 0.14); border-color: var(--green); color: #34D399; }
+        .btn-sm.wa:hover { background: var(--green); color: #000; }
+        .btn-sm.warn { background: rgba(245, 158, 11, 0.14); border-color: var(--gold); color: #FBBF24; }
+        .btn-sm.warn:hover { background: var(--gold); color: #000; }
+        .btn-sm.danger { background: rgba(225, 29, 72, 0.15); border-color: var(--red); color: #fda4af; }
+        .btn-sm.danger:hover { background: var(--red); color: #fff; }
+
+        /* TABELA MASTER DE EMPRESAS LICENCIADAS */
+        .table-wrap { width: 100%; overflow-x: auto; }
+        .master-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 1150px; text-align: left; }
+        .master-table th {
+            background: #060911; color: var(--cyan); font-size: 0.71rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.5px; padding: 13px 14px; border-bottom: 1px solid var(--border);
+        }
+        .master-table td { padding: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .master-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .tenant-badge {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800;
+            background: rgba(56, 189, 248, 0.12); border: 1px solid var(--cyan); color: var(--cyan);
+            padding: 3px 8px; border-radius: 6px; display: inline-block;
+        }
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+            border-radius: 50px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800;
+        }
+        .status-active { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid var(--green); }
+        .status-blocked { background: rgba(225, 29, 72, 0.18); color: #fda4af; border: 1px solid var(--red); }
+
+        .wa-actions-grid { display: flex; flex-wrap: wrap; gap: 5px; max-width: 290px; }
+
+        #toast-master {
+            position: fixed; bottom: 22px; right: 22px; z-index: 9999;
+            background: var(--green); color: #000; font-weight: 900; padding: 13px 22px;
+            border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,0.7); display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 16px 14px; }
+            .master-header { padding: 12px 14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================== -->
+    <!-- PORTA DE AÇO EXCLUSIVA DO CEO (HABNER / CAPITAL TECH)          -->
+    <!-- ============================================================== -->
+    <div id="ceo-lock-overlay">
+        <div class="lock-box">
+            <div class="lock-badge">👑</div>
+            <h2 style="font-size:1.45rem; font-weight:900; text-transform:uppercase; margin-bottom:4px;">CEO COMMAND CENTER</h2>
+            <p style="font-size:0.76rem; color:var(--cyan); font-family:'JetBrains Mono',monospace; margin-bottom:22px;">ACESSO RESTRITO • DIRETORIA CAPITAL TECH SaaS</p>
+            
+            <div class="field" style="text-align:left; margin-bottom:14px;">
+                <label>Chave Mestra do Proprietário (CEO)</label>
+                <input type="password" id="ceo-pin" class="input-std" placeholder="••••••••" onkeydown="if(event.key==='Enter') destrancarPainelCEO()">
+            </div>
+            <button type="button" class="btn btn-gold" style="width:100%; padding:14px;" onclick="destrancarPainelCEO()">🔓 Destrancar Torre de Controle</button>
+            <p id="ceo-err" style="color:#fda4af; font-size:0.78rem; margin-top:12px; display:none; font-weight:700;">Chave incorreta. Acesso negado.</p>
+            <div style="margin-top:16px; padding-top:12px; border-top:1px dashed var(--border); font-size:0.72rem; color:var(--muted);">
+                🔑 Senha do CEO: <code>habner2026</code> ou <code>capital2026</code>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-master">✔ Operação executada na nuvem!</div>
+
+    <!-- CABEÇALHO DO SUPER ADMIN -->
+    <header class="master-header">
+        <div class="brand-row">
+            <div class="brand-icon">CT</div>
+            <div>
+                <div class="brand-title">CAPITAL TECH <span>HOLDING & BILLING</span></div>
+                <div class="brand-sub">Super Admin Multi-Tenant • Controle de Licenças, Disjuntor & Faturamento</div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <a href="index.html" class="btn btn-outline">🌐 Ver Landing Page</a>
+            <a href="gestor.html" class="btn btn-outline">💻 Painel Gestor</a>
+            <a href="app.html" class="btn btn-outline">📱 App Técnico</a>
+            <button type="button" class="btn btn-gold" onclick="exportarCarteiraCSV()">📥 Exportar Carteira (CSV)</button>
+            <button type="button" class="btn btn-red" onclick="trancarPainelCEO()">🔒 Trancar</button>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- 1. KPIS EXECUTIVOS DA HOLDING -->
+        <div class="kpi-grid">
+            <div class="kpi-card green">
+                <div class="kpi-label">MRR (Faturamento Mensal Recorrente)</div>
+                <div class="kpi-value" id="kpi-mrr">R$ 0,00</div>
+                <div class="kpi-foot" id="kpi-mrr-sub">0 Assinaturas Ativas</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">ARR (Receita Anual Projetada + Setups)</div>
+                <div class="kpi-value" id="kpi-arr">R$ 0,00</div>
+                <div class="kpi-foot" id="kpi-setups-sub">Setups Acumulados: R$ 0,00</div>
+            </div>
+            <div class="kpi-card cyan">
+                <div class="kpi-label">Empresas Licenciadas (Ativas / Total)</div>
+                <div class="kpi-value" id="kpi-empresas">0 / 0</div>
+                <div class="kpi-foot" id="kpi-bloqueadas-sub">0 Bloqueadas por Inadimplência</div>
+            </div>
+            <div class="kpi-card red">
+                <div class="kpi-label">Telemetria Global (Todas as Empresas)</div>
+                <div class="kpi-value" id="kpi-telemetria">0 OSs</div>
+                <div class="kpi-foot" id="kpi-frota-global">0 Viaturas Operando na Nuvem</div>
+            </div>
+        </div>
+
+        <!-- 2. CADASTRAR NOVA EMPRESA CLIENTE & PROVISIONAR BANCO WHITE-LABEL -->
+        <section class="panel-box">
+            <div class="panel-head">
+                <div class="panel-title"><span>[01]</span> Cadastrar Nova Empresa Licenciada & Provisionar Gaveta White-Label no Firebase</div>
+                <span class="tenant-badge">CRIA O AMBIENTE DO CLIENTE EM 1 SEGUNDO</span>
+            </div>
+
+            <div class="form-grid-4">
+                <div class="field">
+                    <label>Razão Social / Nome da Empresa</label>
+                    <input type="text" id="emp-nome" class="input-std" placeholder="Ex: Brasília Gás Engenharia Ltda">
+                </div>
+                <div class="field">
+                    <label>Marca White-Label (Topo do App) + Sigla</label>
+                    <div style="display:grid; grid-template-columns: 1fr 75px; gap:8px;">
+                        <input type="text" id="emp-marca" class="input-std" placeholder="Ex: BRASÍLIA GÁS">
+                        <input type="text" id="emp-sigla" class="input-std" maxlength="3" placeholder="BG" style="text-align:center; font-weight:900;">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>E-mail do Gestor do Cliente (Gera o ID)</label>
+                    <input type="email" id="emp-email" class="input-std" placeholder="Ex: diretor@brasiliagas.com.br" oninput="gerarTenantAutomatico()">
+                </div>
+                <div class="field">
+                    <label>Código da Gaveta (Tenant ID no Firebase)</label>
+                    <input type="text" id="emp-tenant" class="input-std" placeholder="Ex: BRASILIAGAS_COM_BR" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:800;">
+                </div>
+            </div>
+
+            <div class="form-grid-4">
+                <div class="field">
+                    <label>CNPJ da Empresa</label>
+                    <input type="text" id="emp-cnpj" class="input-std" placeholder="Ex: 18.492.001/0001-22">
+                </div>
+                <div class="field">
+                    <label>Nome do Responsável / Diretor</label>
+                    <input type="text" id="emp-resp" class="input-std" placeholder="Ex: Eng. Carlos Eduardo">
+                </div>
+                <div class="field">
+                    <label>WhatsApp Financeiro / Diretor (c/ DDD)</label>
+                    <input type="tel" id="emp-zap" class="input-std" placeholder="Ex: 61999999999">
+                </div>
+                <div class="field">
+                    <label>Endereço Completo / Cidade-UF</label>
+                    <input type="text" id="emp-end" class="input-std" placeholder="Ex: SIA Trecho 3 Lote 620 - Brasília/DF">
+                </div>
+            </div>
+
+            <div class="form-grid-4">
+                <div class="field">
+                    <label>Plano Contratado</label>
+                    <select id="emp-plano" class="select-std" onchange="ajustarValorPlano()">
+                        <option value="Corporate White-Label|697">💎 Corporate White-Label (R$ 697/mês)</option>
+                        <option value="Operacional Start|397">🚀 Operacional Start (R$ 397/mês)</option>
+                        <option value="Enterprise Ilimitado|1497">🏛️ Enterprise / Distribuidora (R$ 1.497/mês)</option>
+                        <option value="Parceiro Estratégico|0">🤝 Parceiro / Cortesia (R$ 0/mês)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Valor Mensalidade (R$) & Setup (R$)</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                        <input type="number" id="emp-mensalidade" class="input-std" value="697" placeholder="Mensal">
+                        <input type="number" id="emp-setup" class="input-std" value="990" placeholder="Setup">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Dia de Vencimento & Cor da Marca</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                        <select id="emp-venc" class="select-std">
+                            <option value="Dia 05">Todo Dia 05</option>
+                            <option value="Dia 10" selected>Todo Dia 10</option>
+                            <option value="Dia 15">Todo Dia 15</option>
+                            <option value="Dia 20">Todo Dia 20</option>
+                            <option value="Dia 25">Todo Dia 25</option>
+                        </select>
+                        <select id="emp-cor" class="select-std">
+                            <option value="#F59E0B">Âmbar GLP</option>
+                            <option value="#38BDF8">Azul Tech</option>
+                            <option value="#10B981">Verde Eco</option>
+                            <option value="#F97316">Laranja</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field" style="justify-content:flex-end;">
+                    <button type="button" class="btn btn-gold" style="width:100%; height:44px;" onclick="cadastrarEProvisionarEmpresa()">
+                        ⚡ Cadastrar & Provisionar Empresa
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. TABELA CENTRAL DE GOVERNANÇA, DISJUNTOR & COBRANÇA AUTOMÁTICA -->
+        <section class="panel-box">
+            <div class="panel-head">
+                <div class="panel-title"><span>[02]</span> Carteira de Empresas Licenciadas, Disjuntor em Tempo Real & Régua de Cobrança Inteligente</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="text" id="filtro-busca-emp" class="input-std" style="width:260px;" placeholder="🔍 Buscar empresa, CNPJ ou cidade..." oninput="renderizarPainelMaster()">
+                    <select id="filtro-status-emp" class="select-std" style="width:170px;" onchange="renderizarPainelMaster()">
+                        <option value="TODOS">Todos os Status</option>
+                        <option value="ATIVO">🟢 Apenas Ativas</option>
+                        <option value="BLOQUEADO">🔴 Apenas Bloqueadas</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="master-table">
+                    <thead>
+                        <tr>
+                            <th>Empresa, CNPJ & Endereço</th>
+                            <th>Contato / Diretor</th>
+                            <th>Gaveta Firebase & Telemetria</th>
+                            <th>Plano & Faturamento</th>
+                            <th>Status (Disjuntor)</th>
+                            <th>Ação do Disjuntor (1 Clique)</th>
+                            <th>Mensagens Inteligentes (WhatsApp)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-empresas-saas"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. CONFIGURAÇÕES DE COBRANÇA PIX E LINKS DA HOLDING -->
+        <section class="panel-box">
+            <div class="panel-head">
+                <div class="panel-title"><span>[03]</span> Dados Bancários / PIX da Capital Tech (Usados nas Mensagens Automáticas de Cobrança)</div>
+            </div>
+            <div class="form-grid-3">
+                <div class="field">
+                    <label>Sua Chave PIX Oficial (CNPJ, CPF, Celular ou E-mail)</label>
+                    <input type="text" id="cfg-pix-chave" class="input-std" value="61986294465" onchange="salvarConfigHolding()">
+                </div>
+                <div class="field">
+                    <label>Favorecido / Titular da Conta</label>
+                    <input type="text" id="cfg-pix-nome" class="input-std" value="Habner Teixeira Fernandes — Capital Tech SaaS" onchange="salvarConfigHolding()">
+                </div>
+                <div class="field">
+                    <label>URL Oficial da Plataforma no Render/Vercel</label>
+                    <input type="text" id="cfg-url-base" class="input-std" value="https://capital-tech-saas.onrender.com" onchange="salvarConfigHolding()">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        var MASTER_STORAGE_KEY = "CAPITAL_TECH_HOLDING_DB_V1";
+        var CEO_SESSION_KEY = "CAPITAL_TECH_CEO_UNLOCKED";
+
+        function avisoMaster(msg) {
+            var t = document.getElementById('toast-master');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(function() { t.style.display = 'none'; }, 3400);
+        }
+
+        // AUTENTICAÇÃO DO CEO
+        window.destrancarPainelCEO = function() {
+            var pin = document.getElementById('ceo-pin').value.trim();
+            if (pin === "habner2026" || pin === "capital2026") {
+                document.getElementById('ceo-lock-overlay').style.display = 'none';
+                sessionStorage.setItem(CEO_SESSION_KEY, "true");
+                avisoMaster("👑 Bem-vindo, CEO Habner! Command Center liberado.");
+            } else {
+                document.getElementById('ceo-err').style.display = 'block';
+            }
+        };
+
+        window.trancarPainelCEO = function() {
+            sessionStorage.removeItem(CEO_SESSION_KEY);
+            document.getElementById('ceo-lock-overlay').style.display = 'flex';
+        };
+
+        if (sessionStorage.getItem(CEO_SESSION_KEY) === "true") {
+            document.getElementById('ceo-lock-overlay').style.display = 'none';
+        }
+
+        // DADOS INICIAIS DA HOLDING CAPITAL TECH
+        function obterHoldingPadrao() {
+            return {
+                config: {
+                    pixChave: "61986294465",
+                    pixNome: "Habner Teixeira Fernandes — Capital Tech SaaS",
+                    urlBase: "https://capital-tech-saas.onrender.com"
+                },
+                empresas: [
+                    {
+                        id: "emp_1",
+                        nome: "G3 do Brasil Manutenção e Gás Ltda",
+                        marca: "G3 DO BRASIL",
+                        sigla: "G3",
+                        email: "diretoria@g3brasil.com",
+                        tenantId: "G3BRASIL_COM",
+                        cnpj: "14.289.401/0001-90",
+                        responsavel: "Diretoria Operacional G3",
+                        zap: "61986294465",
+                        endereco: "SIA / Taguatinga — Brasília/DF",
+                        plano: "Corporate White-Label",
+                        mensalidade: 697,
+                        setup: 990,
+                        vencimento: "Dia 10",
+                        cor: "#F59E0B",
+                        status: "ATIVO",
+                        dataCadastro: "01/11/2026"
+                    },
+                    {
+                        id: "emp_2",
+                        nome: "Capital Tech Engenharia & Demonstração",
+                        marca: "CAPITAL TECH",
+                        sigla: "CT",
+                        email: "admin@capitaltech.com",
+                        tenantId: "CAPITALTECH_COM",
+                        cnpj: "39.814.200/0001-11",
+                        responsavel: "Habner T. Fernandes",
+                        zap: "61986294465",
+                        endereco: "Setor P Sul / Ceilândia — Brasília/DF",
+                        plano: "Enterprise Ilimitado",
+                        mensalidade: 1497,
+                        setup: 990,
+                        vencimento: "Dia 05",
+                        cor: "#38BDF8",
+                        status: "ATIVO",
+                        dataCadastro: "02/11/2026"
+                    }
+                ]
+            };
+        }
+
+        var holdingDB = null;
+        var telemetriaNuvem = {}; // Guarda quantas OS e Técnicos cada empresa tem no Firebase
+        var statusNuvem = {};     // Guarda o STATUS_FINANCEIRO em tempo real
+
+        function carregarHoldingLocal() {
+            try {
+                var salvo = localStorage.getItem(MASTER_STORAGE_KEY);
+                holdingDB = salvo ? JSON.parse(salvo) : obterHoldingPadrao();
+            } catch (e) {
+                holdingDB = obterHoldingPadrao();
+            }
+        }
+
+        function salvarHoldingLocal() {
+            try { localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(holdingDB)); } catch (e) {}
+        }
+
+        // CONEXÃO EM TEMPO REAL COM O FIREBASE
+        var rtdb = null;
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDf_mA78IgjnSXyrNasYId3ngq2lWho_9I",
+                authDomain: "g3-smartos.firebaseapp.com",
+                databaseURL: "https://g3-smartos-default-rtdb.firebaseio.com",
+                projectId: "g3-smartos",
+                storageBucket: "g3-smartos.firebasestorage.app",
+                messagingSenderId: "25130890143",
+                appId: "1:25130890143:web:f56e4632325f7af2fbc3aa"
+            };
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            rtdb = firebase.database();
+
+            // 1. Escuta a carteira de empresas da Holding
+            rtdb.ref('CAPITAL_HOLDING').on('value', function(snap) {
+                if (snap.val()) {
+                    holdingDB = snap.val();
+                    salvarHoldingLocal();
+                    window.renderizarPainelMaster();
+                }
+            });
+
+            // 2. Escuta o Disjuntor Financeiro em tempo real
+            rtdb.ref('STATUS_FINANCEIRO').on('value', function(snap) {
+                statusNuvem = snap.val() || {};
+                window.renderizarPainelMaster();
+            });
+
+            // 3. Escuta a árvore EMPRESAS para contar quantas OSs e Viaturas cada cliente tem!
+            rtdb.ref('EMPRESAS').on('value', function(snap) {
+                telemetriaNuvem = snap.val() || {};
+                window.renderizarPainelMaster();
+            });
+        } catch (err) {
+            console.warn("Operando Master em modo local:", err);
+        }
+
+        function salvarHoldingCompleta() {
+            salvarHoldingLocal();
+            if (rtdb && holdingDB) {
+                try { rtdb.ref('CAPITAL_HOLDING').set(holdingDB); } catch (e) {}
+            }
+        }
+
+        // PREENCHIMENTO AUTOMÁTICO DO TENANT ID A PARTIR DO E-MAIL
+        window.gerarTenantAutomatico = function() {
+            var email = document.getElementById('emp-email').value.trim();
+            if (email.indexOf('@') !== -1) {
+                var dominio = email.split('@')[1].replace(/\./g, '_').toUpperCase();
+                document.getElementById('emp-tenant').value = dominio;
+            }
+        };
+
+        window.ajustarValorPlano = function() {
+            var val = document.getElementById('emp-plano').value.split('|')[1];
+            document.getElementById('emp-mensalidade').value = val;
+        };
+
+        // CADASTRAR NOVA EMPRESA E JÁ CRIAR A GAVETA WHITE-LABEL NO FIREBASE
+        window.cadastrarEProvisionarEmpresa = function() {
+            var nome = document.getElementById('emp-nome').value.trim();
+            var marca = (document.getElementById('emp-marca').value.trim() || nome || "NOVA EMPRESA").toUpperCase();
+            var sigla = (document.getElementById('emp-sigla').value.trim() || marca.substring(0, 2)).toUpperCase();
+            var email = document.getElementById('emp-email').value.trim() || "admin@empresa.com.br";
+            var tenantId = (document.getElementById('emp-tenant').value.trim() || "EMPRESA_COM_BR").toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+            var cnpj = document.getElementById('emp-cnpj').value.trim() || "Isento / Em Cadastro";
+            var resp = document.getElementById('emp-resp').value.trim() || "Diretoria";
+            var zap = document.getElementById('emp-zap').value.trim() || "61986294465";
+            var end = document.getElementById('emp-end').value.trim() || "Brasília - DF";
+            var planoNome = document.getElementById('emp-plano').value.split('|')[0];
+            var mensalidade = parseFloat(document.getElementById('emp-mensalidade').value) || 0;
+            var setup = parseFloat(document.getElementById('emp-setup').value) || 0;
+            var venc = document.getElementById('emp-venc').value;
+            var cor = document.getElementById('emp-cor').value;
+
+            if (!nome) {
+                avisoMaster("⚠️ Digite a Razão Social ou Nome da Empresa!");
+                return;
+            }
+
+            var novaEmp = {
+                id: "emp_" + Date.now(),
+                nome: nome,
+                marca: marca,
+                sigla: sigla,
+                email: email,
+                tenantId: tenantId,
+                cnpj: cnpj,
+                responsavel: resp,
+                zap: zap,
+                endereco: end,
+                plano: planoNome,
+                mensalidade: mensalidade,
+                setup: setup,
+                vencimento: venc,
+                cor: cor,
+                status: "ATIVO",
+                dataCadastro: new Date().toLocaleDateString('pt-BR')
+            };
+
+            if (!holdingDB.empresas) holdingDB.empresas = [];
+            holdingDB.empresas.unshift(novaEmp);
+            salvarHoldingCompleta();
+
+            // PROVISIONA NO FIREBASE O STATUS FINANCEIRO E A IDENTIDADE WHITE-LABEL DO CLIENTE
+            if (rtdb) {
+                rtdb.ref('STATUS_FINANCEIRO/' + tenantId).set("ATIVO");
+                rtdb.ref('EMPRESAS/' + tenantId + '/configWhiteLabel').set({
+                    nome: marca,
+                    sigla: sigla,
+                    sub: "Plataforma Corporativa • NBR 13523 & 15526",
+                    art: "ART-DF #0720260098412",
+                    prefixo: sigla,
+                    cor: cor
+                });
+            }
+
+            document.getElementById('emp-nome').value = "";
+            document.getElementById('emp-marca').value = "";
+            document.getElementById('emp-sigla').value = "";
+            document.getElementById('emp-email').value = "";
+            document.getElementById('emp-tenant').value = "";
+            document.getElementById('emp-cnpj').value = "";
+            document.getElementById('emp-resp').value = "";
+            document.getElementById('emp-end').value = "";
+
+            window.renderizarPainelMaster();
+            avisoMaster("🚀 Empresa " + marca + " cadastrada e gaveta [" + tenantId + "] provisionada no Firebase!");
+        };
+
+        // DISJUNTOR EM 1 CLIQUE ( CORTA OU LIBERA NA HORA )
+        window.alternarDisjuntorEmpresa = function(idx, novoStatus) {
+            var emp = holdingDB.empresas[idx];
+            if (!emp) return;
+            emp.status = novoStatus;
+            salvarHoldingCompleta();
+
+            if (rtdb) {
+                rtdb.ref('STATUS_FINANCEIRO/' + emp.tenantId).set(novoStatus);
+            }
+            window.renderizarPainelMaster();
+
+            if (novoStatus === "BLOQUEADO") {
+                avisoMaster("🔴 CORTE EXECUTADO: O sistema da empresa " + emp.marca + " foi bloqueado imediatamente!");
+            } else {
+                avisoMaster("🟢 ACESSO LIBERADO: O sistema da empresa " + emp.marca + " foi religado em tempo real!");
+            }
+        };
+
+        window.removerEmpresaCarteira = function(idx) {
+            var emp = holdingDB.empresas[idx];
+            if (!confirm("Deseja remover " + emp.nome + " da listagem da carteira?")) return;
+            holdingDB.empresas.splice(idx, 1);
+            salvarHoldingCompleta();
+            window.renderizarPainelMaster();
+            avisoMaster("Empresa removida da listagem.");
+        };
+
+        window.salvarConfigHolding = function() {
+            if (!holdingDB.config) holdingDB.config = {};
+            holdingDB.config.pixChave = document.getElementById('cfg-pix-chave').value.trim();
+            holdingDB.config.pixNome = document.getElementById('cfg-pix-nome').value.trim();
+            holdingDB.config.urlBase = document.getElementById('cfg-url-base').value.trim().replace(/\/$/, '');
+            salvarHoldingCompleta();
+            avisoMaster("✔ Configurações financeiras e PIX da Holding atualizadas!");
+        };
+
+        // ==============================================================
+        // GERADOR DE MENSAGENS INTELIGENTES DE WHATSAPP (4 CENÁRIOS)
+        // ==============================================================
+        window.dispararMensagemInteligente = function(idx, tipoMensagem) {
+            var emp = holdingDB.empresas[idx];
+            if (!emp) return;
+
+            var cfg = holdingDB.config || {
+                pixChave: "61986294465",
+                pixNome: "Habner Teixeira Fernandes — Capital Tech SaaS",
+                urlBase: "https://capital-tech-saas.onrender.com"
+            };
+
+            var zapLimpo = (emp.zap || "61986294465").replace(/\D/g, '');
+            var valorFmt = "R$ " + (parseFloat(emp.mensalidade) || 0).toFixed(2).replace('.', ',');
+            var msg = "";
+
+            if (tipoMensagem === 'ONBOARDING') {
+                msg = "🚀 *BEM-VINDO À CAPITAL TECH SaaS — AMBIENTE LIBERADO!* 🚀\n\n" +
+                      "Olá, *" + emp.responsavel + "*! O ecossistema White-Label da *" + emp.marca + "* já está configurado e operando na nuvem:\n\n" +
+                      "💻 *1. Painel do Gestor (Computador/Diretoria):*\n" +
+                      cfg.urlBase + "/gestor.html\n\n" +
+                      "📱 *2. App do Técnico (Celular das Viaturas):*\n" +
+                      cfg.urlBase + "/app.html\n\n" +
+                      "🔑 *Credenciais Corporativas:*\n" +
+                      "• *E-mail:* `" + emp.email + "`\n" +
+                      "• *Senha Mestra Inicial:* `capital2026`\n" +
+                      "• *Gaveta Isolada (Tenant):* `" + emp.tenantId + "`\n\n" +
+                      "Qualquer dúvida, nosso suporte de engenharia está à disposição!";
+            } else if (tipoMensagem === 'COBRANCA_PIX') {
+                msg = "💼 *LEMBRETE DE FATURA MENSAL — CAPITAL TECH SaaS*\n\n" +
+                      "Olá, *" + emp.responsavel + "* (" + emp.nome + "), tudo bem?\n\n" +
+                      "Segue o demonstrativo da licença corporativa do sistema *" + emp.marca + "*:\n" +
+                      "📦 *Plano:* " + emp.plano + "\n" +
+                      "📅 *Vencimento:* " + emp.vencimento + "\n" +
+                      "💰 *Valor Mensal:* *" + valorFmt + "*\n\n" +
+                      "⚡ *Dados para Pagamento via PIX:*\n" +
+                      "• *Chave PIX:* `" + cfg.pixChave + "`\n" +
+                      "• *Favorecido:* " + cfg.pixNome + "\n\n" +
+                      "Assim que realizar a transferência, basta nos enviar o comprovante por aqui para mantermos a sincronização da sua frota 100% ativa!";
+            } else if (tipoMensagem === 'AVISO_BLOQUEIO') {
+                msg = "🚨 *AVISO DE SUSPENSÃO AUTOMÁTICA DE LICENÇA — CAPITAL TECH*\n\n" +
+                      "Prezado(a) *" + emp.responsavel + "* (" + emp.nome + "),\n\n" +
+                      "Identificamos uma pendência na assinatura mensal (*" + valorFmt + "*, vencimento *" + emp.vencimento + "*). Por esse motivo, o acesso ao Painel do Gestor e aos Terminais de Campo da *" + emp.marca + "* encontra-se temporariamente suspenso.\n\n" +
+                      "Para religar o sistema de todas as viaturas em 1 segundo, regularize via PIX:\n" +
+                      "🔑 *Chave PIX:* `" + cfg.pixChave + "`\n" +
+                      "👤 *Favorecido:* " + cfg.pixNome + "\n\n" +
+                      "Envie o comprovante nesta conversa para liberação imediata.";
+            } else if (tipoMensagem === 'AVISO_LIBERACAO') {
+                msg = "🟢 *PAGAMENTO CONFIRMADO & SISTEMA RELIGADO — CAPITAL TECH*\n\n" +
+                      "Olá, *" + emp.responsavel + "*! Confirmamos o recebimento da mensalidade da *" + emp.marca + "*.\n\n" +
+                      "✅ O Disjuntor Cloud já foi ativado e tanto o *Painel do Gestor* quanto os *Aplicativos das Viaturas* estão 100% liberados e sincronizados.\n\n" +
+                      "Excelente semana de operações e bons negócios!";
+            }
+
+            window.open("https://wa.me/55" + zapLimpo + "?text=" + encodeURIComponent(msg), '_blank');
+        };
+
+        // ==============================================================
+        // RENDERIZAÇÃO COMPLETA DO DASHBOARD MASTER
+        // ==============================================================
+        window.renderizarPainelMaster = function() {
+            if (!holdingDB) return;
+            if (!holdingDB.empresas) holdingDB.empresas = [];
+
+            if (holdingDB.config) {
+                document.getElementById('cfg-pix-chave').value = holdingDB.config.pixChave || "61986294465";
+                document.getElementById('cfg-pix-nome').value = holdingDB.config.pixNome || "Habner Teixeira Fernandes — Capital Tech SaaS";
+                document.getElementById('cfg-url-base').value = holdingDB.config.urlBase || "https://capital-tech-saas.onrender.com";
+            }
+
+            var busca = (document.getElementById('filtro-busca-emp').value || "").toLowerCase();
+            var filtroSt = document.getElementById('filtro-status-emp').value;
+            var tbody = document.getElementById('tbody-empresas-saas');
+            tbody.innerHTML = "";
+
+            var mrrTotal = 0;
+            var setupsTotal = 0;
+            var qtdAtivas = 0;
+            var qtdBloqueadas = 0;
+
+            for (var i = 0; i < holdingDB.empresas.length; i++) {
+                var emp = holdingDB.empresas[i];
+                // Sincroniza o status com o que está gravado no Firebase STATUS_FINANCEIRO
+                if (statusNuvem && statusNuvem[emp.tenantId]) {
+                    emp.status = statusNuvem[emp.tenantId];
+                }
+
+                var estaAtiva = emp.status !== "BLOQUEADO";
+                if (estaAtiva) {
+                    qtdAtivas++;
+                    mrrTotal += (parseFloat(emp.mensalidade) || 0);
+                } else {
+                    qtdBloqueadas++;
+                }
+                setupsTotal += (parseFloat(emp.setup) || 0);
+
+                // Telemetria real da gaveta desta empresa no Firebase
+                var dadosGaveta = (telemetriaNuvem && telemetriaNuvem[emp.tenantId]) ? telemetriaNuvem[emp.tenantId] : null;
+                var numOS = (dadosGaveta && dadosGaveta.ordens) ? dadosGaveta.ordens.length : 0;
+                var numTec = (dadosGaveta && dadosGaveta.tecnicos) ? dadosGaveta.tecnicos.length : 0;
+                var numCli = (dadosGaveta && dadosGaveta.clientes) ? dadosGaveta.clientes.length : 0;
+
+                var bateBusca = (emp.nome || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.marca || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.cnpj || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.endereco || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.tenantId || "").toLowerCase().indexOf(busca) !== -1;
+                var bateStatus = (filtroSt === "TODOS") || (emp.status === filtroSt);
+
+                if (bateBusca && bateStatus) {
+                    var badgeStatus = estaAtiva
+                        ? '<span class="status-pill status-active">🟢 ATIVO (EM DIA)</span>'
+                        : '<span class="status-pill status-blocked">🔴 BLOQUEADO</span>';
+
+                    var btnDisjuntor = estaAtiva
+                        ? '<button type="button" class="btn-sm danger" onclick="alternarDisjuntorEmpresa(' + i + ', \'BLOQUEADO\')">🔴 Cortar Acesso (Inadimplente)</button>'
+                        : '<button type="button" class="btn-sm wa" onclick="alternarDisjuntorEmpresa(' + i + ', \'ATIVO\')">🟢 Religar Sistema (Pago)</button>';
+
+                    var tr = document.createElement('tr');
+                    tr.innerHTML =
+                        '<td>' +
+                            '<div style="display:flex; align-items:center; gap:10px;">' +
+                                '<div style="width:36px; height:36px; border-radius:8px; background:' + (emp.cor || '#F59E0B') + '; color:#000; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' + (emp.sigla || 'CT') + '</div>' +
+                                '<div>' +
+                                    '<strong style="font-size:0.95rem; color:#fff;">' + emp.nome + '</strong><br>' +
+                                    '<small style="color:var(--muted); font-family:monospace;">CNPJ: ' + emp.cnpj + ' • 📍 ' + emp.endereco + '</small>' +
+                                '</div>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<strong>' + emp.responsavel + '</strong><br>' +
+                            '<small style="color:var(--cyan);">✉️ ' + emp.email + '</small><br>' +
+                            '<small style="color:#34D399; font-family:monospace;">📱 ' + emp.zap + '</small>' +
+                        '</td>' +
+                        '<td>' +
+                            '<span class="tenant-badge">' + emp.tenantId + '</span><br>' +
+                            '<small style="color:var(--muted); display:block; margin-top:4px;">📋 <strong>' + numOS + '</strong> OSs | 🚐 <strong>' + numTec + '</strong> Viaturas | 🏢 <strong>' + numCli + '</strong> Clientes</small>' +
+                        '</td>' +
+                        '<td>' +
+                            '<strong style="color:var(--gold);">' + emp.plano + '</strong><br>' +
+                            '<span style="font-family:monospace; font-weight:800; color:#fff;">R$ ' + (parseFloat(emp.mensalidade) || 0).toFixed(2).replace('.', ',') + '/mês</span><br>' +
+                            '<small style="color:var(--muted);">Venc: ' + emp.vencimento + ' • Setup: R$ ' + (parseFloat(emp.setup) || 0) + '</small>' +
+                        '</td>' +
+                        '<td>' + badgeStatus + '</td>' +
+                        '<td>' +
+                            '<div style="display:flex; flex-direction:column; gap:6px;">' +
+                                btnDisjuntor +
+                                '<button type="button" class="btn-sm" onclick="removerEmpresaCarteira(' + i + ')">🗑️ Excluir da Carteira</button>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<div class="wa-actions-grid">' +
+                                '<button type="button" class="btn-sm wa" onclick="dispararMensagemInteligente(' + i + ', \'ONBOARDING\')" title="Enviar Links e Senha">🚀 Boas-Vindas</button>' +
+                                '<button type="button" class="btn-sm warn" onclick="dispararMensagemInteligente(' + i + ', \'COBRANCA_PIX\')" title="Cobrar Mensalidade c/ PIX">💰 Cobrar PIX</button>' +
+                                '<button type="button" class="btn-sm danger" onclick="dispararMensagemInteligente(' + i + ', \'AVISO_BLOQUEIO\')" title="Avisar Suspensão">🚨 Aviso Corte</button>' +
+                                '<button type="button" class="btn-sm" onclick="dispararMensagemInteligente(' + i + ', \'AVISO_LIBERACAO\')" title="Confirmar Religação">🔓 Liberado</button>' +
+                            '</div>' +
+                        '</td>';
+                    tbody.appendChild(tr);
+                }
+            }
+
+            // Calcula telemetria global de todas as gavetas no Firebase
+            var globalOS = 0;
+            var globalViaturas = 0;
+            var chavesTenants = Object.keys(telemetriaNuvem || {});
+            for (var k = 0; k < chavesTenants.length; k++) {
+                var g = telemetriaNuvem[chavesTenants[k]];
+                if (g && g.ordens) globalOS += g.ordens.length;
+                if (g && g.tecnicos) globalViaturas += g.tecnicos.length;
+            }
+
+            var arrProjetado = (mrrTotal * 12) + setupsTotal;
+
+            document.getElementById('kpi-mrr').innerText = "R$ " + mrrTotal.toFixed(2).replace('.', ',');
+            document.getElementById('kpi-mrr-sub').innerText = "✔ " + qtdAtivas + " Assinatura(s) Recorrente(s) Ativa(s)";
+            document.getElementById('kpi-arr').innerText = "R$ " + arrProjetado.toFixed(2).replace('.', ',');
+            document.getElementById('kpi-setups-sub').innerText = "Taxas de Implantação: R$ " + setupsTotal.toFixed(2).replace('.', ',');
+            document.getElementById('kpi-empresas').innerText = qtdAtivas + " / " + holdingDB.empresas.length;
+            document.getElementById('kpi-bloqueadas-sub').innerText = qtdBloqueadas > 0
+                ? "🚨 " + qtdBloqueadas + " Empresa(s) Bloqueada(s) no Disjuntor"
+                : "✔ 0% de Inadimplência na Carteira";
+            document.getElementById('kpi-telemetria').innerText = globalOS + " OSs";
+            document.getElementById('kpi-frota-global').innerText = "🚐 " + globalViaturas + " Viaturas Sincronizadas na Nuvem";
+        };
+
+        window.exportarCarteiraCSV = function() {
+            var linhas = ["Empresa;Marca;CNPJ;Responsavel;WhatsApp;Email;TenantID;Plano;Mensalidade;Vencimento;Status"];
+            for (var i = 0; i < holdingDB.empresas.length; i++) {
+                var e = holdingDB.empresas[i];
+                linhas.push([e.nome, e.marca, e.cnpj, e.responsavel, e.zap, e.email, e.tenantId, e.plano, e.mensalidade, e.vencimento, e.status].join(";"));
+            }
+            var blob = new Blob(["\uFEFF" + linhas.join("\n")], { type: "text/csv;charset=utf-8;" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "Carteira_Clientes_CapitalTech_SaaS.csv";
+            a.click();
+            avisoMaster("📥 Planilha financeira da Holding exportada!");
+        };
+
+        carregarHoldingLocal();
+        window.renderizarPainelMaster();
+    </script>
+</body>
+</html>

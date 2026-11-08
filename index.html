@@ -3,702 +3,587 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Capital Tech SaaS | Plataforma Oficial de Engenharia GLP, Frota & Laudos CBMDF/ABNT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Capital Tech | Plataforma Neural de Engenharia GLP, Estanqueidade & Frota</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- MOTORES FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
         :root {
-            --bg: #020408;
-            --bg-sec: #060A12;
-            --panel: #0B111E;
-            --card: #11192B;
+            --bg: #030509;
+            --bg-elevated: #080C15;
+            --surface: #0C1220;
+            --surface-2: #111A2E;
             --brand: #F59E0B;
-            --brand-glow: rgba(245, 158, 11, 0.38);
+            --brand-glow: rgba(245, 158, 11, 0.32);
             --cyan: #38BDF8;
-            --cyan-glow: rgba(56, 189, 248, 0.32);
+            --cyan-glow: rgba(56, 189, 248, 0.25);
             --green: #10B981;
-            --green-glow: rgba(16, 185, 129, 0.32);
+            --green-glow: rgba(16, 185, 129, 0.28);
             --red: #F43F5E;
             --text: #F8FAFC;
             --muted: #94A3B8;
             --border: rgba(255, 255, 255, 0.08);
-            --border-strong: rgba(255, 255, 255, 0.16);
+            --border-bright: rgba(255, 255, 255, 0.16);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; scroll-behavior: smooth; }
-        html, body { background-color: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.55; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        html, body { background-color: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+        h1, h2, h3, h4, .display-font { font-family: 'Outfit', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-        .cyber-bg {
+        /* ARQUITETURA DE ILUMINAÇÃO SILICON VALLEY */
+        .bg-grid-mesh {
             position: fixed; inset: 0; z-index: -2;
-            background-size: 52px 52px;
+            background-size: 56px 56px;
             background-image: 
-                linear-gradient(to right, rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-            mask-image: radial-gradient(circle at 50% 20%, black 40%, transparent 92%);
+                linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at 50% 15%, black 35%, transparent 88%);
         }
-        .glow-top {
-            position: fixed; top: -180px; left: 50%; transform: translateX(-50%);
-            width: 900px; height: 480px;
+        .spotlight-hero {
+            position: fixed; top: -240px; left: 50%; transform: translateX(-50%);
+            width: 1100px; height: 540px;
             background: radial-gradient(ellipse, var(--brand-glow) 0%, var(--cyan-glow) 45%, transparent 72%);
             filter: blur(95px); z-index: -1; pointer-events: none; opacity: 0.65;
         }
 
-        /* BARRA DE TELEMETRIA E CONFORMIDADE INSTITUCIONAL */
-        .telemetry-bar {
-            background: #04070E;
-            border-bottom: 1px solid var(--border);
-            padding: 8px 4%;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.71rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            color: var(--muted);
+        /* BARRA FINA DE STATUS DE ENGENHARIA */
+        .status-strip {
+            background: #020306; border-bottom: 1px solid var(--border);
+            padding: 7px 4%; font-size: 0.72rem; color: var(--muted);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
         }
-        .telemetry-left, .telemetry-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-        .live-indicator {
-            display: inline-flex; align-items: center; gap: 6px;
-            color: #34D399; font-weight: 700; background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 9px; border-radius: 50px;
+        .status-pill-live {
+            display: inline-flex; align-items: center; gap: 7px;
+            color: #34D399; font-weight: 700; font-family: 'JetBrains Mono', monospace;
         }
-        .live-dot {
+        .pulse-dot {
             width: 7px; height: 7px; border-radius: 50%; background: var(--green);
-            box-shadow: 0 0 8px var(--green); animation: blink 1.4s infinite;
+            box-shadow: 0 0 10px var(--green); animation: pulseLive 1.5s infinite;
         }
-        @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
+        @keyframes pulseLive { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.35); } }
 
-        /* NAVBAR EXECUTIVA */
+        /* NAVBAR GLASSMORPHISM FLUTUANTE */
+        .nav-container {
+            position: sticky; top: 14px; z-index: 1000;
+            max-width: 1320px; margin: 14px auto 0 auto; padding: 0 4%;
+        }
         nav {
-            position: sticky; top: 0; width: 100%; padding: 14px 5%;
-            background: rgba(4, 7, 14, 0.88); backdrop-filter: blur(20px);
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 1000; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 14px;
+            background: rgba(12, 18, 32, 0.82); backdrop-filter: blur(20px);
+            border: 1px solid var(--border-bright); border-radius: 16px;
+            padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7); flex-wrap: wrap; gap: 14px;
         }
-        .brand-wrap { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
-        .brand-cube {
-            width: 42px; height: 42px; border-radius: 11px;
+        .brand-id { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+        .brand-logo-box {
+            width: 40px; height: 40px; border-radius: 10px;
             background: linear-gradient(135deg, var(--brand), #D97706);
-            color: #000; font-weight: 900; font-size: 1.25rem;
+            color: #000; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.15rem;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 22px var(--brand-glow);
+            box-shadow: 0 0 22px var(--brand-glow); transition: 0.3s;
         }
-        .brand-text-title { font-weight: 900; font-size: 1.25rem; letter-spacing: 0.4px; text-transform: uppercase; line-height: 1; }
-        .brand-text-title span { color: var(--brand); }
-        .brand-text-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--cyan); display: block; margin-top: 3px; letter-spacing: 0.8px; }
+        .brand-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.3px; }
+        .brand-title span { color: var(--brand); }
 
-        .nav-menu { display: flex; align-items: center; gap: 18px; }
-        .nav-menu a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
-        .nav-menu a:hover { color: #fff; }
+        .nav-links { display: flex; align-items: center; gap: 26px; }
+        .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.87rem; font-weight: 600; transition: 0.2s; }
+        .nav-links a:hover { color: #fff; }
 
-        .nav-cta-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .nav-btns { display: flex; align-items: center; gap: 10px; }
 
-        .btn-gold {
-            background: linear-gradient(90deg, var(--brand), #EA580C);
-            color: #000; font-weight: 900; font-size: 0.85rem; text-transform: uppercase;
-            padding: 11px 20px; border-radius: 10px; border: none; cursor: pointer;
+        .btn-main {
+            background: linear-gradient(135deg, var(--brand), #EA580C);
+            color: #000; font-weight: 800; font-size: 0.88rem;
+            padding: 11px 22px; border-radius: 10px; border: none; cursor: pointer;
             text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
             box-shadow: 0 8px 25px var(--brand-glow); transition: 0.25s;
         }
-        .btn-gold:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-main:hover { transform: translateY(-2px); filter: brightness(1.08); }
 
-        .btn-dark {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-strong);
-            color: #fff; font-weight: 700; font-size: 0.84rem; padding: 10px 16px;
-            border-radius: 10px; text-decoration: none; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 7px; transition: 0.2s;
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-bright);
+            color: #fff; font-weight: 700; font-size: 0.86rem;
+            padding: 10px 18px; border-radius: 10px; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 7px; transition: 0.2s;
         }
-        .btn-dark:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(56, 189, 248, 0.08); }
-
-        /* MODAL DO PORTAL DE ACESSO UNIFICADO */
-        .portal-modal-backdrop {
-            position: fixed; inset: 0; z-index: 9999;
-            background: rgba(2, 4, 8, 0.88); backdrop-filter: blur(12px);
-            display: none; align-items: center; justify-content: center; padding: 20px;
-        }
-        .portal-modal-box {
-            background: var(--panel); border: 1.5px solid var(--cyan);
-            border-radius: 22px; max-width: 680px; width: 100%; padding: 34px;
-            box-shadow: 0 30px 90px rgba(0,0,0,0.95);
-        }
-        .portal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
-        .portal-card {
-            background: var(--card); border: 1.5px solid var(--border-strong);
-            border-radius: 16px; padding: 24px; text-decoration: none; color: #fff;
-            display: flex; flex-direction: column; justify-content: space-between; gap: 14px;
-            transition: 0.25s;
-        }
-        .portal-card:hover { border-color: var(--brand); transform: translateY(-4px); box-shadow: 0 15px 35px rgba(245, 158, 11, 0.15); }
+        .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(56, 189, 248, 0.08); }
 
         /* HERO SECTION */
-        .hero-sec {
-            max-width: 1380px; margin: 0 auto; padding: 55px 4% 40px 4%;
+        .hero {
+            max-width: 1280px; margin: 0 auto; padding: 65px 4% 40px 4%;
             text-align: center; display: flex; flex-direction: column; align-items: center;
         }
         .hero-kicker {
             display: inline-flex; align-items: center; gap: 10px;
-            background: linear-gradient(90deg, rgba(245, 158, 11, 0.14), rgba(56, 189, 248, 0.14));
-            border: 1px solid var(--brand); color: #fff;
-            padding: 7px 18px; border-radius: 50px; font-family: 'JetBrains Mono', monospace;
-            font-size: 0.74rem; font-weight: 700; margin-bottom: 22px; text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-bright);
+            padding: 6px 18px; border-radius: 50px; font-size: 0.78rem; font-weight: 700;
+            color: #E2E8F0; margin-bottom: 24px;
         }
-        .hero-sec h1 {
-            font-size: clamp(2.3rem, 5vw, 4.35rem);
-            font-weight: 900; line-height: 1.06; max-width: 1060px;
-            margin-bottom: 20px; letter-spacing: -1.2px;
+        .hero h1 {
+            font-size: clamp(2.45rem, 5.2vw, 4.5rem); font-weight: 900;
+            line-height: 1.05; letter-spacing: -1.6px; max-width: 1040px; margin-bottom: 22px;
         }
-        .gradient-word {
+        .grad-text {
             background: linear-gradient(90deg, var(--brand) 0%, #FDE047 50%, var(--cyan) 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .hero-lead {
-            font-size: clamp(1.02rem, 1.8vw, 1.22rem); color: var(--muted);
-            max-width: 830px; margin-bottom: 28px;
+        .hero p.lead {
+            font-size: clamp(1.05rem, 1.65vw, 1.24rem); color: var(--muted);
+            max-width: 780px; margin-bottom: 34px;
         }
-        .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
-        .btn-xl { padding: 16px 32px; font-size: 0.98rem; border-radius: 12px; }
+        .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 42px; }
+        .btn-xl { padding: 16px 34px; font-size: 1rem; border-radius: 12px; }
 
-        /* BARRA DE SELOS DE SEGURANÇA E CONFORMIDADE */
-        .compliance-strip {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
-            margin-bottom: 36px; max-width: 1050px;
+        /* BARRA INSTANTÂNEA WHITE-LABEL NO TOPO DO COCKPIT */
+        .wl-instant-bar {
+            width: 100%; max-width: 1180px;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(56, 189, 248, 0.1));
+            border: 1px solid var(--brand); border-radius: 16px 16px 0 0;
+            padding: 14px 24px; display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 14px; text-align: left;
         }
-        .compliance-badge {
-            background: rgba(17, 25, 43, 0.75); border: 1px solid var(--border-strong);
-            padding: 8px 14px; border-radius: 8px; font-size: 0.76rem; font-weight: 700;
-            color: #cbd5e1; display: inline-flex; align-items: center; gap: 7px;
+        .wl-bar-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1; max-width: 580px; }
+        .input-wl-live {
+            flex: 1; min-width: 210px; background: #04070E; border: 1px solid var(--border-bright);
+            color: #fff; padding: 10px 14px; border-radius: 9px; font-size: 0.88rem; font-weight: 700; outline: none;
         }
-        .compliance-badge span { color: var(--green); font-family: 'JetBrains Mono', monospace; }
+        .input-wl-live:focus { border-color: var(--brand); }
+        .dot-swatch {
+            width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5);
+            cursor: pointer; transition: 0.2s;
+        }
+        .dot-swatch:hover { transform: scale(1.15); }
 
-        /* =========================================================
-           SHOWROOM INTERATIVO DE 4 ABAS
-           ========================================================= */
-        .interactive-stage {
-            width: 100%; max-width: 1260px;
-            background: linear-gradient(180deg, #0D1526 0%, #070B14 100%);
-            border: 1.5px solid rgba(56, 189, 248, 0.35);
-            border-radius: 22px; padding: 24px;
-            box-shadow: 0 35px 100px rgba(0,0,0,0.9);
-            text-align: left;
+        /* COCKPIT INTERATIVO DE PRODUTO (MACBOOK + IPHONE SYNC) */
+        .cockpit-window {
+            width: 100%; max-width: 1180px;
+            background: var(--surface); border: 1px solid var(--border-bright); border-top: none;
+            border-radius: 0 0 22px 22px; overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9); text-align: left;
         }
-        .stage-tabs {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px; margin-bottom: 22px; border-bottom: 1px solid var(--border); padding-bottom: 18px;
+        .cockpit-tabs {
+            background: #060911; padding: 12px 22px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
         }
-        .stage-tab-btn {
-            background: var(--card); border: 1px solid var(--border); color: var(--muted);
-            padding: 13px 15px; border-radius: 12px; cursor: pointer; text-align: left;
-            transition: 0.2s; display: flex; flex-direction: column; gap: 4px;
+        .tab-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .c-tab {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--muted);
+            padding: 8px 16px; border-radius: 9px; font-size: 0.82rem; font-weight: 700;
+            cursor: pointer; transition: 0.2s;
         }
-        .stage-tab-btn strong { font-size: 0.88rem; color: #fff; }
-        .stage-tab-btn span { font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; }
-        .stage-tab-btn.active {
-            background: rgba(245, 158, 11, 0.15); border: 1.5px solid var(--brand);
-            box-shadow: 0 0 22px rgba(245, 158, 11, 0.2);
-        }
-        .stage-tab-btn.active span { color: var(--brand); font-weight: 700; }
+        .c-tab:hover { color: #fff; }
+        .c-tab.active { background: rgba(245, 158, 11, 0.16); border-color: var(--brand); color: var(--brand); }
 
-        .stage-pane { display: none; }
-        .stage-pane.active { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 24px; align-items: stretch; }
+        .cockpit-body { padding: 32px; }
+        .c-pane { display: none; grid-template-columns: 1.05fr 0.95fr; gap: 30px; align-items: center; }
+        .c-pane.active { display: grid; animation: fadeUp 0.25s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-        .stage-card {
-            background: #060A12; border: 1px solid var(--border-strong); border-radius: 16px;
-            padding: 22px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;
+        .sim-stage-box {
+            background: #060A12; border: 1px solid var(--border-bright); border-radius: 16px;
+            padding: 22px; position: relative; overflow: hidden;
         }
-
-        .steel-plate-sim {
-            background: radial-gradient(circle, #334155 0%, #1E293B 65%, #0F172A 100%);
-            border: 2px solid #64748B; border-radius: 14px; padding: 20px;
-            font-family: 'JetBrains Mono', monospace; color: #E2E8F0;
-            position: relative; overflow: hidden; margin: 14px 0;
-        }
-        .ocr-scan-bar {
-            position: absolute; left: 0; right: 0; height: 4px;
+        .scan-beam {
+            position: absolute; left: 0; right: 0; height: 3px;
             background: var(--cyan); box-shadow: 0 0 20px var(--cyan);
-            top: 0; display: none; animation: laserMove 1.3s infinite ease-in-out; z-index: 5;
+            top: 0; display: none; animation: beamMove 1.2s infinite ease-in-out;
         }
-        @keyframes laserMove { 0% { top: 4%; } 50% { top: 94%; } 100% { top: 4%; } }
+        @keyframes beamMove { 0% { top: 8%; } 50% { top: 92%; } 100% { top: 8%; } }
 
-        .plate-stamp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stamp-box {
-            border: 1px dashed rgba(255,255,255,0.22); padding: 8px 10px; border-radius: 8px;
-            background: rgba(0,0,0,0.35); transition: 0.3s;
+        .plate-cells { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+        .p-cell {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            padding: 12px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; transition: 0.3s;
         }
-        .stamp-box.detected {
-            border: 1.5px solid #34D399; background: rgba(16, 185, 129, 0.18);
-        }
-        .stamp-box small { display: block; font-size: 0.62rem; color: #94A3B8; }
-        .stamp-box strong { font-size: 0.92rem; color: #fff; }
+        .p-cell.ok { border-color: var(--green); background: rgba(16, 185, 129, 0.12); }
+        .p-cell small { display: block; font-size: 0.65rem; color: var(--muted); }
+        .p-cell strong { font-size: 0.95rem; color: #fff; }
 
-        canvas#pressureChart {
-            width: 100%; height: 185px; background: #03060C;
+        canvas#livePressureCanvas {
+            width: 100%; height: 155px; background: #03060C;
             border: 1px solid var(--border); border-radius: 10px; margin: 12px 0;
         }
 
         /* =========================================================
-           NOVO: VALIDADOR PÚBLICO DE LAUDOS E ART (CONFIANÇA MÁXIMA)
+           O MOTOR DE PRECIFICAÇÃO ÚNICA & ROI (VALE DO SILÍCIO)
            ========================================================= */
-        .section-wrap { max-width: 1300px; margin: 0 auto; padding: 80px 4%; }
-        .sec-head { text-align: center; max-width: 780px; margin: 0 auto 46px auto; }
-        .sec-kicker {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--brand);
-            text-transform: uppercase; font-weight: 800; letter-spacing: 1.2px; display: block; margin-bottom: 10px;
+        .section { max-width: 1240px; margin: 0 auto; padding: 95px 4%; }
+        .sec-head { text-align: center; max-width: 760px; margin: 0 auto 54px auto; }
+        .eyebrow {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 800;
+            color: var(--brand); text-transform: uppercase; letter-spacing: 1.5px;
+            display: block; margin-bottom: 10px;
         }
-        .sec-head h2 { font-size: clamp(1.85rem, 3.6vw, 2.85rem); font-weight: 900; line-height: 1.12; margin-bottom: 12px; }
-        .sec-head p { color: var(--muted); font-size: 1.02rem; }
+        .sec-head h2 { font-size: clamp(2rem, 3.8vw, 3rem); font-weight: 900; line-height: 1.12; margin-bottom: 14px; }
+        .sec-head p { color: var(--muted); font-size: 1.05rem; }
 
-        .validator-box {
-            background: linear-gradient(135deg, #0D1628 0%, #070B14 100%);
-            border: 1.5px solid var(--cyan); border-radius: 22px; padding: 32px;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.75);
+        .unified-pricing-shell {
+            background: linear-gradient(145deg, #0E1629 0%, #070B14 100%);
+            border: 2px solid var(--brand); border-radius: 26px; padding: 42px;
+            box-shadow: 0 35px 95px rgba(0, 0, 0, 0.85), 0 0 60px rgba(245, 158, 11, 0.14);
+            display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center;
+            position: relative;
         }
-        .validator-search-row {
-            display: grid; grid-template-columns: 1fr auto auto; gap: 12px; margin: 18px 0;
+        .all-in-one-ribbon {
+            position: absolute; top: -14px; left: 42px;
+            background: linear-gradient(90deg, var(--brand), #FDE047); color: #000;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; font-weight: 900;
+            padding: 5px 16px; border-radius: 50px; text-transform: uppercase;
         }
+
+        .fleet-slider-box {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-bright);
+            border-radius: 18px; padding: 26px; margin: 22px 0;
+        }
+        .slider-top-row {
+            display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+        }
+        .fleet-count-badge {
+            font-family: 'Outfit', sans-serif; font-size: 2.1rem; font-weight: 900; color: var(--brand);
+        }
+        input[type="range"].master-slider {
+            width: 100%; height: 10px; accent-color: var(--brand);
+            border-radius: 10px; cursor: pointer;
+        }
+        .slider-ticks {
+            display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; color: var(--muted); margin-top: 8px;
+        }
+
+        .included-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px;
+        }
+        .inc-item {
+            display: flex; align-items: center; gap: 9px; font-size: 0.88rem; color: #E2E8F0; font-weight: 600;
+        }
+        .inc-item span { color: var(--green); font-weight: 900; }
+
+        .price-checkout-card {
+            background: #060911; border: 1.5px solid var(--border-bright);
+            border-radius: 22px; padding: 34px 28px; text-align: center;
+            display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+        }
+        .dynamic-price-val {
+            font-family: 'Outfit', sans-serif; font-size: clamp(2.8rem, 4.5vw, 3.8rem);
+            font-weight: 900; color: #fff; line-height: 1;
+        }
+        .dynamic-price-val small { font-size: 1rem; color: var(--muted); font-weight: 500; }
+        .daily-cost-pill {
+            display: inline-block; margin: 0 auto;
+            background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 0.76rem;
+            font-weight: 700; padding: 6px 14px; border-radius: 50px;
+        }
+        .roi-comparison-box {
+            background: rgba(16, 185, 129, 0.09); border: 1px solid var(--green);
+            border-radius: 14px; padding: 16px; text-align: left;
+        }
+
+        /* BENTO GRID DE DIFERENCIAIS */
+        .bento-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; }
+        .bento-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 18px; padding: 30px; transition: 0.25s;
+        }
+        .bento-card:hover { border-color: var(--brand); transform: translateY(-4px); }
+        .bento-tag {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700;
+            color: var(--cyan); background: rgba(56, 189, 248, 0.1); padding: 4px 10px;
+            border-radius: 6px; display: inline-block; margin-bottom: 14px;
+        }
+        .bento-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 10px; }
+        .bento-card p { color: var(--muted); font-size: 0.92rem; }
+
+        /* VALIDADOR OFICIAL CBMDF / ABNT */
+        .validator-bar {
+            background: var(--surface); border: 1px solid var(--border-bright);
+            border-radius: 18px; padding: 24px 30px; display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 20px;
+        }
+        .val-inputs { display: flex; gap: 10px; flex: 1; min-width: 280px; max-width: 520px; }
         .input-std {
-            width: 100%; padding: 13px 15px; border-radius: 10px; border: 1px solid var(--border-strong);
-            background: var(--card); color: #fff; font-size: 0.95rem; font-weight: 600; outline: none;
+            width: 100%; background: #050811; border: 1px solid var(--border-bright);
+            color: #fff; padding: 13px 16px; border-radius: 10px; font-size: 0.92rem; outline: none;
         }
         .input-std:focus { border-color: var(--brand); }
-        .validator-result {
-            background: rgba(16, 185, 129, 0.1); border: 1.5px solid var(--green);
-            border-radius: 14px; padding: 20px; margin-top: 16px; display: block;
-        }
 
-        /* =========================================================
-           NOVO: CASES E DEPOIMENTOS REAIS DE BRASÍLIA / DF
-           ========================================================= */
-        .cases-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+        /* CASES DF */
+        .cases-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 24px; }
         .case-card {
-            background: var(--panel); border: 1px solid var(--border-strong);
-            border-top: 4px solid var(--brand); border-radius: 18px; padding: 28px;
-            display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
-            box-shadow: 0 18px 45px rgba(0,0,0,0.55);
-        }
-        .case-metrics-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            background: #060A12; border: 1px solid var(--border); border-radius: 12px; padding: 12px;
-        }
-        .case-metric strong { display: block; font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; color: #34D399; }
-        .case-metric span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
-        .case-quote { font-size: 0.93rem; color: #e2e8f0; font-style: italic; line-height: 1.6; }
-        .case-author {
-            display: flex; align-items: center; justify-content: space-between;
-            border-top: 1px solid var(--border); padding-top: 14px; gap: 10px;
+            background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--brand);
+            border-radius: 18px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
         }
 
-        /* MATRIZ ANTES VS DEPOIS */
-        .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
-        .vs-col { border-radius: 20px; padding: 32px; border: 1.5px solid var(--border); }
-        .vs-old { background: linear-gradient(180deg, rgba(244, 63, 94, 0.08), #070B12); border-color: rgba(244, 63, 94, 0.35); }
-        .vs-new { background: linear-gradient(180deg, rgba(16, 185, 129, 0.1), #08101D); border-color: var(--green); }
-        .vs-list { list-style: none; margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
-        .vs-list li {
-            display: flex; align-items: flex-start; gap: 12px; font-size: 0.92rem;
-            background: rgba(0,0,0,0.35); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+        /* MODAIS DE SELF-ONBOARDING E LOGIN */
+        .modal-backdrop {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(2, 4, 9, 0.88); backdrop-filter: blur(14px);
+            display: none; align-items: center; justify-content: center; padding: 20px;
         }
-
-        /* STUDIO WHITE-LABEL + CALCULADORA */
-        .dual-engine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
-        .engine-box {
-            background: var(--panel); border: 1.5px solid var(--border-strong);
-            border-radius: 22px; padding: 32px; display: flex; flex-direction: column; justify-content: space-between;
+        .modal-window {
+            background: var(--surface); border: 1.5px solid var(--border-bright);
+            border-radius: 22px; width: 100%; max-width: 500px; padding: 36px 32px;
+            box-shadow: 0 35px 95px rgba(0, 0, 0, 0.95); position: relative;
         }
-        .swatch-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .swatch-pill {
-            flex: 1; min-width: 105px; padding: 10px; border-radius: 8px; border: none;
-            font-weight: 900; font-size: 0.75rem; color: #000; cursor: pointer;
+        .btn-close-modal {
+            position: absolute; top: 18px; right: 18px; width: 34px; height: 34px;
+            border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer; font-weight: 700;
         }
-        input[type="range"] { width: 100%; accent-color: var(--brand); height: 8px; cursor: pointer; margin-top: 8px; }
-
-        /* PLANOS */
-        .pricing-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-        .plan-box {
-            background: var(--panel); border: 1px solid var(--border-strong); border-radius: 22px;
-            padding: 34px 26px; display: flex; flex-direction: column; justify-content: space-between; position: relative;
-        }
-        .plan-box.vip {
-            border: 2px solid var(--brand);
-            background: linear-gradient(180deg, #162038 0%, #0B111E 100%);
-            box-shadow: 0 25px 70px rgba(245, 158, 11, 0.2);
-            transform: scale(1.02);
-        }
-        .vip-tag {
-            position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
-            background: var(--brand); color: #000; font-family: 'JetBrains Mono', monospace;
-            font-size: 0.72rem; font-weight: 900; padding: 4px 16px; border-radius: 50px;
-        }
-        .plan-price { font-family: 'JetBrains Mono', monospace; font-size: 2.4rem; font-weight: 900; color: #fff; margin: 14px 0; }
-        .plan-price small { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
-        .plan-feats { list-style: none; margin: 16px 0 26px 0; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: #E2E8F0; }
-        .plan-feats li::before { content: "✔ "; color: var(--green); font-weight: 900; margin-right: 6px; }
-
-        /* FAQ */
-        .faq-list { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-        .faq-item { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
-        .faq-q {
-            width: 100%; padding: 18px 22px; background: none; border: none; color: #fff;
-            font-size: 1rem; font-weight: 800; text-align: left; cursor: pointer;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .faq-a { padding: 0 22px 18px 22px; color: var(--muted); font-size: 0.92rem; display: none; border-top: 1px solid var(--border); padding-top: 14px; }
-        .faq-item.open .faq-a { display: block; }
-
-        .live-proof-toast {
-            position: fixed; bottom: 20px; left: 20px; z-index: 9500;
-            background: rgba(11, 17, 30, 0.96); backdrop-filter: blur(12px);
-            border: 1px solid var(--cyan); border-left: 4px solid var(--green);
-            padding: 12px 16px; border-radius: 12px; max-width: 340px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 12px;
-            transition: transform 0.4s ease, opacity 0.4s ease;
-        }
-        .live-proof-toast.hidden { transform: translateY(130%); opacity: 0; pointer-events: none; }
-
-        .floating-wa {
-            position: fixed; bottom: 20px; right: 20px; z-index: 9500;
-            background: linear-gradient(90deg, #10B981, #059669); color: #000;
-            font-weight: 900; font-size: 0.88rem; padding: 14px 20px; border-radius: 50px;
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4); border: none; cursor: pointer;
-        }
+        .form-row { margin-bottom: 15px; text-align: left; }
+        .form-row label { display: block; font-size: 0.74rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
 
         footer {
-            background: #010205; border-top: 1px solid var(--border);
-            padding: 45px 5%; text-align: center; color: var(--muted); font-size: 0.84rem;
+            border-top: 1px solid var(--border); padding: 48px 4%; text-align: center;
+            color: var(--muted); font-size: 0.85rem; background: #010205;
         }
 
-        @media (max-width: 980px) {
-            .stage-pane.active, .vs-grid, .dual-engine-grid, .portal-grid, .validator-search-row { grid-template-columns: 1fr; }
-            .plan-box.vip { transform: none; }
-            .nav-menu { display: none; }
-            .live-proof-toast { display: none; }
+        @media (max-width: 960px) {
+            .c-pane.active, .unified-pricing-shell, .included-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .unified-pricing-shell { padding: 28px 22px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="cyber-bg"></div>
-    <div class="glow-top"></div>
+    <div class="bg-grid-mesh"></div>
+    <div class="spotlight-hero"></div>
 
-    <!-- MODAL DO PORTAL DE ACESSO UNIFICADO (DIRETORIA VS TÉCNICO) -->
-    <div class="portal-modal-backdrop" id="modal-portal-acesso">
-        <div class="portal-modal-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:14px;">
-                <div>
-                    <span style="font-family:monospace; font-size:0.72rem; color:var(--cyan); font-weight:800;">CENTRAL DE AUTENTICAÇÃO CLOUD</span>
-                    <h3 style="font-size:1.35rem; font-weight:900; color:#fff;">Selecione Seu Ambiente de Acesso</h3>
-                </div>
-                <button type="button" class="btn-dark" style="padding:6px 12px;" onclick="fecharModalPortal()">✕ Fechar</button>
+    <!-- ============================================================== -->
+    <!-- MODAL 1: SELF-ONBOARDING 7 DIAS (JÁ LEVA A FROTA E O PREÇO!)   -->
+    <!-- ============================================================== -->
+    <div class="modal-backdrop" id="modal-trial">
+        <div class="modal-window" style="border-top: 4px solid var(--brand);">
+            <button type="button" class="btn-close-modal" onclick="fecharModais()">✕</button>
+            <div style="text-align:center; margin-bottom:20px;">
+                <div class="brand-logo-box" style="margin:0 auto 10px auto;" id="modal-sigla-badge">CT</div>
+                <h3 style="font-size:1.45rem; font-weight:900;">Liberar Meu Ambiente por 7 Dias</h3>
+                <p style="font-size:0.85rem; color:var(--muted); margin-top:4px;" id="modal-resumo-plano">
+                    Configuração selecionada: <strong>4 Viaturas</strong> • 100% White-Label Incluso
+                </p>
             </div>
 
-            <div class="portal-grid">
-                <a href="gestor.html" class="portal-card">
-                    <div>
-                        <span style="font-family:monospace; font-size:0.7rem; color:var(--brand); font-weight:800;">COMPUTADOR / DIRETORIA</span>
-                        <h4 style="font-size:1.2rem; font-weight:900; margin:6px 0;">💻 Command Center (Gestor)</h4>
-                        <p style="font-size:0.84rem; color:var(--muted);">Dashboard financeiro, despacho de OS, almoxarifado de viaturas, auditoria com Zoom 2.4x e configuração White-Label.</p>
-                    </div>
-                    <span class="btn-gold" style="justify-content:center; width:100%;">Acessar Painel Gestor ➔</span>
-                </a>
-
-                <a href="app.html" class="portal-card">
-                    <div>
-                        <span style="font-family:monospace; font-size:0.7rem; color:var(--cyan); font-weight:800;">CELULAR / VIATURA NA RUA</span>
-                        <h4 style="font-size:1.2rem; font-weight:900; margin:6px 0;">📱 App do Técnico (PWA)</h4>
-                        <p style="font-size:0.84rem; color:var(--muted);">Scanner OCR de gola P190, GPS via satélite, laboratório de estanqueidade, baixa de peças, 10 fotos e assinatura touch.</p>
-                    </div>
-                    <span class="btn-dark" style="justify-content:center; width:100%; border-color:var(--cyan); color:var(--cyan);">Abrir Terminal de Campo ➔</span>
-                </a>
+            <div class="form-row">
+                <label>Nome da Sua Empresa de Gás / Engenharia</label>
+                <input type="text" id="trial-empresa" class="input-std" placeholder="Ex: Brasília Gás Engenharia">
             </div>
 
-            <div style="margin-top:18px; background:#060A12; border:1px dashed var(--border-strong); padding:12px; border-radius:10px; font-size:0.78rem; color:var(--muted); text-align:center;">
-                🔑 <strong>Credencial de Demonstração Imediata:</strong> Use a senha mestra <code>capital2026</code> em qualquer um dos dois módulos.
+            <div class="form-row">
+                <label>Seu E-mail Corporativo (Login do Diretor)</label>
+                <input type="email" id="trial-email" class="input-std" placeholder="Ex: diretoria@brasiliagas.com.br">
+            </div>
+
+            <div class="form-row" style="margin-bottom:22px;">
+                <label>WhatsApp Executivo com DDD</label>
+                <input type="tel" id="trial-zap" class="input-std" placeholder="Ex: 61999999999">
+            </div>
+
+            <button type="button" class="btn-main" id="btn-confirmar-trial" style="width:100%; justify-content:center; padding:16px; font-size:0.96rem;" onclick="criarAmbienteTrialAutomatico()">
+                🚀 Criar Meu Painel White-Label & Entrar Agora
+            </button>
+            <p style="text-align:center; font-size:0.74rem; color:var(--muted); margin-top:12px;">
+                🔒 Sem cartão de crédito • Acesso imediato ao Gestor e App do Técnico
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 2: ACESSO DIRETO AO SISTEMA (DESTRANCA SESSÃO NA HORA)   -->
+    <!-- ============================================================== -->
+    <div class="modal-backdrop" id="modal-login">
+        <div class="modal-window" style="border-top: 4px solid var(--cyan);">
+            <button type="button" class="btn-close-modal" onclick="fecharModais()">✕</button>
+            <div style="text-align:center; margin-bottom:22px;">
+                <div class="brand-logo-box" style="margin:0 auto 10px auto; background:linear-gradient(135deg, var(--cyan), #0284C7);">🔐</div>
+                <h3 style="font-size:1.45rem; font-weight:900;">Portal de Acesso Corporativo</h3>
+                <p style="font-size:0.85rem; color:var(--muted); margin-top:4px;">Entre direto na Torre de Controle ou no App de Campo.</p>
+            </div>
+
+            <div class="form-row">
+                <label>E-mail da Empresa</label>
+                <input type="email" id="login-quick-email" class="input-std" value="admin@capitaltech.com">
+            </div>
+
+            <div class="form-row">
+                <label>Chave de Acesso (Padrão: capital2026)</label>
+                <input type="password" id="login-quick-pass" class="input-std" value="capital2026">
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:22px;">
+                <button type="button" class="btn-main" style="justify-content:center; padding:14px;" onclick="acessarModuloDireto('gestor.html')">
+                    💻 Abrir Gestor
+                </button>
+                <button type="button" class="btn-ghost" style="justify-content:center; padding:14px; border-color:var(--cyan); color:var(--cyan);" onclick="acessarModuloDireto('app.html')">
+                    📱 Abrir App Rua
+                </button>
+            </div>
+
+            <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border); text-align:center;">
+                <a href="master.html" style="font-size:0.75rem; color:var(--muted); text-decoration:none;">👑 Acesso Exclusivo CEO: Command Center (Master)</a>
             </div>
         </div>
     </div>
 
-    <!-- BARRA DE TELEMETRIA AO VIVO -->
-    <div class="telemetry-bar">
-        <div class="telemetry-left">
-            <span class="live-indicator"><span class="live-dot"></span> SERVIDOR CLOUD OPERACIONAL • SLA 99.98%</span>
-            <span>CRIPTOGRAFIA SSL 256-BITS • LGPD COMPLIANT</span>
-        </div>
-        <div class="telemetry-right">
-            <span>NORMAS: ABNT NBR 13523 • NBR 15526 • NBR 8460 • CBMDF</span>
-            <span style="color:var(--brand); font-weight:700;">RASTREABILIDADE RBC / INMETRO</span>
-        </div>
+    <!-- BARRA DE TELEMETRIA SUPERIOR -->
+    <div class="status-strip">
+        <span class="status-pill-live"><span class="pulse-dot"></span> INFRAESTRUTURA CLOUD MULTI-TENANT ATIVA</span>
+        <span class="mono">CONFORMIDADE: ABNT NBR 13523 • NBR 15526 • NBR 8460 • CBMDF • INMETRO</span>
     </div>
 
-    <!-- NAVBAR PRINCIPAL -->
-    <nav>
-        <a href="#" class="brand-wrap">
-            <div class="brand-cube" id="ui-nav-sigla">CT</div>
-            <div>
-                <div class="brand-text-title"><span id="ui-nav-nome" style="color:#fff;">CAPITAL TECH</span> <span>SaaS</span></div>
-                <span class="brand-text-sub">PORTAL OFICIAL • ENGENHARIA GLP & FROTA</span>
+    <!-- NAVBAR EXECUTIVA -->
+    <div class="nav-container">
+        <nav>
+            <a href="#" class="brand-id">
+                <div class="brand-logo-box" id="nav-sigla">CT</div>
+                <div class="brand-title"><span id="nav-nome" style="color:#fff;">CAPITAL TECH</span> <span>SaaS</span></div>
+            </a>
+
+            <div class="nav-links">
+                <a href="#cockpit">Simulador Ao Vivo</a>
+                <a href="#investimento">Simulador de Preço & ROI</a>
+                <a href="#validador">Validador CBMDF</a>
+                <a href="#cases">Cases DF</a>
             </div>
-        </a>
 
-        <div class="nav-menu">
-            <a href="#laboratorio">Simulador Ao Vivo</a>
-            <a href="#validador">Validar Laudo/ART</a>
-            <a href="#cases-df">Cases Brasília/DF</a>
-            <a href="#personalizar">Sua Marca & ROI</a>
-            <a href="#planos">Licenciamento</a>
-        </div>
-
-        <div class="nav-cta-group">
-            <button type="button" class="btn-dark" onclick="abrirModalPortal()">🔐 Acessar Sistema (Login)</button>
-            <button type="button" class="btn-gold" onclick="dispararPropostaWhatsApp('Licenciamento Portal Principal')">🚀 Contratar Plataforma</button>
-        </div>
-    </nav>
+            <div class="nav-btns">
+                <button type="button" class="btn-ghost" onclick="abrirModal('modal-login')">🔐 Entrar</button>
+                <button type="button" class="btn-main" onclick="abrirModal('modal-trial')">Testar 7 Dias Grátis</button>
+            </div>
+        </nav>
+    </div>
 
     <!-- HERO SECTION -->
-    <header class="hero-sec">
+    <header class="hero">
         <div class="hero-kicker">
-            <span>🏛️ TECNOLOGIA VALIDADA EM CAMPO NO DISTRITO FEDERAL</span>
-            <span>•</span>
-            <span>PADRÃO ABNT, INMETRO & CORPO DE BOMBEIROS</span>
+            <span>⚡ PLATAFORMA ALL-IN-ONE WHITE-LABEL</span>
+            <span style="color:var(--brand);">•</span>
+            <span>OCR DE TANQUES P190 + LAUDO EM 1 SEGUNDO + ESTOQUE POR VIATURA</span>
         </div>
 
         <h1>
-            A Primeira Plataforma de Engenharia GLP que <span class="gradient-word">Enxerga o Tanque, Audita a Rede e Blinda Sua Frota.</span>
+            O Sistema Operacional das Empresas de Gás que <span class="grad-text">Lideram o Mercado.</span>
         </h1>
 
-        <p class="hero-lead">
-            Enquanto o seu técnico aponta a câmera para a gola do tanque P190 no subsolo, a <strong>Visão Computacional OCR</strong> extrai a série e a tara, valida o ensaio de estanqueidade <strong>NBR 15526</strong>, abate a válvula da viatura e entrega o certificado assinado com 10 fotos em <strong>Zoom 2.4x</strong> na mesa da diretoria em menos de 1 segundo.
+        <p class="lead">
+            Enquanto o seu técnico escaneia a gola do tanque P190 pelo celular no subsolo sem internet, o Certificado ABNT com <strong>10 fotos em Zoom 2.4x</strong>, <strong>vídeo do manômetro</strong> e <strong>baixa automática de peças da viatura</strong> já está na tela da diretoria.
         </p>
 
-        <div class="hero-btns">
-            <button type="button" class="btn-gold btn-xl" onclick="dispararPropostaWhatsApp('Implantação Corporativa 24h')">
-                📲 Licenciar Com a Marca da Minha Empresa
+        <div class="hero-actions">
+            <button type="button" class="btn-main btn-xl" onclick="abrirModal('modal-trial')">
+                🚀 Liberar 7 Dias Grátis com a Minha Marca
             </button>
-            <button type="button" class="btn-dark btn-xl" onclick="abrirModalPortal()">
-                💻 Entrar no Painel Gestor ou App Técnico
-            </button>
+            <a href="#investimento" class="btn-ghost btn-xl">
+                💰 Simular Valor para Minha Frota
+            </a>
         </div>
 
-        <!-- SELOS DE CREDIBILIDADE CORPORATIVA -->
-        <div class="compliance-strip">
-            <div class="compliance-badge"><span>✔</span> Adequado às Exigências CBMDF & Seguradoras</div>
-            <div class="compliance-badge"><span>✔</span> Rastreabilidade RBC / INMETRO de Manômetros</div>
-            <div class="compliance-badge"><span>✔</span> Validador Público de ART/TRT com QR Code</div>
-            <div class="compliance-badge"><span>✔</span> Opera Offline em Subsolos e Casas de Bombas</div>
+        <!-- BARRA WHITE-LABEL INSTANTÂNEA ACOPLADA AO COCKPIT -->
+        <div class="wl-instant-bar" id="cockpit">
+            <div>
+                <span class="mono" style="font-size:0.7rem; color:var(--brand); font-weight:800; text-transform:uppercase;">🎨 TESTE SUA MARCA AGORA MESMO</span>
+                <div style="font-size:0.92rem; font-weight:700; color:#fff;">Digite o nome da sua empresa para ver o sistema inteiro se transformar:</div>
+            </div>
+            <div class="wl-bar-controls">
+                <input type="text" id="live-brand-input" class="input-wl-live" placeholder="Digite o nome da sua empresa aqui..." oninput="transformarMarcaAoVivo(this.value)">
+                <div class="dot-swatch" style="background:#F59E0B;" onclick="mudarCorGlobal('#F59E0B')" title="Âmbar GLP"></div>
+                <div class="dot-swatch" style="background:#38BDF8;" onclick="mudarCorGlobal('#38BDF8')" title="Azul Tech"></div>
+                <div class="dot-swatch" style="background:#10B981;" onclick="mudarCorGlobal('#10B981')" title="Verde Eco"></div>
+                <div class="dot-swatch" style="background:#F97316;" onclick="mudarCorGlobal('#F97316')" title="Laranja Chama"></div>
+            </div>
         </div>
 
-        <!-- =========================================================
-             SHOWROOM INTERATIVO DE 4 ABAS (OPERAÇÃO AO VIVO)
-             ========================================================= -->
-        <div class="interactive-stage" id="laboratorio">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="background:var(--brand); color:#000; font-family:monospace; font-weight:900; font-size:0.72rem; padding:4px 10px; border-radius:6px;">LABORATÓRIO INTERATIVO</span>
-                    <strong style="font-size:0.92rem; color:#fff;">Clique nos 4 módulos abaixo para testar os motores da plataforma agora mesmo:</strong>
+        <!-- COCKPIT INTERATIVO DE DEMONSTRAÇÃO -->
+        <div class="cockpit-window">
+            <div class="cockpit-tabs">
+                <div class="tab-group">
+                    <button type="button" class="c-tab active" id="c-btn-1" onclick="mudarAbaCockpit(1)">📷 1. Visão Computacional OCR (P190)</button>
+                    <button type="button" class="c-tab" id="c-btn-2" onclick="mudarAbaCockpit(2)">📈 2. Telemetria de Estanqueidade Ao Vivo</button>
+                    <button type="button" class="c-tab" id="c-btn-3" onclick="mudarAbaCockpit(3)">🚐 3. Almoxarifado Móvel da Viatura</button>
                 </div>
-                <span style="font-family:monospace; font-size:0.75rem; color:var(--cyan);" id="stage-status-indicator">🟢 MÓDULO 01 ATIVO: SCANNER OCR</span>
+                <span class="mono" style="font-size:0.74rem; color:var(--green);" id="cockpit-brand-indicator">● LICENÇA WHITE-LABEL: CAPITAL TECH</span>
             </div>
 
-            <div class="stage-tabs">
-                <button type="button" class="stage-tab-btn active" id="st-btn-1" onclick="trocarMotorShowroom(1)">
-                    <strong>📷 1. Visão Computacional OCR</strong>
-                    <span>Lê a chapa de aço da gola P190</span>
-                </button>
-                <button type="button" class="stage-tab-btn" id="st-btn-2" onclick="trocarMotorShowroom(2)">
-                    <strong>📈 2. Curva de Pressão Ao Vivo</strong>
-                    <span>Simule vazamento ou estanqueidade</span>
-                </button>
-                <button type="button" class="stage-tab-btn" id="st-btn-3" onclick="trocarMotorShowroom(3)">
-                    <strong>🚐 3. Estoque Móvel de Viaturas</strong>
-                    <span>Transfira peças p/ o carro na rua</span>
-                </button>
-                <button type="button" class="stage-tab-btn" id="st-btn-4" onclick="trocarMotorShowroom(4)">
-                    <strong>✍️ 4. Assinatura Touch + QR Code</strong>
-                    <span>Assine com o dedo aqui mesmo</span>
-                </button>
-            </div>
-
-            <!-- ABA 1: OCR -->
-            <div class="stage-pane active" id="st-pane-1">
-                <div class="stage-card">
+            <div class="cockpit-body">
+                <!-- ABA 1: OCR -->
+                <div class="c-pane active" id="c-pane-1">
                     <div>
-                        <span style="font-family:monospace; font-size:0.72rem; color:var(--cyan); font-weight:700;">[CÂMERA DO TÉCNICO • FILTRO DE ALTO CONTRASTE]</span>
-                        <h3 style="font-size:1.3rem; font-weight:900; margin:6px 0;">Leitura Óptica de Plaqueta / Gola de Tanque (NBR 8460)</h3>
-                        <p style="font-size:0.86rem; color:var(--muted);">Clique no botão abaixo para disparar o feixe de visão computacional sobre a gravação na chapa de aço:</p>
+                        <span class="eyebrow">FIM DOS ERROS DE ANOTAÇÃO NA RUA</span>
+                        <h3 style="font-size:1.65rem; font-weight:900; margin-bottom:12px;">A Câmera Lê a Chapa de Aço do Tanque em 2 Segundos</h3>
+                        <p style="color:var(--muted); font-size:0.95rem; margin-bottom:22px;">
+                            O filtro de alto contraste ignora ferrugem e reflexo solar na gola do P190, extrai Série, Tara, Capacidade e Ano, calcula automaticamente a requalificação NBR 8865 (+15 anos) e já arquiva a Foto Nº 1 com lupa de 2.4x.
+                        </p>
+                        <button type="button" class="btn-main" onclick="dispararScannerDemo()">
+                            🔍 Disparar Leitura Óptica na Plaqueta
+                        </button>
+                    </div>
 
-                        <div class="steel-plate-sim">
-                            <div class="ocr-scan-bar" id="ocr-laser-line"></div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:#94A3B8; margin-bottom:8px;">
-                                <span>CHAPA DE AÇO ESTACIONÁRIO P190</span>
-                                <span id="ocr-confidence-txt">AGUARDANDO LEITURA...</span>
-                            </div>
-                            <div class="plate-stamp-grid">
-                                <div class="stamp-box" id="stamp-1"><small>NÚMERO DE SÉRIE</small><strong>Nº 001729</strong></div>
-                                <div class="stamp-box" id="stamp-2"><small>TARA GRAVADA</small><strong>135,10 KG</strong></div>
-                                <div class="stamp-box" id="stamp-3"><small>CAP. VOLUMÉTRICA</small><strong>450 LITROS</strong></div>
-                                <div class="stamp-box" id="stamp-4"><small>DATA / REGISTRO</small><strong>2017 • ARXO</strong></div>
-                            </div>
+                    <div class="sim-stage-box">
+                        <div class="scan-beam" id="demo-beam"></div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--cyan);" class="mono">
+                            <span>TANQUE ESTACIONÁRIO P190 • NBR 8460</span>
+                            <span id="demo-ocr-status">AGUARDANDO DISPARO...</span>
+                        </div>
+                        <div class="plate-cells">
+                            <div class="p-cell" id="pcell-1"><small>NÚMERO DE SÉRIE</small><strong>Nº 001729</strong></div>
+                            <div class="p-cell" id="pcell-2"><small>TARA GRAVADA</small><strong>135,10 KG</strong></div>
+                            <div class="p-cell" id="pcell-3"><small>CAPACIDADE</small><strong>450 LITROS</strong></div>
+                            <div class="p-cell" id="pcell-4"><small>STATUS NBR 8865</small><strong style="color:var(--green);">Vigente (2032)</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 2: TELEMETRIA DE PRESSÃO -->
+                <div class="c-pane" id="c-pane-2">
+                    <div>
+                        <span class="eyebrow">LABORATÓRIO NBR 15526 & RASTREABILIDADE RBC</span>
+                        <h3 style="font-size:1.65rem; font-weight:900; margin-bottom:12px;">Curva Manométrica Auditada em Tempo Real</h3>
+                        <p style="color:var(--muted); font-size:0.95rem; margin-bottom:22px;">
+                            O sistema bloqueia manômetros com certificado INMETRO vencido e monitora a variação de pressão. Clique nos botões abaixo para simular uma queda na tubulação ou a aprovação do laudo:
+                        </p>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="btn-ghost" style="border-color:var(--red); color:#FDA4AF;" onclick="mudarCurvaPressao('VAZAMENTO')">🚨 Simular Queda de Pressão</button>
+                            <button type="button" class="btn-main" onclick="mudarCurvaPressao('ESTANQUE')">✅ Estabilizar Rede em 15.0 kPa</button>
                         </div>
                     </div>
 
-                    <button type="button" class="btn-gold" style="width:100%; justify-content:center;" onclick="executarDemonstracaoOCR()">
-                        🔍 Disparar Scanner Óptico na Gola Agora
-                    </button>
-                </div>
-
-                <div class="stage-card">
-                    <div>
-                        <span style="font-family:monospace; font-size:0.72rem; color:#34D399; font-weight:700;">[RESPOSTA AUTOMÁTICA DO SERVIDOR]</span>
-                        <h3 style="font-size:1.25rem; font-weight:800; margin:6px 0;">Preenchimento & Cálculo NBR 8865 Instantâneo</h3>
-                        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:14px;">O sistema preenche o laudo sozinho, calcula os 15 anos de requalificação e salva a Foto Nº 1 com lupa de 2.4x:</p>
-
-                        <div style="background:#0B111E; border:1px solid var(--border); border-radius:12px; padding:14px; font-family:monospace; font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
-                            <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Ativo Identificado:</span><strong id="ocr-out-serie" style="color:var(--brand);">Aguardando scanner...</strong></div>
-                            <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Tara / Volume:</span><strong id="ocr-out-tara">---</strong></div>
-                            <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Pressão de Serviço:</span><strong id="ocr-out-pserv">---</strong></div>
-                            <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Status NBR 8865:</span><strong id="ocr-out-req" style="color:#34D399;">---</strong></div>
-                            <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Slot Fotográfico #1:</span><strong id="ocr-out-foto" style="color:var(--cyan);">---</strong></div>
-                        </div>
-                    </div>
-
-                    <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); padding:12px; border-radius:10px; font-size:0.8rem; color:#cbd5e1;">
-                        💡 <strong>Zero erro humano:</strong> Elimina anotações trocadas de números de série em parques com dezenas de tanques.
-                    </div>
-                </div>
-            </div>
-
-            <!-- ABA 2: PRESSÃO -->
-            <div class="stage-pane" id="st-pane-2">
-                <div class="stage-card">
-                    <div>
+                    <div class="sim-stage-box">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-family:monospace; font-size:0.72rem; color:var(--cyan); font-weight:700;">[LABORATÓRIO MANOMÉTRICO • NBR 15526]</span>
-                            <span id="press-live-badge" style="font-family:monospace; font-size:0.75rem; font-weight:800; color:#34D399;">● 15.0 kPa ESTÁVEL</span>
+                            <span class="mono" style="font-size:0.72rem; color:var(--muted);">MANÔMETRO #INM-9482 CALIBRADO</span>
+                            <span class="mono" style="font-size:0.76rem; font-weight:800; color:var(--green);" id="live-press-pill">● 15.0 kPa ESTÁVEL (APROVADO)</span>
                         </div>
-                        <h3 style="font-size:1.25rem; font-weight:900; margin:6px 0;">Monitoramento Gráfico de Queda de Pressão</h3>
-                        <canvas id="pressureChart" width="520" height="185"></canvas>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <button type="button" class="btn-dark" style="border-color:var(--red); color:#fda4af; justify-content:center;" onclick="definirModoPressao('VAZAMENTO')">
-                            🚨 Simular Vazamento na Rede
-                        </button>
-                        <button type="button" class="btn-gold" style="justify-content:center;" onclick="definirModoPressao('ESTANQUE')">
-                            ✅ Estancar & Cravar 15.0 kPa
-                        </button>
+                        <canvas id="livePressureCanvas" width="500" height="155"></canvas>
+                        <div style="font-size:0.78rem; color:var(--muted);" id="live-press-foot">
+                            Veredito automático: Variação de 0.0 kPa • Detector de Gás 0% LEL Confirmado.
+                        </div>
                     </div>
                 </div>
 
-                <div class="stage-card">
+                <!-- ABA 3: ESTOQUE MÓVEL -->
+                <div class="c-pane" id="c-pane-3">
                     <div>
-                        <span style="font-family:monospace; font-size:0.72rem; color:var(--brand); font-weight:700;">[VALIDADOR AUTOMÁTICO + INMETRO]</span>
-                        <h3 style="font-size:1.25rem; font-weight:800; margin:6px 0;">Veredito Sem Margem para Erro ou Fraude</h3>
-                        <p style="font-size:0.86rem; color:var(--muted); margin-bottom:14px;">O sistema bloqueia manômetros com calibração RBC/INMETRO vencida e emite o veredito matemático instantâneo:</p>
-
-                        <div id="press-verdict-card" style="background:rgba(16,185,129,0.12); border:2px solid var(--green); border-radius:12px; padding:18px; margin-bottom:14px;">
-                            <div style="font-size:0.72rem; font-family:monospace; color:#34D399; font-weight:800;">LAUDO AUTOMATIZADO ABNT</div>
-                            <div id="press-verdict-title" style="font-size:1.15rem; font-weight:900; color:#fff; margin:4px 0;">APROVADO — VARIAÇÃO: 0.0 kPa (REDE 100% ESTANQUE)</div>
-                            <div id="press-verdict-sub" style="font-size:0.8rem; color:#cbd5e1;">Manômetro Digital #INM-9482 Calibrado • Detector 0% LEL Confirmado.</div>
-                        </div>
-                    </div>
-
-                    <div style="font-family:monospace; font-size:0.76rem; color:var(--muted); background:#0B111E; padding:12px; border-radius:10px; border:1px solid var(--border);">
-                        &gt; Segurança Jurídica: Se houver queda acima da tolerância, o sistema alerta a tela do Gestor com <strong style="color:var(--red);">🚨 REPROVADO / BLOQUEAR CENTRAL</strong> na mesma hora.
-                    </div>
-                </div>
-            </div>
-
-            <!-- ABA 3: ESTOQUE -->
-            <div class="stage-pane" id="st-pane-3">
-                <div class="stage-card">
-                    <div>
-                        <span style="font-family:monospace; font-size:0.72rem; color:var(--cyan); font-weight:700;">[RASTREABILIDADE DE ALMOXARIFADO MÓVEL]</span>
-                        <h3 style="font-size:1.25rem; font-weight:900; margin:6px 0;">Fim do Sumiço de Reguladores e Válvulas nos Carros</h3>
-                        <p style="font-size:0.86rem; color:var(--muted); margin-bottom:14px;">Teste transferir uma peça do Galpão Central para a viatura e depois simular a aplicação em um condomínio:</p>
-
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-                            <div style="background:#0B111E; border:1px solid var(--border); padding:14px; border-radius:12px; text-align:center;">
-                                <small style="color:var(--muted); font-size:0.72rem; font-weight:700;">🏢 GALPÃO CENTRAL</small>
-                                <div id="stk-base-qtd" style="font-family:monospace; font-size:1.8rem; font-weight:900; color:var(--cyan); margin:4px 0;">25 un.</div>
-                                <span style="font-size:0.74rem; color:#cbd5e1;">Regulador 1º Estágio Aliança</span>
-                            </div>
-                            <div style="background:#0B111E; border:1.5px solid var(--brand); padding:14px; border-radius:12px; text-align:center;">
-                                <small style="color:var(--brand); font-size:0.72rem; font-weight:700;">🚐 VIATURA FROTA-DF04</small>
-                                <div id="stk-van-qtd" style="font-family:monospace; font-size:1.8rem; font-weight:900; color:#fff; margin:4px 0;">4 un.</div>
-                                <span style="font-size:0.74rem; color:#34D399;" id="stk-van-val">Carga: R$ 660,00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <button type="button" class="btn-dark" style="justify-content:center;" onclick="simularMovimentoEstoque('ABASTECER_CARRO')">
-                            🚐 Enviar +1 Peça p/ Viatura
-                        </button>
-                        <button type="button" class="btn-gold" style="justify-content:center;" onclick="simularMovimentoEstoque('USAR_NA_OS')">
-                            🔧 Técnico Usou na OS (+R$ 165)
+                        <span class="eyebrow">GOVERNANÇA DE PEÇAS POR CARRO</span>
+                        <h3 style="font-size:1.65rem; font-weight:900; margin-bottom:12px;">Nenhuma Válvula ou Regulador Some da Frota</h3>
+                        <p style="color:var(--muted); font-size:0.95rem; margin-bottom:22px;">
+                            Cada Fiorino ou moto funciona como um almoxarifado individual. Quando o técnico aplica um regulador no condomínio, o estoque do carro desce automaticamente e o valor entra na Ordem de Serviço.
+                        </p>
+                        <button type="button" class="btn-main" onclick="simularAplicacaoPeca()">
+                            🔧 Baixar 1x Regulador da Viatura (+R$ 165)
                         </button>
                     </div>
-                </div>
 
-                <div class="stage-card">
-                    <div>
-                        <span style="font-family:monospace; font-size:0.72rem; color:#34D399; font-weight:700;">[ESPELHO FINANCEIRO AUTOMÁTICO]</span>
-                        <h3 style="font-size:1.25rem; font-weight:800; margin:6px 0;">Cada Peça Aplicada Soma na OS Automaticamente</h3>
-                        <p style="font-size:0.86rem; color:var(--muted); margin-bottom:16px;">O técnico nunca esquece de cobrar uma peça trocada. Ao clicar em baixar do carro, o valor já entra na fatura do cliente:</p>
-
-                        <div style="background:#0B111E; border:1px solid var(--border); border-radius:12px; padding:16px; font-family:monospace; font-size:0.82rem;">
-                            <div style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px dashed var(--border);">
-                                <span>Mão de Obra Técnica:</span><strong>R$ 280,00</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--border);">
-                                <span>Peças Baixadas da Viatura:</span><strong id="stk-os-pecas" style="color:var(--brand);">0x Regulador (R$ 0,00)</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding-top:10px; font-size:1.05rem;">
-                                <span style="color:#fff; font-weight:800;">TOTAL DA OS NA CENTRAL:</span>
-                                <strong id="stk-os-total" style="color:#34D399;">R$ 280,00</strong>
-                            </div>
+                    <div class="sim-stage-box">
+                        <div style="display:flex; justify-content:space-between; padding-bottom:14px; border-bottom:1px solid var(--border); margin-bottom:14px;">
+                            <span>🚐 Viatura <strong>FROTA-DF04</strong> (Regulador Aliança 1º Est.)</span>
+                            <strong class="mono" style="color:var(--brand); font-size:1rem;" id="van-stock-count">4 un. no carro</strong>
                         </div>
-                    </div>
-
-                    <div id="stk-log-msg" style="font-family:monospace; font-size:0.76rem; color:var(--cyan); background:rgba(56,189,248,0.08); padding:11px; border-radius:8px; border:1px solid rgba(56,189,248,0.25);">
-                        &gt; Clique nos botões ao lado para testar o fluxo físico e financeiro em tempo real.
-                    </div>
-                </div>
-            </div>
-
-            <!-- ABA 4: ASSINATURA -->
-            <div class="stage-pane" id="st-pane-4">
-                <div class="stage-card">
-                    <div>
-                        <span style="font-family:monospace; font-size:0.72rem; color:var(--brand); font-weight:700;">[TESTE DE ASSINATURA TOUCH AO VIVO]</span>
-                        <h3 style="font-size:1.25rem; font-weight:900; margin:6px 0;">Assine Abaixo com o Mouse ou o Dedo</h3>
-                        <p style="font-size:0.84rem; color:var(--muted); margin-bottom:10px;">Veja como o síndico ou gerente assina na tela do celular do seu técnico e gera o hash criptográfico:</p>
-
-                        <div style="background:#fff; border:2px solid var(--brand); border-radius:10px; overflow:hidden; margin-bottom:10px;">
-                            <canvas id="demoSigCanvas" width="500" height="145" style="width:100%; height:145px; display:block; cursor:crosshair; touch-action:none;"></canvas>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:var(--muted); font-size:0.92rem;">Fatura Atual da OS #8490:</span>
+                            <strong class="mono" style="font-size:1.5rem; color:var(--green);" id="van-os-total">R$ 280,00</strong>
                         </div>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; gap:10px;">
-                        <button type="button" class="btn-dark" onclick="limparAssinaturaDemo()">🗑️ Limpar Quadro</button>
-                        <button type="button" class="btn-gold" style="flex:1; justify-content:center;" onclick="autenticarCertificadoDemo()">
-                            📄 Cravar Assinatura & Gerar Selo QR Code
-                        </button>
-                    </div>
-                </div>
-
-                <div class="stage-card">
-                    <div style="display:flex; gap:16px; align-items:center; background:#0B111E; border:1.5px solid var(--brand); border-radius:14px; padding:18px;">
-                        <div style="background:#fff; padding:6px; border-radius:8px; flex-shrink:0;">
-                            <img id="demo-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=CERTIFICADO-CAPITAL-TECH-VALIDADO" alt="QR" style="width:96px; height:96px; display:block;">
-                        </div>
-                        <div>
-                            <span style="font-family:monospace; font-size:0.68rem; color:#34D399; font-weight:800;">● DOCUMENTO PRONTO P/ CBMDF & CONDOMÍNIO</span>
-                            <h4 style="font-size:1.05rem; font-weight:900; color:#fff; margin:4px 0;" id="demo-cert-brand">CERTIFICADO OFICIAL — CAPITAL TECH</h4>
-                            <p style="font-size:0.78rem; color:var(--muted);" id="demo-cert-status">Aguardando rubrica digital no quadro ao lado para gerar hash de validação...</p>
-                        </div>
-                    </div>
-
-                    <div style="background:rgba(16,185,129,0.1); border:1px solid var(--green); border-radius:10px; padding:14px; font-size:0.82rem; color:#e2e8f0;">
-                        ✔ <strong>Envio Triplo em 1 Clique:</strong> Gera o PDF A4 para impressão, dispara o resumo no WhatsApp do Síndico c/ alerta de revisão de 1 ano e arquiva na Central com as 10 fotos e o vídeo.
                     </div>
                 </div>
             </div>
@@ -706,757 +591,611 @@
     </header>
 
     <!-- =========================================================
-         NOVO: VALIDADOR PÚBLICO DE CERTIFICADOS E ART (PARA BOMBEIROS E SÍNDICOS)
+         MOTOR ÚNICO DE PRECIFICAÇÃO DINÂMICA POR TÉCNICO + ROI
          ========================================================= -->
-    <section class="section-wrap" id="validador" style="padding-bottom: 30px;">
-        <div class="validator-box">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;">
-                <div>
-                    <span style="font-family:monospace; font-size:0.74rem; color:var(--cyan); font-weight:800;">🏛️ CONSULTA PÚBLICA DE AUTENTICIDADE NORMATIVA (CBMDF / ABNT / INMETRO)</span>
-                    <h2 style="font-size:1.65rem; font-weight:900; margin-top:4px;">Validador Oficial de Certificados de Estanqueidade & ART</h2>
-                    <p style="font-size:0.9rem; color:var(--muted);">Síndicos, engenheiros e vistoriadores podem consultar em tempo real a validade de qualquer certificado emitido na plataforma:</p>
-                </div>
-                <span style="background:rgba(16,185,129,0.14); border:1px solid var(--green); color:#34D399; font-family:monospace; font-size:0.74rem; font-weight:800; padding:6px 12px; border-radius:50px;">
-                    🔒 BASE INTEGRADA AO FIREBASE REALTIME
-                </span>
-            </div>
-
-            <div class="validator-search-row">
-                <input type="text" id="input-consulta-os" class="input-std" value="CT-2026-8412" placeholder="Digite o Nº do Protocolo da OS (Ex: CT-2026-8412 ou G3-2026-1090)">
-                <button type="button" class="btn-gold" onclick="consultarCertificadoPublico()">🔍 Verificar Autenticidade</button>
-                <button type="button" class="btn-dark" onclick="preencherProtocoloExemplo('G3-2026-9104')">Testar Case G3 DF</button>
-            </div>
-
-            <div class="validator-result" id="box-resultado-validador">
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; font-size:0.84rem;">
-                    <div>
-                        <small style="color:var(--muted); font-family:monospace;">PROTOCOLO & STATUS</small>
-                        <strong style="display:block; color:#34D399; font-size:1rem;" id="val-res-prot">✔ #CT-2026-8412 — AUTÊNTICO & VIGENTE</strong>
-                    </div>
-                    <div>
-                        <small style="color:var(--muted); font-family:monospace;">PONTO AUDITADO / LOCAL</small>
-                        <strong style="display:block; color:#fff;" id="val-res-cli">Padaria & Confeitaria Pão Dourado (Taguatinga/DF)</strong>
-                    </div>
-                    <div>
-                        <small style="color:var(--muted); font-family:monospace;">ENSAIO & INSTRUMENTO RBC</small>
-                        <strong style="display:block; color:var(--brand);" id="val-res-ens">15.0 kPa Estável (0.0 kPa) • Manômetro #INM-9482</strong>
-                    </div>
-                    <div>
-                        <small style="color:var(--muted); font-family:monospace;">RESPONSABILIDADE TÉCNICA</small>
-                        <strong style="display:block; color:var(--cyan);" id="val-res-art">ART-DF #0720260098412 • 10 Fotos HD Auditadas</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- =========================================================
-         NOVO: CASES REAIS E DEPOIMENTOS DE BRASÍLIA / DISTRITO FEDERAL
-         ========================================================= -->
-    <section class="section-wrap" id="cases-df">
+    <section class="section" id="investimento">
         <div class="sec-head">
-            <span class="sec-kicker">PROVA REAL DE CAMPO • BRASÍLIA / DF</span>
-            <h2>Quem Já Opera com Nossa Engenharia no Distrito Federal</h2>
-            <p>De frotas corporativas no SIA e Taguatinga a grandes condomínios verticais em Águas Claras e Noroeste:</p>
+            <span class="eyebrow">MODELO VALE DO SILÍCIO • PLANO ÚNICO COMPLETO</span>
+            <h2>Um Único Sistema Completo. Valor Justo pelo Tamanho da Sua Frota.</h2>
+            <p>Sem planos limitados ou recursos bloqueados. Você recebe <strong>100% da plataforma White-Label com a sua marca</strong>, e a assinatura acompanha o número de técnicos/viaturas em campo:</p>
         </div>
 
-        <div class="cases-grid">
-            <!-- CASE 1: G3 DO BRASIL / OPERAÇÃO CORPORATIVA -->
-            <div class="case-card">
+        <div class="unified-pricing-shell">
+            <div class="all-in-one-ribbon">★ TUDO LIBERADO • 100% WHITE-LABEL INCLUSO EM QUALQUER FROTA</div>
+
+            <!-- LADO ESQUERDO: CONTROLE DESLIZANTE DE TÉCNICOS + TUDO INCLUSO -->
+            <div>
+                <h3 style="font-size:1.55rem; font-weight:900;">Quantos Técnicos ou Viaturas Sua Operação Possui?</h3>
+                <p style="font-size:0.92rem; color:var(--muted); margin-top:4px;">Arraste o seletor abaixo para calcular instantaneamente o investimento mensal e o retorno financeiro da sua equipe:</p>
+
+                <div class="fleet-slider-box">
+                    <div class="slider-top-row">
+                        <span style="font-size:0.86rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Tamanho da Sua Frota em Campo:</span>
+                        <span class="fleet-count-badge" id="lbl-num-tecnicos">4 Técnicos / Viaturas</span>
+                    </div>
+
+                    <input type="range" id="slider-tecnicos" class="master-slider" min="1" max="30" value="4" oninput="calcularPlanoUnicoInteligente()">
+
+                    <div class="slider-ticks">
+                        <span>1 Técnico (Autônomo)</span>
+                        <span>5 Viaturas</span>
+                        <span>10 Viaturas</span>
+                        <span>20 Viaturas</span>
+                        <span>30+ Frota Pesada</span>
+                    </div>
+                </div>
+
+                <div style="font-size:0.78rem; font-weight:800; color:var(--cyan); text-transform:uppercase; letter-spacing:0.8px;" class="mono">
+                    ✔ TODOS OS MOTORES INCLUSOS SEM CUSTO EXTRA:
+                </div>
+
+                <div class="included-grid">
+                    <div class="inc-item"><span>✔</span> 100% White-Label (Sua Marca e Cores)</div>
+                    <div class="inc-item"><span>✔</span> Ordens de Serviço & PDFs A4 Ilimitados</div>
+                    <div class="inc-item"><span>✔</span> Scanner OCR de Gola P190 por Câmera</div>
+                    <div class="inc-item"><span>✔</span> Dossiê de 10 Fotos Zoom 2.4x + Vídeo 10s</div>
+                    <div class="inc-item"><span>✔</span> Controle de Estoque Móvel por Viatura</div>
+                    <div class="inc-item"><span>✔</span> Funciona Offline no 2º Subsolo (PWA)</div>
+                    <div class="inc-item"><span>✔</span> Validador Público de ART/QR Code CBMDF</div>
+                    <div class="inc-item"><span>✔</span> Despacho Direto no WhatsApp da Frota</div>
+                </div>
+            </div>
+
+            <!-- LADO DIREITO: CARTÃO DE VALOR DINÂMICO + ROI -->
+            <div class="price-checkout-card">
                 <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-family:monospace; font-size:0.72rem; color:var(--brand); font-weight:800; background:rgba(245,158,11,0.12); padding:4px 10px; border-radius:6px;">CASE DESTAQUE • SIA & TAGUATINGA/DF</span>
-                        <span style="color:#FDE047; font-size:0.9rem;">★★★★★</span>
+                    <span class="mono" style="font-size:0.72rem; color:var(--muted); text-transform:uppercase; font-weight:700;">INVESTIMENTO MENSAL DA SUA FROTA</span>
+                    <div class="dynamic-price-val" style="margin:10px 0;">
+                        <span id="val-mensal-dinamico">R$ 547</span> <small>/ mês</small>
                     </div>
-                    <h3 style="font-size:1.25rem; font-weight:900; margin-bottom:10px;">Operação G3 do Brasil — Manutenção Preventiva, P190 & Redes</h3>
-                    <div class="case-metrics-row" style="margin-bottom:14px;">
-                        <div class="case-metric">
-                            <strong>-42 min</strong>
-                            <span>Tempo por OS na Rua</span>
-                        </div>
-                        <div class="case-metric">
-                            <strong>100%</strong>
-                            <span>Controle de Peças na Frota</span>
-                        </div>
+                    <div class="daily-cost-pill" id="lbl-custo-diario">
+                        Equivale a apenas R$ 4,55 / dia por técnico
                     </div>
-                    <p class="case-quote">
-                        "Antes o técnico terminava o teste de estanqueidade em Taguatinga ou Ceilândia e a diretoria só via o papel dias depois. Hoje, no segundo em que o técnico salva no celular, o painel pisca verde na base com as 10 fotos em zoom de 2.4x, o vídeo do manômetro e o regulador já abatido da Fiorino."
-                    </p>
                 </div>
-                <div class="case-author">
-                    <div>
-                        <strong style="display:block; font-size:0.92rem; color:#fff;">Diretoria de Operações & Engenharia</strong>
-                        <span style="font-size:0.76rem; color:var(--cyan);">Frota Ativa no Distrito Federal • Ecossistema SmartOS</span>
-                    </div>
-                    <span style="font-family:monospace; font-size:0.7rem; color:#34D399; font-weight:800;">✔ IMPLANTADO</span>
-                </div>
-            </div>
 
-            <!-- CASE 2: CONDOMÍNIOS VERTICAIS ÁGUAS CLARAS & NOROESTE -->
-            <div class="case-card" style="border-top-color:var(--cyan);">
+                <div class="roi-comparison-box">
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:6px;">
+                        <span style="color:var(--muted);">Horas Poupadas no Mês:</span>
+                        <strong class="mono" style="color:#fff;" id="roi-horas-poupadas">193 horas/mês</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:8px;">
+                        <span style="color:var(--muted);">Economia (Tempo + Estoque):</span>
+                        <strong class="mono" style="color:var(--green); font-size:1rem;" id="roi-economia-mensal">+ R$ 6.204 / mês</strong>
+                    </div>
+                    <div style="border-top:1px dashed rgba(16,185,129,0.35); padding-top:8px; font-size:0.76rem; color:#A7F3D0; text-align:center;" class="mono" id="roi-payback-txt">
+                        ⚡ O SISTEMA SE PAGA EM 2,6 DIAS DE OPERAÇÃO
+                    </div>
+                </div>
+
                 <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-family:monospace; font-size:0.72rem; color:var(--cyan); font-weight:800; background:rgba(56,189,248,0.12); padding:4px 10px; border-radius:6px;">CONDOMÍNIOS • ÁGUAS CLARAS & NOROESTE</span>
-                        <span style="color:#FDE047; font-size:0.9rem;">★★★★★</span>
-                    </div>
-                    <h3 style="font-size:1.25rem; font-weight:900; margin-bottom:10px;">Vistorias Prediais NBR 15526 & Aprovação CBMDF</h3>
-                    <div class="case-metrics-row" style="margin-bottom:14px;">
-                        <div class="case-metric">
-                            <strong>0% Falha</strong>
-                            <span>Em Subsolos Sem 4G</span>
-                        </div>
-                        <div class="case-metric">
-                            <strong>Instantâneo</strong>
-                            <span>Envio PDF + QR ao Síndico</span>
-                        </div>
-                    </div>
-                    <p class="case-quote">
-                        "O maior desafio em Águas Claras era o técnico descer no 2º subsolo para testar prumada e perder os dados por falta de internet. O aplicativo PWA funciona offline, colhe a assinatura do síndico na tela e gera o Certificado A4 com QR Code que o Corpo de Bombeiros e a seguradora aprovam na hora."
-                    </p>
-                </div>
-                <div class="case-author">
-                    <div>
-                        <strong style="display:block; font-size:0.92rem; color:#fff;">Engenharia de Manutenção Predial</strong>
-                        <span style="font-size:0.76rem; color:var(--cyan);">Atendimento Águas Claras, Sudoeste e Asa Norte/DF</span>
-                    </div>
-                    <span style="font-family:monospace; font-size:0.7rem; color:#34D399; font-weight:800;">✔ IMPLANTADO</span>
-                </div>
-            </div>
-
-            <!-- CASE 3: FOOD SERVICE, PADARIAS E COMÉRCIO PESADO -->
-            <div class="case-card" style="border-top-color:var(--green);">
-                <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-family:monospace; font-size:0.72rem; color:#34D399; font-weight:800; background:rgba(16,185,129,0.12); padding:4px 10px; border-radius:6px;">GRANEL P190 • CEILÂNDIA, GUARÁ & ASA SUL</span>
-                        <span style="color:#FDE047; font-size:0.9rem;">★★★★★</span>
-                    </div>
-                    <h3 style="font-size:1.25rem; font-weight:900; margin-bottom:10px;">Rastreabilidade de Parque de Tanques Estacionários</h3>
-                    <div class="case-metrics-row" style="margin-bottom:14px;">
-                        <div class="case-metric">
-                            <strong>3 seg</strong>
-                            <span>Leitura Óptica de Gola</span>
-                        </div>
-                        <div class="case-metric">
-                            <strong>+38%</strong>
-                            <span>Recorrência Anual Ativa</span>
-                        </div>
-                    </div>
-                    <p class="case-quote">
-                        "Com o scanner OCR lendo a tara e a série direto na gola do P190 e o botão que já agenda o aviso de vencimento de 1 ano no WhatsApp do comerciante, nenhuma padaria ou restaurante da nossa carteira esquece de renovar o laudo anual de estanqueidade."
-                    </p>
-                </div>
-                <div class="case-author">
-                    <div>
-                        <strong style="display:block; font-size:0.92rem; color:#fff;">Gestão de Ativos & Tanques Granel</strong>
-                        <span style="font-size:0.76rem; color:var(--cyan);">Parque de Tanques NBR 8460 / NBR 8865 no DF e Entorno</span>
-                    </div>
-                    <span style="font-family:monospace; font-size:0.7rem; color:#34D399; font-weight:800;">✔ IMPLANTADO</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- =========================================================
-         MATRIZ DE SUBSTITUIÇÃO: OPERAÇÃO ANTIGA VS CAPITAL TECH
-         ========================================================= -->
-    <section class="section-wrap" id="comparativo">
-        <div class="sec-head">
-            <span class="sec-kicker">DIAGNÓSTICO DE EFICIÊNCIA</span>
-            <h2>Por Que Empresas Tradicionais Perdem Tempo e Dinheiro Todos os Dias?</h2>
-            <p>Compare uma operação fragmentada no papel e WhatsApp com a engenharia centralizada da Capital Tech SaaS:</p>
-        </div>
-
-        <div class="vs-grid">
-            <div class="vs-col vs-old">
-                <span style="font-family:monospace; font-size:0.75rem; color:var(--red); font-weight:800;">❌ OPERAÇÃO CEGA (PAPEL + PLANILHAS)</span>
-                <h3 style="font-size:1.45rem; font-weight:900; margin-top:6px;">Caos Operacional e Risco Jurídico</h3>
-                <ul class="vs-list">
-                    <li><span>❌</span><div><strong>Talões de papel ilegíveis ou rasgados:</strong> Técnicos anotam números de série errados e o escritório perde horas tentando decifrar a letra.</div></li>
-                    <li><span>❌</span><div><strong>Peças sumindo das viaturas:</strong> Reguladores, válvulas e pigtails saem do galpão e ninguém sabe em qual carro estão ou se foram cobrados.</div></li>
-                    <li><span>❌</span><div><strong>Fotos perdidas no WhatsApp:</strong> Imagens misturadas em grupos sem vínculo com a Ordem de Serviço, impossíveis de achar numa fiscalização.</div></li>
-                    <li><span>❌</span><div><strong>Demora de dias para faturar:</strong> O gestor precisa esperar o técnico voltar à base no fim da semana para digitar o laudo no computador.</div></li>
-                </ul>
-            </div>
-
-            <div class="vs-col vs-new">
-                <span style="font-family:monospace; font-size:0.75rem; color:#34D399; font-weight:800;">✔ ECOSSISTEMA CAPITAL TECH SaaS</span>
-                <h3 style="font-size:1.45rem; font-weight:900; margin-top:6px;">Governança Total em Tempo Real</h3>
-                <ul class="vs-list">
-                    <li><span>✅</span><div><strong>Scanner OCR + GPS por Satélite:</strong> A câmera lê a gola do tanque sozinha e crava Rua, Número e Bairro automaticamente no certificado.</div></li>
-                    <li><span>✅</span><div><strong>Almoxarifado Móvel por Viatura:</strong> Controle cirúrgico de quantas peças estão em cada carro e baixa automática direto para o valor da OS.</div></li>
-                    <li><span>✅</span><div><strong>Dossiê de 10 Fotos Zoom 2.4x + Vídeo 10s:</strong> Tudo organizado dentro do protocolo da OS, com lupa de alta definição para o engenheiro auditar.</div></li>
-                    <li><span>✅</span><div><strong>Semáforo de Baixa Instantânea:</strong> O técnico clicou em salvar na rua, o painel do gestor fica verde em menos de 1 segundo com o PDF pronto.</div></li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- =========================================================
-         STUDIO WHITE-LABEL + CALCULADORA DE PAYBACK
-         ========================================================= -->
-    <section class="section-wrap" id="personalizar">
-        <div class="sec-head">
-            <span class="sec-kicker">CUSTOMIZAÇÃO & RETORNO FINANCEIRO</span>
-            <h2>Sua Própria Marca no Topo + Retorno do Investimento na 1ª Semana</h2>
-            <p>Configure o sistema com o nome da sua empresa e calcule quanto dinheiro volta para o seu caixa:</p>
-        </div>
-
-        <div class="dual-engine-grid">
-            <div class="engine-box">
-                <div>
-                    <span style="font-family:monospace; font-size:0.72rem; color:var(--cyan); font-weight:800;">🎨 PROVADOR WHITE-LABEL AO VIVO</span>
-                    <h3 style="font-size:1.35rem; font-weight:900; margin:6px 0 14px 0;">Coloque a Marca da Sua Empresa</h3>
-
-                    <div style="margin-bottom:14px;">
-                        <label style="font-size:0.75rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Nome da Sua Empresa de Gás / Engenharia:</label>
-                        <input type="text" id="wl-input-nome" class="input-std" style="margin-top:6px;" value="CAPITAL TECH" placeholder="Ex: Brasília Gás Engenharia" oninput="aplicarMarcaVisitante()">
-                    </div>
-
-                    <div style="margin-bottom:14px;">
-                        <label style="font-size:0.75rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Sigla da Logo (2 ou 3 Letras):</label>
-                        <input type="text" id="wl-input-sigla" class="input-std" style="margin-top:6px;" maxlength="3" value="CT" oninput="aplicarMarcaVisitante()">
-                    </div>
-
-                    <div style="margin-bottom:18px;">
-                        <label style="font-size:0.75rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Cor Institucional do Seu Sistema:</label>
-                        <div class="swatch-row">
-                            <button type="button" class="swatch-pill" style="background:#F59E0B;" onclick="trocarCorVisitante('#F59E0B')">Âmbar GLP</button>
-                            <button type="button" class="swatch-pill" style="background:#38BDF8;" onclick="trocarCorVisitante('#38BDF8')">Azul Ciano</button>
-                            <button type="button" class="swatch-pill" style="background:#10B981;" onclick="trocarCorVisitante('#10B981')">Verde Eco</button>
-                            <button type="button" class="swatch-pill" style="background:#F97316;" onclick="trocarCorVisitante('#F97316')">Laranja Chama</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="background:#060A12; border:2px solid var(--brand); border-radius:14px; padding:18px;">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-                        <div class="brand-cube" id="wl-card-sigla">CT</div>
-                        <div>
-                            <strong style="font-size:1.05rem; text-transform:uppercase; display:block;" id="wl-card-nome">CAPITAL TECH</strong>
-                            <span style="font-family:monospace; font-size:0.68rem; color:var(--cyan);">APP DO TÉCNICO & PAINEL GESTOR PERSONALIZADOS</span>
-                        </div>
-                    </div>
-                    <p style="font-size:0.8rem; color:var(--muted);">Seu cliente final verá apenas a sua marca no Certificado PDF, no QR Code e nas mensagens de WhatsApp.</p>
-                </div>
-            </div>
-
-            <div class="engine-box">
-                <div>
-                    <span style="font-family:monospace; font-size:0.72rem; color:#34D399; font-weight:800;">💰 SIMULADOR DE PAYBACK & ECONOMIA</span>
-                    <h3 style="font-size:1.35rem; font-weight:900; margin:6px 0 14px 0;">Em Quantos Dias o Sistema se Paga?</h3>
-
-                    <div style="margin-bottom:16px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.88rem; font-weight:700;">
-                            <span>🚐 Técnicos / Viaturas em Campo:</span>
-                            <span id="calc-lbl-tec" style="color:var(--brand); font-family:monospace;">4 Viaturas</span>
-                        </div>
-                        <input type="range" id="calc-rng-tec" min="1" max="25" value="4" oninput="atualizarCalculadoraPayback()">
-                    </div>
-
-                    <div style="margin-bottom:16px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.88rem; font-weight:700;">
-                            <span>📋 Ordens de Serviço por Técnico / Dia:</span>
-                            <span id="calc-lbl-os" style="color:var(--brand); font-family:monospace;">4 OS / dia</span>
-                        </div>
-                        <input type="range" id="calc-rng-os" min="1" max="10" value="4" oninput="atualizarCalculadoraPayback()">
-                    </div>
-
-                    <div style="margin-bottom:18px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.88rem; font-weight:700;">
-                            <span>📦 Extravio de Peças + Retrabalho Mensal:</span>
-                            <span id="calc-lbl-perda" style="color:var(--brand); font-family:monospace;">R$ 1.500 / mês</span>
-                        </div>
-                        <input type="range" id="calc-rng-perda" min="300" max="8000" step="100" value="1500" oninput="atualizarCalculadoraPayback()">
-                    </div>
-                </div>
-
-                <div style="background:rgba(16,185,129,0.1); border:2px solid var(--green); border-radius:16px; padding:20px; text-align:center;">
-                    <span style="font-family:monospace; font-size:0.72rem; color:#34D399; font-weight:800; text-transform:uppercase;" id="calc-payback-dias">
-                        ⚡ O SISTEMA SE PAGA EM 3 DIAS DE OPERAÇÃO
-                    </span>
-                    <div style="font-family:monospace; font-size:2.2rem; font-weight:900; color:#fff; margin:6px 0;" id="calc-lucro-anual">
-                        R$ 72.192 / ano
-                    </div>
-                    <p style="font-size:0.82rem; color:#cbd5e1; margin-bottom:14px;" id="calc-horas-mes">
-                        Economia direta + <strong>205 horas/mês</strong> poupadas de digitação e prancheta.
-                    </p>
-                    <button type="button" class="btn-gold" style="width:100%; justify-content:center;" onclick="dispararPropostaWhatsApp('Simulação Calculadora de Lucro')">
-                        📈 Quero Capturar Essa Economia Agora
+                    <button type="button" class="btn-main" style="width:100%; justify-content:center; padding:17px; font-size:1rem;" onclick="abrirModal('modal-trial')">
+                        🚀 Testar 7 Dias Grátis Agora
+                    </button>
+                    <button type="button" class="btn-ghost" style="width:100%; justify-content:center; margin-top:10px; font-size:0.82rem;" onclick="enviarSimulacaoWhatsApp()">
+                        💬 Receber Proposta Formal no WhatsApp
                     </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- =========================================================
-         PLANOS DE LICENCIAMENTO SAAS
-         ========================================================= -->
-    <section class="section-wrap" id="planos">
+    <!-- VALIDADOR PÚBLICO CBMDF / ABNT -->
+    <section class="section" id="validador" style="padding-top:0; padding-bottom:40px;">
+        <div class="validator-bar">
+            <div>
+                <span class="mono" style="font-size:0.72rem; color:var(--cyan); font-weight:800;">🏛️ PORTAL PÚBLICO DE CONFORMIDADE • CBMDF, SÍNDICOS & SEGURADORAS</span>
+                <h3 style="font-size:1.25rem; font-weight:800; margin-top:3px;">Verificar Autenticidade de Certificado de Estanqueidade & ART</h3>
+            </div>
+            <div class="val-inputs">
+                <input type="text" id="input-prot-publico" class="input-std" value="CT-2026-8412" placeholder="Digite o Protocolo (Ex: CT-2026-8412)">
+                <button type="button" class="btn-main" style="white-space:nowrap;" onclick="validarProtocoloPublico()">🔍 Auditar</button>
+            </div>
+            <div id="res-validador-publico" style="width:100%; display:none; background:rgba(16,185,129,0.1); border:1px solid var(--green); padding:12px 16px; border-radius:10px; font-size:0.85rem; color:#E2E8F0;"></div>
+        </div>
+    </section>
+
+    <!-- ARQUITETURA DE ENGENHARIA (BENTO GRID) -->
+    <section class="section">
         <div class="sec-head">
-            <span class="sec-kicker">LICENCIAMENTO CORPORATIVO IMEDIATO</span>
-            <h2>Tecnologia Avaliada em R$ 60.000 por uma Fração de um Auxiliar</h2>
-            <p>Escolha o plano ideal para a sua frota e receba seu ambiente configurado hoje mesmo:</p>
+            <span class="eyebrow">ENGENHARIA DE PONTA A PONTA</span>
+            <h2>Por Que Diretores Trocam Planilhas e Sistemas Antigos pela Capital Tech?</h2>
         </div>
 
-        <div class="pricing-row">
-            <div class="plan-box">
-                <div>
-                    <h3 style="font-size:1.3rem; font-weight:900;">Plano Operacional Start</h3>
-                    <p style="font-size:0.84rem; color:var(--muted); margin-top:4px;">Para equipes enxutas de manutenção e laudos de estanqueidade.</p>
-                    <div class="plan-price">R$ 397 <small>/ mês</small></div>
-                    <ul class="plan-feats">
-                        <li>Até <strong>3 Técnicos / Viaturas</strong> em campo</li>
-                        <li>Painel do Gestor Sincronizado ao Vivo</li>
-                        <li>App PWA com Scanner OCR & GPS</li>
-                        <li>Certificados PDF A4 + QR Code Ilimitados</li>
-                        <li>Controle de Estoque Móvel nas Viaturas</li>
-                    </ul>
-                </div>
-                <button type="button" class="btn-dark" style="width:100%; justify-content:center;" onclick="dispararPropostaWhatsApp('Plano Start — R$ 397/mês')">
-                    Solicitar Licença Start
-                </button>
+        <div class="bento-grid">
+            <div class="bento-card">
+                <span class="bento-tag">01 • DOSSIÊ FOTOGRÁFICO HD</span>
+                <h3>10 Fotos com Lupa 2.4x + Vídeo de 10s</h3>
+                <p>O engenheiro amplia o ponteiro do manômetro e o teste de espuma em 2.4x na tela do computador antes de assinar e liberar a central do prédio.</p>
             </div>
-
-            <div class="plan-box vip">
-                <div class="vip-tag">★ RECOMENDADO • 100% WHITE-LABEL</div>
-                <div>
-                    <h3 style="font-size:1.35rem; font-weight:900; color:var(--brand);">Corporate White-Label</h3>
-                    <p style="font-size:0.84rem; color:var(--muted); margin-top:4px;">Sua empresa com plataforma própria, sua marca, suas cores e domínio.</p>
-                    <div class="plan-price">R$ 697 <small>/ mês</small></div>
-                    <ul class="plan-feats">
-                        <li>Até <strong>10 Técnicos / Viaturas</strong> ativos</li>
-                        <li><strong>Personalização Total White-Label</strong> (Sua Marca)</li>
-                        <li>Dossiê de 10 Fotos c/ Lupa 2.4x + Vídeo 10s</li>
-                        <li>Despacho Inteligente no WhatsApp da Frota</li>
-                        <li>Gestão Completa de Parque de Tanques P190</li>
-                        <li>Implantação Guiada + Suporte VIP Direto</li>
-                    </ul>
-                </div>
-                <button type="button" class="btn-gold" style="width:100%; justify-content:center;" onclick="dispararPropostaWhatsApp('Plano Corporate White-Label — R$ 697/mês')">
-                    🚀 Ativar Minha Plataforma White-Label
-                </button>
+            <div class="bento-card">
+                <span class="bento-tag">02 • OPERAÇÃO SUBSOLO</span>
+                <h3>PWA Offline-First Sem Lojas de App</h3>
+                <p>Instalável em 2 segundos via link direto. Funciona no 2º subsolo sem sinal 4G e sincroniza automaticamente assim que o técnico sobe a rampa.</p>
             </div>
-
-            <div class="plan-box">
-                <div>
-                    <h3 style="font-size:1.3rem; font-weight:900;">Enterprise / Distribuidora</h3>
-                    <p style="font-size:0.84rem; color:var(--muted); margin-top:4px;">Para operações estaduais ou nacionais com frotas pesadas.</p>
-                    <div class="plan-price">Sob Consulta</div>
-                    <ul class="plan-feats">
-                        <li><strong>Viaturas, Técnicos e OSs Ilimitados</strong></li>
-                        <li>Banco de Dados Isolado Dedicado</li>
-                        <li>Customização de Normas e Checklists</li>
-                        <li>Integração via CSV / API com ERP Matriz</li>
-                        <li>Gerente de Engenharia de Conta Dedicado</li>
-                    </ul>
-                </div>
-                <button type="button" class="btn-dark" style="width:100%; justify-content:center;" onclick="dispararPropostaWhatsApp('Licença Enterprise / Distribuidora')">
-                    Falar com Engenharia Comercial
-                </button>
+            <div class="bento-card">
+                <span class="bento-tag">03 • GEOLOCALIZAÇÃO REAL</span>
+                <h3>Endereço Auditado via Satélite</h3>
+                <p>Converte a coordenada GPS do celular no endereço físico real (Rua, Quadra, Lote e Cidade) impresso no Certificado PDF A4 para prova jurídica.</p>
             </div>
         </div>
     </section>
 
-    <!-- FAQ -->
-    <section class="section-wrap" id="faq">
+    <!-- CASES DE BRASÍLIA / DF -->
+    <section class="section" id="cases" style="padding-top:10px;">
         <div class="sec-head">
-            <span class="sec-kicker">TRANSPARÊNCIA TÉCNICA</span>
-            <h2>Perguntas Frequentes de Diretores e Engenheiros</h2>
+            <span class="eyebrow">PROVA REAL DE CAMPO • BRASÍLIA / DF</span>
+            <h2>Operações que Já Escalaram com Nossa Tecnologia</h2>
         </div>
 
-        <div class="faq-list">
-            <div class="faq-item open">
-                <button type="button" class="faq-q" onclick="alternarFaq(this)">
-                    <span>1. E se o técnico estiver no subsolo do prédio sem sinal de internet?</span>
-                    <span style="color:var(--brand);">▼</span>
-                </button>
-                <div class="faq-a">
-                    O aplicativo utiliza arquitetura <strong>PWA Offline-First</strong> com memória local protegida. O técnico preenche o checklist, tira as fotos, colhe a assinatura na tela e crava a coordenada GPS normalmente mesmo sem 4G. Assim que ele sobe a rampa do subsolo, o sistema sincroniza tudo com o painel do gestor.
+        <div class="cases-grid">
+            <div class="case-card">
+                <div>
+                    <span class="bento-tag">SIA & TAGUATINGA / DF</span>
+                    <h3 style="font-size:1.2rem; font-weight:800; margin-bottom:10px;">Operação G3 do Brasil — Manutenção & Redes GLP</h3>
+                    <p style="font-size:0.92rem; color:var(--muted);">"No segundo em que o técnico salva o teste de estanqueidade na rua, o painel pisca verde na base com as 10 fotos em zoom de 2.4x e a válvula já abatida da Fiorino."</p>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <strong>Diretoria Operacional</strong>
+                    <span class="mono" style="color:var(--green); font-weight:700;">-42 min por OS</span>
                 </div>
             </div>
 
-            <div class="faq-item">
-                <button type="button" class="faq-q" onclick="alternarFaq(this)">
-                    <span>2. Em quanto tempo o sistema fica pronto com a marca da minha empresa?</span>
-                    <span style="color:var(--brand);">▼</span>
-                </button>
-                <div class="faq-a">
-                    Em menos de <strong>15 minutos</strong>. Nossa tecnologia possui um motor White-Label nativo na Aba 7 do painel do gestor: basta digitar o nome da sua empresa, a sigla, a ART padrão e escolher a cor para que todos os celulares da frota e os certificados PDF assumam a sua marca na mesma hora.
+            <div class="case-card" style="border-top-color:var(--cyan);">
+                <div>
+                    <span class="bento-tag">ÁGUAS CLARAS & NOROESTE / DF</span>
+                    <h3 style="font-size:1.2rem; font-weight:800; margin-bottom:10px;">Condomínios Verticais & Padrão CBMDF</h3>
+                    <p style="font-size:0.92rem; color:var(--muted);">"O aplicativo opera no subsolo sem internet, colhe a assinatura touch do síndico e gera na hora o PDF A4 com QR Code que os Bombeiros e a seguradora exigem."</p>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <strong>Engenharia Predial</strong>
+                    <span class="mono" style="color:var(--cyan); font-weight:700;">100% Aprovado CBMDF</span>
                 </div>
             </div>
 
-            <div class="faq-item">
-                <button type="button" class="faq-q" onclick="alternarFaq(this)">
-                    <span>3. O certificado emitido serve para fiscalização do CBMDF e Seguradoras?</span>
-                    <span style="color:var(--brand);">▼</span>
-                </button>
-                <div class="faq-a">
-                    Sim. O laudo segue rigorosamente os parâmetros da <strong>ABNT NBR 13523, NBR 15526, NBR 8460 e NBR 8865</strong>, trazendo número da ART/TRT do engenheiro responsável, rastreabilidade do manômetro calibrado RBC/INMETRO, dossiê fotográfico datado, endereço auditado via satélite, assinatura digital do cliente e Validador Público com QR Code.
+            <div class="case-card" style="border-top-color:var(--green);">
+                <div>
+                    <span class="bento-tag">CEILÂNDIA, GUARÁ & ASA SUL / DF</span>
+                    <h3 style="font-size:1.2rem; font-weight:800; margin-bottom:10px;">Parque de Tanques Estacionários P190</h3>
+                    <p style="font-size:0.92rem; color:var(--muted);">"O scanner OCR lendo a gola de aço em 2 segundos e o aviso automático de renovação de 1 ano no WhatsApp aumentaram em 38% nossa recorrência anual."</p>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <strong>Gestão de Ativos Granel</strong>
+                    <span class="mono" style="color:var(--green); font-weight:700;">+38% Recorrência</span>
                 </div>
             </div>
         </div>
     </section>
-
-    <!-- NOTIFICAÇÃO DE PROVA SOCIAL AO VIVO -->
-    <div class="live-proof-toast" id="live-toast">
-        <div style="font-size:1.5rem;">🛰️</div>
-        <div>
-            <div style="font-size:0.72rem; font-family:monospace; color:#34D399; font-weight:800;" id="toast-title">OS #CT-8914 BAIXADA AGORA</div>
-            <div style="font-size:0.78rem; color:#e2e8f0;" id="toast-desc">Estanqueidade Aprovada (15.0 kPa) • Águas Claras/DF</div>
-        </div>
-    </div>
-
-    <!-- BOTÃO FLUTUANTE WHATSAPP -->
-    <button type="button" class="floating-wa" onclick="dispararPropostaWhatsApp('Botão Flutuante Direto')">
-        <span>💬 Falar com Especialista Agora</span>
-    </button>
 
     <footer>
-        <p><strong style="color:#fff;">CAPITAL TECH SaaS</strong> — Portal Oficial de Engenharia GLP/GN, Controle de Frota e Certificação Normativa.</p>
-        <p style="margin-top:6px; font-size:0.75rem;">Brasília - Distrito Federal • Atendimento Nacional • <a href="gestor.html" style="color:var(--cyan);">Painel do Gestor</a> • <a href="app.html" style="color:var(--brand);">App do Técnico</a></p>
+        <p><strong style="color:#fff;">CAPITAL TECH SaaS</strong> — Ecossistema Corporativo de Engenharia GLP, Estanqueidade e Gestão de Frota em Tempo Real.</p>
+        <p style="margin-top:8px; font-size:0.78rem;">
+            Brasília - Distrito Federal •
+            <a href="gestor.html" style="color:var(--cyan); text-decoration:none;">Painel do Gestor</a> •
+            <a href="app.html" style="color:var(--brand); text-decoration:none;">App do Técnico</a> •
+            <a href="master.html" style="color:var(--muted); text-decoration:none;">CEO Command Center</a>
+        </p>
     </footer>
 
+    <!-- =========================================================
+         MOTORES INTELIGENTES (PRECIFICAÇÃO DINÂMICA + FIREBASE)
+         ========================================================= -->
     <script>
-        var WHATSAPP_VENDAS = "5561986294465";
-        var STORAGE_KEY = "G3_ERP_MASTER_DB_V2";
+        var WHATSAPP_COMERCIAL = "5561986294465";
+        var MASTER_STORAGE_KEY = "CAPITAL_TECH_HOLDING_DB_V1";
+        var SESSION_AUTH_KEY = "CAPITAL_TECH_AUTH_SESSION";
+        var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
 
-        // MODAL DO PORTAL DE ACESSO UNIFICADO
-        window.abrirModalPortal = function() {
-            document.getElementById('modal-portal-acesso').style.display = 'flex';
-        };
-        window.fecharModalPortal = function() {
-            document.getElementById('modal-portal-acesso').style.display = 'none';
-        };
-
-        // VALIDADOR PÚBLICO DE CERTIFICADOS E ART (LÊ TANTO DO BANCO REAL QUANTO EXEMPLOS)
-        window.preencherProtocoloExemplo = function(prot) {
-            document.getElementById('input-consulta-os').value = prot;
-            window.consultarCertificadoPublico();
+        // Estado global da simulação do cliente na página
+        var estadoPlano = {
+            tecnicos: 4,
+            mensalidade: 547,
+            corEscolhida: "#F59E0B",
+            marcaDigitada: "CAPITAL TECH"
         };
 
-        window.consultarCertificadoPublico = function() {
-            var codigo = (document.getElementById('input-consulta-os').value || "").trim().toUpperCase();
-            var box = document.getElementById('box-resultado-validador');
-            box.style.display = 'block';
+        var rtdb = null;
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDf_mA78IgjnSXyrNasYId3ngq2lWho_9I",
+                authDomain: "g3-smartos.firebaseapp.com",
+                databaseURL: "https://g3-smartos-default-rtdb.firebaseio.com",
+                projectId: "g3-smartos",
+                storageBucket: "g3-smartos.firebasestorage.app",
+                messagingSenderId: "25130890143",
+                appId: "1:25130890143:web:f56e4632325f7af2fbc3aa"
+            };
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            rtdb = firebase.database();
+        } catch (e) {}
 
-            if (!codigo) {
-                document.getElementById('val-res-prot').innerText = "⚠️ DIGITE UM PROTOCOLO VÁLIDO";
+        // ==========================================================
+        // 1. MOTOR DE PRECIFICAÇÃO ÚNICA POR QUANTIDADE DE TÉCNICOS
+        // ==========================================================
+        window.calcularPlanoUnicoInteligente = function() {
+            var nTec = parseInt(document.getElementById('slider-tecnicos').value) || 1;
+            estadoPlano.tecnicos = nTec;
+
+            // Fórmula Inteligente: Base Plataforma White-Label (R$ 197) + Escala progressiva por técnico
+            var valorMensal = 297;
+            if (nTec === 1) {
+                valorMensal = 297;
+            } else if (nTec <= 5) {
+                valorMensal = 227 + (nTec * 80); // Ex: 2=387, 3=467, 4=547, 5=627
+            } else if (nTec <= 15) {
+                valorMensal = 627 + ((nTec - 5) * 65); // Desconto progressivo de frota
+            } else {
+                valorMensal = 1277 + ((nTec - 15) * 50); // Escala distribuidora
+            }
+
+            estadoPlano.mensalidade = valorMensal;
+
+            var custoPorTecnicoDia = (valorMensal / (nTec * 30)).toFixed(2).replace('.', ',');
+            var horasEconomizadasMes = Math.round((nTec * 4 * 22 * 35) / 60);
+            var economiaTotalMes = (horasEconomizadasMes * 28) + (nTec * 200);
+            var diasPayback = Math.max(1, ((valorMensal / economiaTotalMes) * 30)).toFixed(1).replace('.', ',');
+
+            document.getElementById('lbl-num-tecnicos').innerText = nTec + (nTec === 1 ? " Técnico / Viatura" : " Técnicos / Viaturas");
+            document.getElementById('val-mensal-dinamico').innerText = "R$ " + valorMensal.toLocaleString('pt-BR');
+            document.getElementById('lbl-custo-diario').innerText = "Apenas R$ " + custoPorTecnicoDia + " / dia por técnico em campo";
+            document.getElementById('roi-horas-poupadas').innerText = horasEconomizadasMes + " horas/mês";
+            document.getElementById('roi-economia-mensal').innerText = "+ R$ " + economiaTotalMes.toLocaleString('pt-BR') + " / mês";
+            document.getElementById('roi-payback-txt').innerText = "⚡ O SISTEMA SE PAGA EM APENAS " + diasPayback + " DIAS DE OPERAÇÃO";
+
+            document.getElementById('modal-resumo-plano').innerHTML =
+                "Frota configurada: <strong>" + nTec + (nTec === 1 ? " Viatura" : " Viaturas") + " (R$ " + valorMensal + "/mês após os 7 dias grátis)</strong>";
+        };
+
+        // ==========================================================
+        // 2. TRANSFORMAÇÃO WHITE-LABEL AO VIVO NA PÁGINA INTEIRA
+        // ==========================================================
+        window.transformarMarcaAoVivo = function(valor) {
+            var limpo = (valor || "").trim().toUpperCase() || "CAPITAL TECH";
+            estadoPlano.marcaDigitada = limpo;
+
+            var partes = limpo.split(' ');
+            var sigla = partes.length > 1 ? (partes[0][0] + partes[1][0]) : limpo.substring(0, 2);
+
+            document.getElementById('nav-nome').innerText = limpo;
+            document.getElementById('nav-sigla').innerText = sigla;
+            document.getElementById('modal-sigla-badge').innerText = sigla;
+            document.getElementById('cockpit-brand-indicator').innerText = "● LICENÇA WHITE-LABEL: " + limpo;
+        };
+
+        window.mudarCorGlobal = function(corHex) {
+            estadoPlano.corEscolhida = corHex;
+            document.documentElement.style.setProperty('--brand', corHex);
+        };
+
+        // ==========================================================
+        // 3. SELF-ONBOARDING DE 7 DIAS INTEGRADO AO MASTER.HTML
+        // ==========================================================
+        window.abrirModal = function(id) {
+            if (id === 'modal-trial' && estadoPlano.marcaDigitada !== "CAPITAL TECH") {
+                document.getElementById('trial-empresa').value = estadoPlano.marcaDigitada;
+            }
+            document.getElementById(id).style.display = 'flex';
+        };
+
+        window.fecharModais = function() {
+            document.getElementById('modal-trial').style.display = 'none';
+            document.getElementById('modal-login').style.display = 'none';
+        };
+
+        window.acessarModuloDireto = function(destino) {
+            var email = document.getElementById('login-quick-email').value.trim() || "admin@capitaltech.com";
+            sessionStorage.setItem(SESSION_AUTH_KEY, email);
+            sessionStorage.setItem(TEC_SESSION_KEY, email);
+            window.location.href = destino;
+        };
+
+        function gerarTenantIdSeguro(emailStr, nomeEmpresa) {
+            var limpo = (emailStr || "").trim().toLowerCase();
+            if (limpo.indexOf('@') !== -1) {
+                var dom = limpo.split('@')[1];
+                if (dom.indexOf('gmail') !== -1 || dom.indexOf('hotmail') !== -1 || dom.indexOf('outlook') !== -1 || dom.indexOf('yahoo') !== -1) {
+                    return (nomeEmpresa || "EMPRESA").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+                }
+                return dom.replace(/[^a-z0-9]/g, '_').toUpperCase();
+            }
+            return (nomeEmpresa || "CAPITALTECH").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+        }
+
+        window.criarAmbienteTrialAutomatico = function() {
+            var nome = document.getElementById('trial-empresa').value.trim();
+            var email = document.getElementById('trial-email').value.trim();
+            var zap = document.getElementById('trial-zap').value.trim() || "61999999999";
+
+            if (!nome || !email) {
+                alert("Preencha o Nome da Sua Empresa e o seu E-mail para liberarmos seu painel.");
                 return;
             }
 
-            // Verifica se existe no banco sincronizado local/nuvem
+            var btn = document.getElementById('btn-confirmar-trial');
+            btn.innerText = "⏳ Provisionando sua gaveta White-Label na nuvem...";
+
+            var marcaUpper = nome.toUpperCase();
+            var partes = marcaUpper.split(' ');
+            var sigla = partes.length > 1 ? (partes[0][0] + partes[1][0]) : marcaUpper.substring(0, 2);
+            var tenantId = gerarTenantIdSeguro(email, marcaUpper);
+
+            // Gera a quantidade de viaturas que o cliente escolheu no slider!
+            var listaTecnicosIniciais = [];
+            var mapaEstoqueInicial = {};
+            for (var t = 1; t <= Math.min(estadoPlano.tecnicos, 10); t++) {
+                var tid = "t" + t;
+                listaTecnicosIniciais.push({
+                    id: tid,
+                    nome: "Técnico 0" + t + " (" + marcaUpper + ")",
+                    carro: "FROTA-0" + t,
+                    placa: "BSB-" + t + "A26",
+                    zap: zap,
+                    regiao: "Distrito Federal",
+                    inmetro: "Manômetro Digital RBC #0" + t
+                });
+                mapaEstoqueInicial[tid] = 4;
+            }
+
+            var dadosGavetaNova = {
+                configWhiteLabel: {
+                    nome: marcaUpper,
+                    sigla: sigla,
+                    sub: "Frota Licenciada (" + estadoPlano.tecnicos + " Viaturas) • NBR 13523 & 15526",
+                    art: "ART-DF #0720260098412",
+                    prefixo: sigla,
+                    cor: estadoPlano.corEscolhida
+                },
+                clientes: [
+                    { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: "Águas Claras - Brasília/DF", central: "Tanque Estacionário P190", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
+                ],
+                tecnicos: listaTecnicosIniciais,
+                materiais: [
+                    { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: mapaEstoqueInicial }
+                ],
+                tanques: [
+                    { serie: "Nº 001729", cliente: "Condomínio Residencial Bella Vita", tara: "135,10 kg", vol: "450 Litros / 190 kg GLP", pserv: "1,7 MPa • NBR 8460", fabReg: "Data: 2017 • ARXO", statusReq: "Vigente (Requalificar em 2032)" }
+                ],
+                ordens: []
+            };
+
+            var expiraEm = new Date(Date.now() + 7 * 86400000).toLocaleDateString('pt-BR');
+            var registroParaMaster = {
+                id: "emp_" + Date.now(),
+                nome: nome,
+                marca: marcaUpper,
+                sigla: sigla,
+                email: email,
+                tenantId: tenantId,
+                cnpj: "Trial 7 Dias (" + estadoPlano.tecnicos + " Viaturas)",
+                responsavel: email.split('@')[0],
+                zap: zap,
+                endereco: "Autocadastro via Portal SaaS",
+                plano: "Frota " + estadoPlano.tecnicos + " Técnico(s) — Trial até " + expiraEm,
+                mensalidade: estadoPlano.mensalidade,
+                setup: 0,
+                vencimento: expiraEm,
+                cor: estadoPlano.corEscolhida,
+                status: "ATIVO",
+                dataCadastro: new Date().toLocaleDateString('pt-BR')
+            };
+
             try {
-                var salvo = localStorage.getItem(STORAGE_KEY);
-                if (salvo) {
-                    var banco = JSON.parse(salvo);
-                    if (banco && banco.ordens) {
-                        for (var i = 0; i < banco.ordens.length; i++) {
-                            var o = banco.ordens[i];
-                            if ((o.protocolo || "").toUpperCase() === codigo.replace('#', '')) {
-                                document.getElementById('val-res-prot').innerText = "✔ #" + o.protocolo + " — AUTÊNTICO & SINCRONIZADO";
-                                document.getElementById('val-res-cli').innerText = o.cliente + " (" + (o.local || "DF") + ")";
-                                document.getElementById('val-res-ens').innerText = (o.pressao || "15.0 kPa") + " • " + (o.equip || "INMETRO OK");
-                                document.getElementById('val-res-art').innerText = (o.art || "ART Ativa") + " • Técnico: " + o.tecnico;
-                                return;
-                            }
-                        }
-                    }
-                }
+                localStorage.setItem("ERP_SAAS_" + tenantId, JSON.stringify(dadosGavetaNova));
+                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dadosGavetaNova));
+                sessionStorage.setItem(SESSION_AUTH_KEY, email);
+                sessionStorage.setItem(TEC_SESSION_KEY, email);
+
+                var hSalva = localStorage.getItem(MASTER_STORAGE_KEY);
+                var hObj = hSalva ? JSON.parse(hSalva) : { empresas: [] };
+                if (!hObj.empresas) hObj.empresas = [];
+                hObj.empresas.unshift(registroParaMaster);
+                localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(hObj));
             } catch (e) {}
 
-            // Caso seja o exemplo G3 ou outro protocolo demonstrativo
-            if (codigo.indexOf("G3") !== -1) {
-                document.getElementById('val-res-prot').innerText = "✔ #" + codigo + " — VALIDADO (OPERAÇÃO G3 DF)";
-                document.getElementById('val-res-cli').innerText = "Condomínio Residencial Bella Vita (Águas Claras/DF)";
-                document.getElementById('val-res-ens').innerText = "15.0 kPa Estável (Queda 0.0 kPa) • Manômetro Wika #INM-3310";
-                document.getElementById('val-res-art').innerText = "ART-DF #0720260098412 • 10/10 Fotos + Vídeo Auditados";
+            if (rtdb) {
+                rtdb.ref('STATUS_FINANCEIRO/' + tenantId).set("ATIVO");
+                rtdb.ref('EMPRESAS/' + tenantId).set(dadosGavetaNova);
+                rtdb.ref('CAPITAL_HOLDING/empresas').once('value', function(snap) {
+                    var lista = snap.val() || [];
+                    lista.unshift(registroParaMaster);
+                    rtdb.ref('CAPITAL_HOLDING/empresas').set(lista).finally(function() {
+                        window.location.href = "gestor.html";
+                    });
+                });
+                setTimeout(function() { window.location.href = "gestor.html"; }, 1200);
             } else {
-                document.getElementById('val-res-prot').innerText = "✔ #" + codigo + " — CERTIFICADO AUTÊNTICO & VIGENTE";
-                document.getElementById('val-res-cli').innerText = "Padaria & Confeitaria Pão Dourado (QNL 12 - Taguatinga/DF)";
-                document.getElementById('val-res-ens').innerText = "15.0 kPa Estável (0.0 kPa) • Manômetro Digital #INM-9482";
-                document.getElementById('val-res-art').innerText = "ART-DF #0720260098412 • Conformidade NBR 13523 & 15526";
+                window.location.href = "gestor.html";
             }
         };
 
-        // 1. NAVEGAÇÃO ENTRE OS 4 MOTORES DO SHOWROOM
-        window.trocarMotorShowroom = function(num) {
-            var titulos = {
-                1: "🟢 MÓDULO 01 ATIVO: VISÃO COMPUTACIONAL OCR",
-                2: "🟢 MÓDULO 02 ATIVO: TELEMETRIA MANOMÉTRICA AO VIVO",
-                3: "🟢 MÓDULO 03 ATIVO: ALMOXARIFADO MÓVEL DE VIATURAS",
-                4: "🟢 MÓDULO 04 ATIVO: ASSINATURA TOUCH & SELO QR CODE"
-            };
-            for (var i = 1; i <= 4; i++) {
-                document.getElementById('st-btn-' + i).classList.remove('active');
-                document.getElementById('st-pane-' + i).classList.remove('active');
+        // ==========================================================
+        // 4. SIMULADORES INTERATIVOS DO COCKPIT
+        // ==========================================================
+        window.mudarAbaCockpit = function(n) {
+            for (var i = 1; i <= 3; i++) {
+                document.getElementById('c-btn-' + i).classList.remove('active');
+                document.getElementById('c-pane-' + i).classList.remove('active');
             }
-            document.getElementById('st-btn-' + num).classList.add('active');
-            document.getElementById('st-pane-' + num).classList.add('active');
-            document.getElementById('stage-status-indicator').innerText = titulos[num];
+            document.getElementById('c-btn-' + n).classList.add('active');
+            document.getElementById('c-pane-' + n).classList.add('active');
         };
 
-        // 2. MOTOR 1: SIMULAÇÃO DE VISÃO COMPUTACIONAL OCR
-        window.executarDemonstracaoOCR = function() {
-            var laser = document.getElementById('ocr-laser-line');
-            var conf = document.getElementById('ocr-confidence-txt');
-            laser.style.display = 'block';
-            conf.innerText = "⏳ PROCESSANDO RELEVO NO AÇO...";
-            conf.style.color = "var(--cyan)";
-
-            for (var s = 1; s <= 4; s++) {
-                document.getElementById('stamp-' + s).classList.remove('detected');
-            }
+        window.dispararScannerDemo = function() {
+            var beam = document.getElementById('demo-beam');
+            var st = document.getElementById('demo-ocr-status');
+            beam.style.display = 'block';
+            st.innerText = "FILTRANDO ALTO CONTRASTE...";
 
             setTimeout(function() {
-                laser.style.display = 'none';
-                conf.innerText = "✔ 4 PARÂMETROS EXTRAÍDOS (PRECISÃO 99.4%)";
-                conf.style.color = "#34D399";
-                for (var s = 1; s <= 4; s++) {
-                    document.getElementById('stamp-' + s).classList.add('detected');
+                beam.style.display = 'none';
+                st.innerText = "✔ LEITURA CONCLUÍDA (99.4%)";
+                st.style.color = "var(--green)";
+                for (var i = 1; i <= 4; i++) {
+                    document.getElementById('pcell-' + i).classList.add('ok');
                 }
-                document.getElementById('ocr-out-serie').innerText = "Tanque P190 Nº 001729 (ARXO)";
-                document.getElementById('ocr-out-tara').innerText = "135,10 kg • 450 Litros";
-                document.getElementById('ocr-out-pserv').innerText = "1,7 MPa (NBR 8460)";
-                document.getElementById('ocr-out-req').innerText = "Vigente — Requalificar em 2032";
-                document.getElementById('ocr-out-foto').innerText = "✔ Salva no Dossiê c/ Zoom 2.4x";
-            }, 1100);
+            }, 950);
         };
 
-        // 3. MOTOR 2: GRÁFICO DE TELEMETRIA MANOMÉTRICA
-        var modoPressao = "ESTANQUE";
-        var historicoPressao = [15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0];
+        // Gráfico de Pressão em Tempo Real
+        var modoCurva = "ESTANQUE";
+        var ptsPressao = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15];
 
-        window.definirModoPressao = function(novoModo) {
-            modoPressao = novoModo;
-            var badge = document.getElementById('press-live-badge');
-            var card = document.getElementById('press-verdict-card');
-            var title = document.getElementById('press-verdict-title');
-            var sub = document.getElementById('press-verdict-sub');
-
-            if (novoModo === 'VAZAMENTO') {
-                badge.innerText = "🚨 QUEDA DETECTADA: 11.4 kPa";
-                badge.style.color = "var(--red)";
-                card.style.background = "rgba(244, 63, 94, 0.15)";
-                card.style.borderColor = "var(--red)";
-                title.innerText = "REPROVADO — FUGA MANOMÉTRICA DE -3.6 kPa DETECTADA";
-                sub.innerText = "Protocolo de Emergência Ativado: Bloquear válvula geral e aplicar espuma tensoativa.";
+        window.mudarCurvaPressao = function(m) {
+            modoCurva = m;
+            var pill = document.getElementById('live-press-pill');
+            var foot = document.getElementById('live-press-foot');
+            if (m === 'VAZAMENTO') {
+                pill.innerText = "🚨 QUEDA DETECTADA (-3.2 kPa)";
+                pill.style.color = "var(--red)";
+                foot.innerText = "Bloqueio Normativo Ativado: O sistema impede emissão de certificado aprovado.";
             } else {
-                historicoPressao = [15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0];
-                badge.innerText = "● 15.0 kPa ESTÁVEL";
-                badge.style.color = "#34D399";
-                card.style.background = "rgba(16, 185, 129, 0.12)";
-                card.style.borderColor = "var(--green)";
-                title.innerText = "APROVADO — VARIAÇÃO: 0.0 kPa (REDE 100% ESTANQUE)";
-                sub.innerText = "Manômetro Digital #INM-9482 Calibrado • Detector 0% LEL Confirmado.";
+                ptsPressao = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15];
+                pill.innerText = "● 15.0 kPa ESTÁVEL (APROVADO)";
+                pill.style.color = "var(--green)";
+                foot.innerText = "Veredito automático: Variação de 0.0 kPa • Detector de Gás 0% LEL Confirmado.";
             }
         };
 
-        function desenharGraficoPressao() {
-            var cvs = document.getElementById('pressureChart');
+        setInterval(function() {
+            var cvs = document.getElementById('livePressureCanvas');
             if (!cvs) return;
             var ctx = cvs.getContext('2d');
-            var w = cvs.width;
-            var h = cvs.height;
-
-            var ultimo = historicoPressao[historicoPressao.length - 1];
-            var novoVal = 15.0;
-            if (modoPressao === 'VAZAMENTO') {
-                novoVal = Math.max(9.5, +(ultimo - (0.25 + Math.random() * 0.25)).toFixed(2));
-            }
-            historicoPressao.push(novoVal);
-            if (historicoPressao.length > 18) historicoPressao.shift();
+            var w = cvs.width, h = cvs.height;
+            var ult = ptsPressao[ptsPressao.length - 1];
+            var novo = modoCurva === 'VAZAMENTO' ? Math.max(10.2, +(ult - 0.35).toFixed(2)) : 15.0;
+            ptsPressao.push(novo);
+            if (ptsPressao.length > 16) ptsPressao.shift();
 
             ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = "rgba(255,255,255,0.06)";
-            ctx.lineWidth = 1;
-            for (var y = 30; y < h; y += 35) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-            }
-
-            ctx.strokeStyle = modoPressao === 'VAZAMENTO' ? "#F43F5E" : "#10B981";
+            ctx.strokeStyle = modoCurva === 'VAZAMENTO' ? "#F43F5E" : "#10B981";
             ctx.lineWidth = 3;
             ctx.beginPath();
-            var passoX = w / (historicoPressao.length - 1);
-            for (var i = 0; i < historicoPressao.length; i++) {
-                var val = historicoPressao[i];
-                var posY = h - ((val - 8) / 9) * (h - 30) - 15;
-                var posX = i * passoX;
-                if (i === 0) ctx.moveTo(posX, posY);
-                else ctx.lineTo(posX, posY);
+            var step = w / (ptsPressao.length - 1);
+            for (var i = 0; i < ptsPressao.length; i++) {
+                var y = h - ((ptsPressao[i] - 9) / 8) * (h - 30) - 15;
+                if (i === 0) ctx.moveTo(0, y);
+                else ctx.lineTo(i * step, y);
             }
             ctx.stroke();
+        }, 650);
 
-            ctx.fillStyle = "#94A3B8";
-            ctx.font = "11px JetBrains Mono";
-            ctx.fillText("Alvo Normativo: 15.0 kPa | Leitura Atual: " + novoVal.toFixed(1) + " kPa", 12, 20);
-        }
-        setInterval(desenharGraficoPressao, 700);
-
-        // 4. MOTOR 3: SIMULADOR DE ESTOQUE MÓVEL
-        var saldoGalpaoDemo = 25;
-        var saldoViaturaDemo = 4;
-        var aplicadosOSDemo = 0;
-
-        window.simularMovimentoEstoque = function(tipo) {
-            var log = document.getElementById('stk-log-msg');
-            if (tipo === 'ABASTECER_CARRO') {
-                if (saldoGalpaoDemo <= 0) return;
-                saldoGalpaoDemo--;
-                saldoViaturaDemo++;
-                log.innerHTML = "&gt; 🚐 <strong>TRANSFERÊNCIA AO VIVO:</strong> +1 Regulador Aliança saiu do Galpão e entrou na viatura FROTA-DF04.";
-            } else {
-                if (saldoViaturaDemo <= 0) {
-                    log.innerHTML = "&gt; ⚠️ <strong>SALDO ZERADO NO CARRO:</strong> Clique em 'Enviar +1 Peça p/ Viatura' para abastecer o técnico!";
-                    return;
-                }
-                saldoViaturaDemo--;
-                aplicadosOSDemo++;
-                log.innerHTML = "&gt; 🔧 <strong>BAIXA EM CAMPO:</strong> Técnico aplicou 1 Regulador no cliente. Estoque do carro abatido e fatura somada!";
-            }
-
-            document.getElementById('stk-base-qtd').innerText = saldoGalpaoDemo + " un.";
-            document.getElementById('stk-van-qtd').innerText = saldoViaturaDemo + " un.";
-            document.getElementById('stk-van-val').innerText = "Carga: R$ " + (saldoViaturaDemo * 165).toFixed(2).replace('.', ',');
-            document.getElementById('stk-os-pecas').innerText = aplicadosOSDemo + "x Regulador (R$ " + (aplicadosOSDemo * 165).toFixed(2).replace('.', ',') + ")";
-            document.getElementById('stk-os-total').innerText = "R$ " + (280 + aplicadosOSDemo * 165).toFixed(2).replace('.', ',');
+        var qtdCarroDemo = 4, totalOSDemo = 280;
+        window.simularAplicacaoPeca = function() {
+            if (qtdCarroDemo <= 0) { qtdCarroDemo = 4; totalOSDemo = 280; }
+            else { qtdCarroDemo--; totalOSDemo += 165; }
+            document.getElementById('van-stock-count').innerText = qtdCarroDemo + " un. no carro";
+            document.getElementById('van-os-total').innerText = "R$ " + totalOSDemo.toFixed(2).replace('.', ',');
         };
 
-        // 5. MOTOR 4: ASSINATURA DIGITAL NA TELA
-        var sCanvas = document.getElementById('demoSigCanvas');
-        var sCtx = sCanvas.getContext('2d');
-        var desenhandoDemo = false;
-
-        sCtx.lineWidth = 2.8;
-        sCtx.lineCap = 'round';
-        sCtx.strokeStyle = '#0F172A';
-
-        function posAssinatura(e) {
-            var r = sCanvas.getBoundingClientRect();
-            var cx = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
-            var cy = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
-            return {
-                x: (cx - r.left) * (sCanvas.width / r.width),
-                y: (cy - r.top) * (sCanvas.height / r.height)
-            };
-        }
-
-        sCanvas.addEventListener('mousedown', function(e) {
-            desenhandoDemo = true;
-            var p = posAssinatura(e);
-            sCtx.beginPath(); sCtx.moveTo(p.x, p.y);
-        });
-        sCanvas.addEventListener('mousemove', function(e) {
-            if (!desenhandoDemo) return;
-            var p = posAssinatura(e);
-            sCtx.lineTo(p.x, p.y); sCtx.stroke();
-        });
-        window.addEventListener('mouseup', function() { desenhandoDemo = false; });
-
-        sCanvas.addEventListener('touchstart', function(e) {
-            e.preventDefault(); desenhandoDemo = true;
-            var p = posAssinatura(e);
-            sCtx.beginPath(); sCtx.moveTo(p.x, p.y);
-        }, { passive: false });
-        sCanvas.addEventListener('touchmove', function(e) {
-            if (!desenhandoDemo) return;
-            e.preventDefault();
-            var p = posAssinatura(e);
-            sCtx.lineTo(p.x, p.y); sCtx.stroke();
-        }, { passive: false });
-        window.addEventListener('touchend', function() { desenhandoDemo = false; });
-
-        window.limparAssinaturaDemo = function() {
-            sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
-            document.getElementById('demo-cert-status').innerText = "Quadro limpo. Desenhe sua rubrica novamente ao lado.";
+        window.validarProtocoloPublico = function() {
+            var p = (document.getElementById('input-prot-publico').value || "CT-2026-8412").trim().toUpperCase();
+            var box = document.getElementById('res-validador-publico');
+            box.style.display = 'block';
+            box.innerHTML = "✔ <strong>PROTOCOLO #" + p + " AUTÊNTICO & VIGENTE:</strong> Ensaio NBR 15526 Estanque (15.0 kPa) • Manômetro RBC #INM-9482 • ART-DF #0720260098412";
         };
 
-        window.autenticarCertificadoDemo = function() {
-            var hash = "HASH-" + Math.floor(100000 + Math.random() * 900000);
-            var emp = document.getElementById('wl-input-nome').value.trim() || "CAPITAL TECH";
-            document.getElementById('demo-cert-status').innerHTML = "<strong style='color:#34D399;'>✔ ASSINATURA GRAVADA (" + hash + ")!</strong> Certificado ABNT pronto para impressão A4 e envio no WhatsApp.";
-            document.getElementById('demo-qr-img').src = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" + encodeURIComponent("AUTENTICADO-" + emp + "-" + hash);
+        window.enviarSimulacaoWhatsApp = function() {
+            var msg = "🚀 *PROPOSTA DE LICENCIAMENTO — CAPITAL TECH SaaS*\n\n" +
+                      "Olá! Simulei minha frota no portal e quero implantar a plataforma:\n" +
+                      "🏢 *Marca:* " + estadoPlano.marcaDigitada + "\n" +
+                      "🚐 *Frota Configurada:* " + estadoPlano.tecnicos + " Técnico(s)/Viatura(s)\n" +
+                      "💎 *Plano Único All-In-One:* R$ " + estadoPlano.mensalidade + "/mês\n\n" +
+                      "Podemos liberar os 7 dias de teste gratuito?";
+            window.open("https://wa.me/" + WHATSAPP_COMERCIAL + "?text=" + encodeURIComponent(msg), '_blank');
         };
 
-        // 6. STUDIO WHITE-LABEL DO VISITANTE
-        window.aplicarMarcaVisitante = function() {
-            var nome = (document.getElementById('wl-input-nome').value.trim() || "CAPITAL TECH").toUpperCase();
-            var sigla = (document.getElementById('wl-input-sigla').value.trim() || "CT").toUpperCase();
-
-            document.getElementById('ui-nav-nome').innerText = nome;
-            document.getElementById('ui-nav-sigla').innerText = sigla;
-            document.getElementById('wl-card-nome').innerText = nome;
-            document.getElementById('wl-card-sigla').innerText = sigla;
-            document.getElementById('demo-cert-brand').innerText = "CERTIFICADO OFICIAL — " + nome;
-        };
-
-        window.trocarCorVisitante = function(hex) {
-            document.documentElement.style.setProperty('--brand', hex);
-        };
-
-        // 7. CALCULADORA DE PAYBACK
-        window.atualizarCalculadoraPayback = function() {
-            var tec = parseInt(document.getElementById('calc-rng-tec').value) || 4;
-            var osDia = parseInt(document.getElementById('calc-rng-os').value) || 4;
-            var perda = parseInt(document.getElementById('calc-rng-perda').value) || 1500;
-
-            document.getElementById('calc-lbl-tec').innerText = tec + (tec === 1 ? " Viatura" : " Viaturas");
-            document.getElementById('calc-lbl-os').innerText = osDia + " OS / dia";
-            document.getElementById('calc-lbl-perda').innerText = "R$ " + perda.toLocaleString('pt-BR') + " / mês";
-
-            var horasPoupadasMes = Math.round((tec * osDia * 22 * 35) / 60);
-            var ganhoProdutividadeMes = horasPoupadasMes * 28;
-            var retornoMensalTotal = ganhoProdutividadeMes + perda;
-            var retornoAnual = retornoMensalTotal * 12;
-            var diasPayback = Math.max(1, Math.round((697 / retornoMensalTotal) * 30));
-
-            document.getElementById('calc-payback-dias').innerText = "⚡ O SISTEMA SE PAGA EM APENAS " + diasPayback + (diasPayback === 1 ? " DIA" : " DIAS") + " DE OPERAÇÃO";
-            document.getElementById('calc-lucro-anual').innerText = "R$ " + retornoAnual.toLocaleString('pt-BR') + " / ano";
-            document.getElementById('calc-horas-mes').innerHTML = "Recuperação financeira + <strong>" + horasPoupadasMes + " horas produtivas/mês</strong> liberadas na sua equipe.";
-        };
-
-        // 8. FAQ
-        window.alternarFaq = function(btn) {
-            btn.parentElement.classList.toggle('open');
-        };
-
-        // 9. PROVA SOCIAL DE TELEMETRIA NO DF
-        var eventosTelemetria = [
-            { t: "OS #CT-8914 BAIXADA EM CAMPO", d: "Estanqueidade Aprovada (15.0 kPa) • Águas Claras/DF" },
-            { t: "SCANNER OCR EXECUTADO", d: "Tanque P190 Nº 001729 lido em 2.1s • Taguatinga/DF" },
-            { t: "ESTOQUE MÓVEL SINCRONIZADO", d: "+4 Reguladores Aliança enviados p/ FROTA-DF04 (SIA/DF)" },
-            { t: "CERTIFICADO PDF + ART EMITIDO", d: "Assinatura digital colhida • Setor Noroeste/DF" }
-        ];
-        var idxEvento = 0;
-        setInterval(function() {
-            var toast = document.getElementById('live-toast');
-            if (!toast) return;
-            toast.classList.add('hidden');
-            setTimeout(function() {
-                idxEvento = (idxEvento + 1) % eventosTelemetria.length;
-                document.getElementById('toast-title').innerText = eventosTelemetria[idxEvento].t;
-                document.getElementById('toast-desc').innerText = eventosTelemetria[idxEvento].d;
-                toast.classList.remove('hidden');
-            }, 600);
-        }, 6500);
-
-        // 10. FECHAMENTO COMERCIAL NO WHATSAPP
-        window.dispararPropostaWhatsApp = function(origemClique) {
-            var emp = document.getElementById('wl-input-nome').value.trim() || "Minha Empresa";
-            var frota = document.getElementById('calc-rng-tec').value;
-            var lucro = document.getElementById('calc-lucro-anual').innerText;
-
-            var msg = "🚀 *LICENCIAMENTO CAPITAL TECH SaaS*\n\n" +
-                      "Olá! Acessei o Portal Principal da Capital Tech e quero implantar a plataforma:\n" +
-                      "🏢 *Empresa:* " + emp + "\n" +
-                      "🚐 *Frota Atual:* " + frota + " viatura(s)\n" +
-                      "💰 *Retorno Estimado na Calculadora:* " + lucro + "\n" +
-                      "📌 *Módulo Solicitado:* " + origemClique + "\n\n" +
-                      "Podemos liberar meu acesso White-Label?";
-
-            window.open("https://wa.me/" + WHATSAPP_VENDAS + "?text=" + encodeURIComponent(msg), '_blank');
-        };
-
-        window.atualizarCalculadoraPayback();
+        window.calcularPlanoUnicoInteligente();
     </script>
+    <!-- ====================================================================
+     CÁPSULA MARKETPLACE DE SÍNDICOS & API DE SEGURADORAS PREDIAIS
+     ==================================================================== -->
+<script>
+(function() {
+    // Turbina o Validador Público para exibir o Score da Seguradora + Botão de Chamar Viatura (Marketplace)
+    var validarOrig = window.validarProtocoloPublico;
+    window.validarProtocoloPublico = function() {
+        if (typeof validarOrig === 'function') validarOrig();
+        var p = (document.getElementById('input-prot-publico').value || "CT-2026-8412").trim().toUpperCase();
+        var box = document.getElementById('res-validador-publico');
+        if (!box) return;
+
+        box.style.display = 'block';
+        box.innerHTML =
+            '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">' +
+                '<div>' +
+                    '<div style="color:#34D399; font-weight:900; font-size:0.92rem;">✔ CERTIFICADO #' + p + ' AUTÊNTICO • PADRÃO SEGURADORA AAA</div>' +
+                    '<div style="font-size:0.82rem; color:#CBD5E1; margin-top:4px;">' +
+                        'Estanqueidade NBR 15526 (15.0 kPa) • <strong>IA Acústica FFT: 0.0 dB (Sem Fuga)</strong> • <strong>Risk Score: 99/100 (AAA)</strong>' +
+                    '</div>' +
+                '</div>' +
+                '<button type="button" onclick="abrirModalMarketplaceSindico()" style="background:linear-gradient(135deg,#F59E0B,#EA580C); color:#000; font-weight:900; font-size:0.8rem; padding:10px 16px; border-radius:9px; border:none; cursor:pointer; white-space:nowrap;">' +
+                    '⚡ Agendar Vistoria / Renovação para Meu Condomínio' +
+                '</button>' +
+            '</div>';
+    };
+
+    // Cria o Modal do Marketplace onde o Síndico chama uma viatura e gera OS automática
+    var modalMkt = document.createElement('div');
+    modalMkt.id = "modal-marketplace-sindico";
+    modalMkt.style.cssText = "position:fixed; inset:0; z-index:99999; background:rgba(2,4,9,0.88); backdrop-filter:blur(14px); display:none; align-items:center; justify-content:center; padding:20px;";
+    modalMkt.innerHTML =
+        '<div style="background:#0C1220; border:2px solid #10B981; border-radius:22px; width:100%; max-width:490px; padding:32px 28px; color:#fff; position:relative; box-shadow:0 30px 90px rgba(0,0,0,0.95);">' +
+            '<button type="button" onclick="document.getElementById(\'modal-marketplace-sindico\').style.display=\'none\'" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.08); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer;">✕</button>' +
+            '<span style="font-family:monospace; font-size:0.72rem; color:#10B981; font-weight:800;">⚡ MARKETPLACE CAPITAL TECH • DESPACHO AUTOMÁTICO</span>' +
+            '<h3 style="font-size:1.4rem; font-weight:900; margin:6px 0;">Solicitar Viatura Homologada</h3>' +
+            '<p style="font-size:0.84rem; color:#94A3B8; margin-bottom:18px;">Seu pedido cai diretamente no Radar da viatura credenciada mais próxima para emissão do Laudo ABNT + Score de Seguradora.</p>' +
+            '<div style="margin-bottom:12px;"><label style="font-size:0.72rem; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px;">NOME DO CONDOMÍNIO / RESTAURANTE</label><input id="mkt-cond" class="input-std" placeholder="Ex: Condomínio Residencial Parque das Águas"></div>' +
+            '<div style="margin-bottom:12px;"><label style="font-size:0.72rem; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px;">ENDEREÇO / REGIÃO ADMINISTRATIVA</label><input id="mkt-end" class="input-std" placeholder="Ex: Rua 36 Norte, Águas Claras - DF"></div>' +
+            '<div style="margin-bottom:18px;"><label style="font-size:0.72rem; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px;">WHATSAPP DO SÍNDICO / GESTOR</label><input id="mkt-zap" class="input-std" placeholder="Ex: 61999998888"></div>' +
+            '<button type="button" onclick="dispararPedidoMarketplace()" style="width:100%; padding:15px; border-radius:10px; border:none; background:linear-gradient(90deg,#10B981,#059669); color:#000; font-weight:900; font-size:0.94rem; cursor:pointer;">🚀 Despachar Chamado para Frota Credenciada</button>' +
+        '</div>';
+    document.body.appendChild(modalMkt);
+
+    window.abrirModalMarketplaceSindico = function() {
+        document.getElementById('modal-marketplace-sindico').style.display = 'flex';
+    };
+
+    window.dispararPedidoMarketplace = function() {
+        var cond = document.getElementById('mkt-cond').value.trim();
+        var end = document.getElementById('mkt-end').value.trim();
+        var zap = document.getElementById('mkt-zap').value.trim();
+        if (!cond || !end) {
+            alert("Informe o nome do Condomínio e o Endereço para localizarmos a viatura.");
+            return;
+        }
+
+        var novaOSMarketplace = {
+            id: "mkt_" + Date.now(),
+            protocolo: "MKT-" + Math.floor(1000 + Math.random() * 9000),
+            data: new Date().toLocaleDateString('pt-BR'),
+            cliente: cond + " (Lead Marketplace)",
+            endereco: end,
+            zap: zap,
+            tecnico: "Técnico 01",
+            servico: "Renovação Anual NBR 15526 + Score Seguradora AAA",
+            status: "Pendente",
+            prioridade: "URGENTE",
+            valorTotal: 450.00,
+            origem: "MARKETPLACE_SINDICO"
+        };
+
+        // Injeta direto na fila da empresa para tocar no Radar iFood do Técnico e aparecer na Torre do Gestor!
+        try {
+            var dbLocal = JSON.parse(localStorage.getItem("G3_ERP_MASTER_DB_V2") || "{}");
+            if (!dbLocal.ordens) dbLocal.ordens = [];
+            dbLocal.ordens.unshift(novaOSMarketplace);
+            localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dbLocal));
+        } catch (e) {}
+
+        if (typeof rtdb !== 'undefined' && rtdb) {
+            rtdb.ref('MARKETPLACE_DEMANDAS').push(novaOSMarketplace);
+        }
+
+        document.getElementById('modal-marketplace-sindico').style.display = 'none';
+        alert("✔ Chamado #" + novaOSMarketplace.protocolo + " enviado para o Radar da Frota! A viatura mais próxima já recebeu o alerta sonoro.");
+    };
+})();
+</script>
 </body>
 </html>
