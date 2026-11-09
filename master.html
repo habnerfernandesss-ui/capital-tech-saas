@@ -140,10 +140,12 @@
         .btn-sm.warn:hover { background: var(--gold); color: #000; }
         .btn-sm.danger { background: rgba(225, 29, 72, 0.15); border-color: var(--red); color: #fda4af; }
         .btn-sm.danger:hover { background: var(--red); color: #fff; }
+        .btn-sm.cyan { background: rgba(56, 189, 248, 0.14); border-color: var(--cyan); color: var(--cyan); }
+        .btn-sm.cyan:hover { background: var(--cyan); color: #000; }
 
         /* TABELA MASTER DE EMPRESAS LICENCIADAS */
         .table-wrap { width: 100%; overflow-x: auto; }
-        .master-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 1150px; text-align: left; }
+        .master-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 1180px; text-align: left; }
         .master-table th {
             background: #060911; color: var(--cyan); font-size: 0.71rem; font-weight: 800;
             text-transform: uppercase; letter-spacing: 0.5px; padding: 13px 14px; border-bottom: 1px solid var(--border);
@@ -163,7 +165,7 @@
         .status-active { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid var(--green); }
         .status-blocked { background: rgba(225, 29, 72, 0.18); color: #fda4af; border: 1px solid var(--red); }
 
-        .wa-actions-grid { display: flex; flex-wrap: wrap; gap: 5px; max-width: 290px; }
+        .wa-actions-grid { display: flex; flex-wrap: wrap; gap: 5px; max-width: 300px; }
 
         #toast-master {
             position: fixed; bottom: 22px; right: 22px; z-index: 9999;
@@ -257,12 +259,12 @@
             <div class="form-grid-4">
                 <div class="field">
                     <label>Razão Social / Nome da Empresa</label>
-                    <input type="text" id="emp-nome" class="input-std" placeholder="Ex: Brasília Gás Engenharia Ltda">
+                    <input type="text" id="emp-nome" class="input-std" placeholder="Ex: Brasília Gás Engenharia Ltda" oninput="gerarTenantAutomatico()">
                 </div>
                 <div class="field">
                     <label>Marca White-Label (Topo do App) + Sigla</label>
                     <div style="display:grid; grid-template-columns: 1fr 75px; gap:8px;">
-                        <input type="text" id="emp-marca" class="input-std" placeholder="Ex: BRASÍLIA GÁS">
+                        <input type="text" id="emp-marca" class="input-std" placeholder="Ex: BRASÍLIA GÁS" oninput="gerarTenantAutomatico()">
                         <input type="text" id="emp-sigla" class="input-std" maxlength="3" placeholder="BG" style="text-align:center; font-weight:900;">
                     </div>
                 </div>
@@ -361,7 +363,7 @@
                             <th>Gaveta Firebase & Telemetria</th>
                             <th>Plano & Faturamento</th>
                             <th>Status (Disjuntor)</th>
-                            <th>Ação do Disjuntor (1 Clique)</th>
+                            <th>Controle & Acesso Direto (CEO)</th>
                             <th>Mensagens Inteligentes (WhatsApp)</th>
                         </tr>
                     </thead>
@@ -396,19 +398,30 @@
     <script>
         var MASTER_STORAGE_KEY = "CAPITAL_TECH_HOLDING_DB_V1";
         var CEO_SESSION_KEY = "CAPITAL_TECH_CEO_UNLOCKED";
+        var SESSION_AUTH_KEY = "CAPITAL_TECH_AUTH_SESSION";
+        var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
+
+        // Defesa contra congelamento de cache (bfcache)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
 
         function avisoMaster(msg) {
             var t = document.getElementById('toast-master');
+            if (!t) return;
             t.innerText = msg;
             t.style.display = 'block';
             setTimeout(function() { t.style.display = 'none'; }, 3400);
         }
 
-        // AUTENTICAÇÃO DO CEO
+        // AUTENTICAÇÃO PERSISTENTE DO CEO
         window.destrancarPainelCEO = function() {
             var pin = document.getElementById('ceo-pin').value.trim();
             if (pin === "habner2026" || pin === "capital2026") {
                 document.getElementById('ceo-lock-overlay').style.display = 'none';
+                localStorage.setItem(CEO_SESSION_KEY, "true");
                 sessionStorage.setItem(CEO_SESSION_KEY, "true");
                 avisoMaster("👑 Bem-vindo, CEO Habner! Command Center liberado.");
             } else {
@@ -417,11 +430,12 @@
         };
 
         window.trancarPainelCEO = function() {
+            localStorage.removeItem(CEO_SESSION_KEY);
             sessionStorage.removeItem(CEO_SESSION_KEY);
             document.getElementById('ceo-lock-overlay').style.display = 'flex';
         };
 
-        if (sessionStorage.getItem(CEO_SESSION_KEY) === "true") {
+        if (localStorage.getItem(CEO_SESSION_KEY) === "true" || sessionStorage.getItem(CEO_SESSION_KEY) === "true") {
             document.getElementById('ceo-lock-overlay').style.display = 'none';
         }
 
@@ -476,14 +490,25 @@
             };
         }
 
-        var holdingDB = null;
-        var telemetriaNuvem = {}; // Guarda quantas OS e Técnicos cada empresa tem no Firebase
-        var statusNuvem = {};     // Guarda o STATUS_FINANCEIRO em tempo real
+        var holdingDB = obterHoldingPadrao();
+        var telemetriaNuvem = {};
+        var statusNuvem = {};
 
         function carregarHoldingLocal() {
             try {
                 var salvo = localStorage.getItem(MASTER_STORAGE_KEY);
-                holdingDB = salvo ? JSON.parse(salvo) : obterHoldingPadrao();
+                if (salvo) {
+                    var parsed = JSON.parse(salvo);
+                    var padrao = obterHoldingPadrao();
+                    var listaEmp = parsed.empresas || padrao.empresas;
+                    if (!Array.isArray(listaEmp)) listaEmp = Object.values(listaEmp);
+                    holdingDB = {
+                        config: parsed.config || padrao.config,
+                        empresas: listaEmp
+                    };
+                } else {
+                    holdingDB = obterHoldingPadrao();
+                }
             } catch (e) {
                 holdingDB = obterHoldingPadrao();
             }
@@ -496,7 +521,7 @@
         // CONEXÃO EM TEMPO REAL COM O FIREBASE
         var rtdb = null;
         try {
-            const firebaseConfig = {
+            var firebaseConfig = {
                 apiKey: "AIzaSyDf_mA78IgjnSXyrNasYId3ngq2lWho_9I",
                 authDomain: "g3-smartos.firebaseapp.com",
                 databaseURL: "https://g3-smartos-default-rtdb.firebaseio.com",
@@ -512,10 +537,19 @@
 
             // 1. Escuta a carteira de empresas da Holding
             rtdb.ref('CAPITAL_HOLDING').on('value', function(snap) {
-                if (snap.val()) {
-                    holdingDB = snap.val();
+                var dados = snap.val();
+                if (dados) {
+                    var padrao = obterHoldingPadrao();
+                    var listaEmp = dados.empresas || padrao.empresas;
+                    if (!Array.isArray(listaEmp)) listaEmp = Object.values(listaEmp);
+                    holdingDB = {
+                        config: dados.config || padrao.config,
+                        empresas: listaEmp
+                    };
                     salvarHoldingLocal();
                     window.renderizarPainelMaster();
+                } else {
+                    salvarHoldingCompleta();
                 }
             });
 
@@ -525,7 +559,7 @@
                 window.renderizarPainelMaster();
             });
 
-            // 3. Escuta a árvore EMPRESAS para contar quantas OSs e Viaturas cada cliente tem!
+            // 3. Escuta a árvore EMPRESAS para contar OSs, Viaturas e Clientes em tempo real
             rtdb.ref('EMPRESAS').on('value', function(snap) {
                 telemetriaNuvem = snap.val() || {};
                 window.renderizarPainelMaster();
@@ -541,12 +575,24 @@
             }
         }
 
-        // PREENCHIMENTO AUTOMÁTICO DO TENANT ID A PARTIR DO E-MAIL
+        // GERAÇÃO DE TENANT ID UNIFICADA COM O INDEX.HTML E GESTOR.HTML
+        function calcularTenantSeguro(emailStr, nomeEmpresa) {
+            var limpo = (emailStr || "").trim().toLowerCase();
+            if (limpo.indexOf('@') !== -1) {
+                var dom = limpo.split('@')[1];
+                if (dom.indexOf('gmail') !== -1 || dom.indexOf('hotmail') !== -1 || dom.indexOf('outlook') !== -1 || dom.indexOf('yahoo') !== -1) {
+                    return (nomeEmpresa || "EMPRESA").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+                }
+                return dom.replace(/[^a-z0-9]/g, '_').toUpperCase();
+            }
+            return (nomeEmpresa || "EMPRESA_COM_BR").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+        }
+
         window.gerarTenantAutomatico = function() {
             var email = document.getElementById('emp-email').value.trim();
-            if (email.indexOf('@') !== -1) {
-                var dominio = email.split('@')[1].replace(/\./g, '_').toUpperCase();
-                document.getElementById('emp-tenant').value = dominio;
+            var nome = document.getElementById('emp-marca').value.trim() || document.getElementById('emp-nome').value.trim();
+            if (email || nome) {
+                document.getElementById('emp-tenant').value = calcularTenantSeguro(email, nome);
             }
         };
 
@@ -555,13 +601,13 @@
             document.getElementById('emp-mensalidade').value = val;
         };
 
-        // CADASTRAR NOVA EMPRESA E JÁ CRIAR A GAVETA WHITE-LABEL NO FIREBASE
+        // CADASTRAR NOVA EMPRESA E PROVISIONAR GAVETA COMPLETA NO FIREBASE + LOCALSTORAGE
         window.cadastrarEProvisionarEmpresa = function() {
             var nome = document.getElementById('emp-nome').value.trim();
             var marca = (document.getElementById('emp-marca').value.trim() || nome || "NOVA EMPRESA").toUpperCase();
             var sigla = (document.getElementById('emp-sigla').value.trim() || marca.substring(0, 2)).toUpperCase();
-            var email = document.getElementById('emp-email').value.trim() || "admin@empresa.com.br";
-            var tenantId = (document.getElementById('emp-tenant').value.trim() || "EMPRESA_COM_BR").toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+            var email = document.getElementById('emp-email').value.trim() || "admin@" + marca.toLowerCase().replace(/[^a-z0-9]/g, '') + ".com.br";
+            var tenantId = (document.getElementById('emp-tenant').value.trim() || calcularTenantSeguro(email, marca)).toUpperCase().replace(/[^A-Z0-9_]/g, '_');
             var cnpj = document.getElementById('emp-cnpj').value.trim() || "Isento / Em Cadastro";
             var resp = document.getElementById('emp-resp').value.trim() || "Diretoria";
             var zap = document.getElementById('emp-zap').value.trim() || "61986294465";
@@ -601,16 +647,43 @@
             holdingDB.empresas.unshift(novaEmp);
             salvarHoldingCompleta();
 
-            // PROVISIONA NO FIREBASE O STATUS FINANCEIRO E A IDENTIDADE WHITE-LABEL DO CLIENTE
-            if (rtdb) {
-                rtdb.ref('STATUS_FINANCEIRO/' + tenantId).set("ATIVO");
-                rtdb.ref('EMPRESAS/' + tenantId + '/configWhiteLabel').set({
+            var estruturaInicialGaveta = {
+                configWhiteLabel: {
                     nome: marca,
                     sigla: sigla,
                     sub: "Plataforma Corporativa • NBR 13523 & 15526",
                     art: "ART-DF #0720260098412",
                     prefixo: sigla,
                     cor: cor
+                },
+                clientes: [
+                    { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: end, central: "Tanque Estacionário P190 (Granel)", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
+                ],
+                tecnicos: [
+                    { id: "t1", nome: resp + " (Viatura 01)", carro: "FROTA-01 (" + sigla + ")", placa: "BSB-1A26", zap: zap, regiao: end, inmetro: "Manômetro Digital #INM-9482", statusOperacional: "DISPONIVEL" }
+                ],
+                materiais: [
+                    { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: { "t1": 4 } },
+                    { id: "m2", cod: "GLP-MNG02", nome: "Mangueira Flexível Metálica NBR 14177 (1,2m)", preco: 95.00, saldoBase: 40, alocadoPorTecnico: { "t1": 6 } }
+                ],
+                tanques: [
+                    { serie: "Nº 001729", cliente: "Condomínio Residencial Bella Vita", tara: "135,10 kg", vol: "450 Litros / 190 kg GLP", pserv: "1,7 MPa • NBR 8460", fabReg: "Data: 2017 • ARXO", statusReq: "Vigente (Requalificar em 2032)" }
+                ],
+                ordens: []
+            };
+
+            try {
+                localStorage.setItem("ERP_SAAS_" + tenantId, JSON.stringify(estruturaInicialGaveta));
+            } catch (e) {}
+
+            if (rtdb) {
+                rtdb.ref('STATUS_FINANCEIRO/' + tenantId).set("ATIVO");
+                rtdb.ref('EMPRESAS/' + tenantId).once('value', function(snap) {
+                    if (!snap.val()) {
+                        rtdb.ref('EMPRESAS/' + tenantId).set(estruturaInicialGaveta);
+                    } else {
+                        rtdb.ref('EMPRESAS/' + tenantId + '/configWhiteLabel').set(estruturaInicialGaveta.configWhiteLabel);
+                    }
                 });
             }
 
@@ -627,7 +700,19 @@
             avisoMaster("🚀 Empresa " + marca + " cadastrada e gaveta [" + tenantId + "] provisionada no Firebase!");
         };
 
-        // DISJUNTOR EM 1 CLIQUE ( CORTA OU LIBERA NA HORA )
+        // ACESSO DIRETO DO CEO AO PAINEL DE QUALQUER EMPRESA DA CARTEIRA
+        window.acessarGavetaCliente = function(idx, destino) {
+            var emp = holdingDB.empresas[idx];
+            if (!emp) return;
+            var emailAlvo = emp.email || "admin@capitaltech.com";
+            localStorage.setItem(SESSION_AUTH_KEY, emailAlvo);
+            localStorage.setItem(TEC_SESSION_KEY, emailAlvo);
+            sessionStorage.setItem(SESSION_AUTH_KEY, emailAlvo);
+            sessionStorage.setItem(TEC_SESSION_KEY, emailAlvo);
+            window.location.href = destino + "?tenant=" + encodeURIComponent(emp.tenantId);
+        };
+
+        // DISJUNTOR EM 1 CLIQUE (CORTA OU LIBERA NA HORA)
         window.alternarDisjuntorEmpresa = function(idx, novoStatus) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
@@ -664,9 +749,7 @@
             avisoMaster("✔ Configurações financeiras e PIX da Holding atualizadas!");
         };
 
-        // ==============================================================
         // GERADOR DE MENSAGENS INTELIGENTES DE WHATSAPP (4 CENÁRIOS)
-        // ==============================================================
         window.dispararMensagemInteligente = function(idx, tipoMensagem) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
@@ -722,9 +805,14 @@
             window.open("https://wa.me/55" + zapLimpo + "?text=" + encodeURIComponent(msg), '_blank');
         };
 
-        // ==============================================================
+        function contarItensSeguro(colecao) {
+            if (!colecao) return 0;
+            if (Array.isArray(colecao)) return colecao.length;
+            if (typeof colecao === 'object') return Object.keys(colecao).length;
+            return 0;
+        }
+
         // RENDERIZAÇÃO COMPLETA DO DASHBOARD MASTER
-        // ==============================================================
         window.renderizarPainelMaster = function() {
             if (!holdingDB) return;
             if (!holdingDB.empresas) holdingDB.empresas = [];
@@ -747,7 +835,6 @@
 
             for (var i = 0; i < holdingDB.empresas.length; i++) {
                 var emp = holdingDB.empresas[i];
-                // Sincroniza o status com o que está gravado no Firebase STATUS_FINANCEIRO
                 if (statusNuvem && statusNuvem[emp.tenantId]) {
                     emp.status = statusNuvem[emp.tenantId];
                 }
@@ -761,11 +848,10 @@
                 }
                 setupsTotal += (parseFloat(emp.setup) || 0);
 
-                // Telemetria real da gaveta desta empresa no Firebase
                 var dadosGaveta = (telemetriaNuvem && telemetriaNuvem[emp.tenantId]) ? telemetriaNuvem[emp.tenantId] : null;
-                var numOS = (dadosGaveta && dadosGaveta.ordens) ? dadosGaveta.ordens.length : 0;
-                var numTec = (dadosGaveta && dadosGaveta.tecnicos) ? dadosGaveta.tecnicos.length : 0;
-                var numCli = (dadosGaveta && dadosGaveta.clientes) ? dadosGaveta.clientes.length : 0;
+                var numOS = dadosGaveta ? contarItensSeguro(dadosGaveta.ordens) : 0;
+                var numTec = dadosGaveta ? contarItensSeguro(dadosGaveta.tecnicos) : 0;
+                var numCli = dadosGaveta ? contarItensSeguro(dadosGaveta.clientes) : 0;
 
                 var bateBusca = (emp.nome || "").toLowerCase().indexOf(busca) !== -1 ||
                                 (emp.marca || "").toLowerCase().indexOf(busca) !== -1 ||
@@ -811,6 +897,10 @@
                         '<td>' + badgeStatus + '</td>' +
                         '<td>' +
                             '<div style="display:flex; flex-direction:column; gap:6px;">' +
+                                '<div style="display:flex; gap:5px;">' +
+                                    '<button type="button" class="btn-sm cyan" style="flex:1; justify-content:center;" onclick="acessarGavetaCliente(' + i + ', \'gestor.html\')">💻 Gestor</button>' +
+                                    '<button type="button" class="btn-sm warn" style="flex:1; justify-content:center;" onclick="acessarGavetaCliente(' + i + ', \'app.html\')">📱 App</button>' +
+                                '</div>' +
                                 btnDisjuntor +
                                 '<button type="button" class="btn-sm" onclick="removerEmpresaCarteira(' + i + ')">🗑️ Excluir da Carteira</button>' +
                             '</div>' +
@@ -827,14 +917,15 @@
                 }
             }
 
-            // Calcula telemetria global de todas as gavetas no Firebase
             var globalOS = 0;
             var globalViaturas = 0;
             var chavesTenants = Object.keys(telemetriaNuvem || {});
             for (var k = 0; k < chavesTenants.length; k++) {
                 var g = telemetriaNuvem[chavesTenants[k]];
-                if (g && g.ordens) globalOS += g.ordens.length;
-                if (g && g.tecnicos) globalViaturas += g.tecnicos.length;
+                if (g) {
+                    globalOS += contarItensSeguro(g.ordens);
+                    globalViaturas += contarItensSeguro(g.tecnicos);
+                }
             }
 
             var arrProjetado = (mrrTotal * 12) + setupsTotal;
