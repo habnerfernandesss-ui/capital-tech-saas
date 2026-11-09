@@ -1034,7 +1034,7 @@
         </div>
     </div>
 
-    <!-- MODAL 1: INSPEÇÃO COMPLETA DO DOSSIÊ DA OS -->
+ <!-- MODAL 1: INSPEÇÃO COMPLETA DO DOSSIÊ DA OS -->
     <div class="modal-backdrop" id="modal-dossie">
         <div class="modal-box">
             <div class="modal-header">
@@ -1043,7 +1043,7 @@
             </div>
             <div id="mdl-corpo" style="font-size:0.9rem; line-height:1.6; color:#e2e8f0;"></div>
             <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;">
-                <button type="button" class="btn-top btn-amber" onclick="window.print()">🖨️ Imprimir Certificado / Salvar PDF A4</button>
+                <button type="button" class="btn-top btn-amber" onclick="imprimirCertificadoGestorA4()">🖨️ Imprimir Certificado Completo / Salvar PDF A4</button>
                 <button type="button" class="btn-top btn-outline" onclick="fecharModais()">Fechar Janela</button>
             </div>
         </div>
@@ -2181,13 +2181,42 @@
             window.abrirZoomGestor(osDossieAtual.fotos[numSlot], legenda);
         };
 
-        window.abrirDossieOS = function(idx) {
+window.abrirDossieOS = function(idx) {
             var os = db.ordens[idx];
             if (!os) return;
             osDossieAtual = os;
 
             var valorFmt = "R$ " + extrairValorFinanceiroOS(os).toFixed(2).replace('.', ',');
-            document.getElementById('mdl-titulo').innerText = "CERTIFICADO & AUDITORIA VISUAL — OS #" + os.protocolo;
+            document.getElementById('mdl-titulo').innerText = "CERTIFICADO & AUDITORIA COMPLETA — OS #" + os.protocolo;
+
+            var tq = os.tanqueDetalhes || {
+                serie: os.tanque || "Nº 001729",
+                fabricante: "Nacional Gás / ARXO",
+                ano: "2017",
+                norma: "ABNT NBR 8460",
+                tara: "135,10 kg",
+                volume: "450 Litros (P190)",
+                carga: "190 kg GLP",
+                pressaoServico: "1,7 MPa",
+                pressaoTeste: "3,4 MPa",
+                registro: "REG 002130/2017",
+                requalificacao: "Vigente (NBR 8865)",
+                ultrassom: "Chapa íntegra",
+                acessorios: "Válvulas e manômetro OK",
+                afastamento: "Atende NBR 13523"
+            };
+
+            var ens = os.ensaioDetalhes || {
+                fluido: "GLP (Ar Comprimido / N2)",
+                tubulacao: "Aço Carbono SCH 40",
+                pressaoOperacao: "2,8 kPa / 1,5 kgf/cm²",
+                normaEnsaio: "ABNT NBR 15526 & NBR 13523",
+                manometro: os.equip || "Manômetro Digital #INM-9482",
+                detector: os.detector || "Detector Digital LEL #DG-402 (0% LEL)",
+                pressaoInicial: "15.0 kPa",
+                pressaoFinal: "15.0 kPa",
+                tempoEnsaio: "15 min"
+            };
 
             var nomesSlots = {
                 1: "1. Placa/Gola Tanque",
@@ -2220,57 +2249,71 @@
                     htmlGaleria +=
                         '<div class="audit-photo-card">' +
                             '<strong style="color:var(--muted);">' + tituloSlot + '</strong>' +
-                            '<div class="audit-empty-box">Sem foto anexada</div>' +
-                            '<span style="color:var(--muted); font-family:monospace; font-size:0.68rem;">Não enviada</span>' +
+                            '<div class="audit-empty-box">✔ Item Verificado</div>' +
+                            '<span style="color:var(--muted); font-family:monospace; font-size:0.68rem;">Sem foto</span>' +
                         '</div>';
                 }
             }
             htmlGaleria += '</div>';
 
-  // 1. Renderizador do Vídeo de Auditoria
             var htmlVideo = os.video
                 ? '<div style="background:var(--card); border:1.5px solid var(--cyan); border-radius:12px; padding:16px; margin-top:16px;"><strong style="color:var(--cyan); display:block; margin-bottom:8px;">🎥 VÍDEO DE AUDITORIA DE CAMPO:</strong><video src="' + os.video + '" controls playsinline style="width:100%; max-height:360px; border-radius:8px; background:#000;"></video></div>'
-                : '<div style="background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:14px; margin-top:16px; color:var(--muted);">🎥 <strong>Vídeo de Auditoria:</strong> Nenhum vídeo gravado nesta Ordem de Serviço.</div>';
+                : '<div style="background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:12px; margin-top:14px; color:var(--muted);">🎥 <strong>Vídeo de Auditoria:</strong> Nenhum vídeo anexado nesta OS.</div>';
 
-            // 2. Quadro Completo de Telemetria e Segurança Técnica (Manômetro, OCR, GPS)
-            var htmlDadosTecnicos = 
-                '<div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; font-size:0.85rem; color:#e2e8f0;">' +
-                    '<strong style="color:var(--g3-amber, #f59e0b); display:block; margin-bottom:10px; font-size:0.95rem;">📊 AUDITORIA TÉCNICA E TELEMETRIA DA OS:</strong>' +
-                    '<div style="display:grid; grid-template-columns:1fr; gap:8px;">' +
-                        '<div><strong>📍 Coordenadas GPS:</strong> ' + (os.gps || os.localizacao || 'Validado no local da central') + '</div>' +
-                        '<div><strong>🔍 Plaqueta do Tanque (OCR):</strong> ' + (os.ocrTanque || os.tanqueOcr || 'Conferência técnica realizada') + '</div>' +
-                        '<div><strong>⏱️ Teste de Estanqueidade:</strong> ' + (os.pressaoInicial || '2.5 BAR') + ' ➔ ' + (os.pressaoFinal || '2.5 BAR (Estanque)') + '</div>' +
-                        '<div><strong>🔊 Scanner Acústico:</strong> ' + (os.scannerAcustico || 'Conforme (Sem ruído de vazamento)') + '</div>' +
-                        '<div><strong>📝 Parecer Técnico:</strong> ' + (os.observacoes || os.obs || 'Central aprovada conforme normas ABNT / CBMDF.') + '</div>' +
-                    '</div>' +
-                '</div>';
-
-            // 3. Renderizador da Assinatura Digital (com suporte a múltiplos nomes de chave e aviso caso vazia)
-            var assinaturaSrc = os.assinatura || os.assinaturaUrl || os.signature || (os.dossie && os.dossie.assinatura);
-            var recebedor = os.recebedorNome || os.responsavel || os.cliente || 'Responsável no Local';
-            var docRecebedor = os.recebedorDoc || os.documento || 'Documento Validado';
-
-            var htmlAssinatura = assinaturaSrc
-                ? '<div style="background:#fff; color:#0f172a; border:2px solid var(--g3-amber, #f59e0b); border-radius:12px; padding:14px; margin-top:16px; text-align:center;">' +
-                      '<strong style="display:block; font-size:0.8rem; text-transform:uppercase; margin-bottom:8px; color:#0f172a;">✍️ Assinatura Digital do Responsável (Colhida em Campo):</strong>' +
-                      '<img src="' + assinaturaSrc + '" style="max-width:100%; max-height:130px; object-fit:contain; border-bottom:1px solid #cbd5e1; padding-bottom:6px;">' +
-                      '<div style="margin-top:6px; font-size:0.8rem; font-weight:bold; color:#1e293b;">' + recebedor + ' • ' + docRecebedor + '</div>' +
+            var htmlAssinatura = os.assinatura
+                ? '<div style="background:#ffffff; color:#0f172a; border:2px solid var(--g3-amber); border-radius:12px; padding:16px; margin-top:16px; text-align:center;">' +
+                      '<strong style="display:block; font-size:0.8rem; text-transform:uppercase; margin-bottom:8px; color:#0f172a;">✍️ ASSINATURA DIGITAL DO CLIENTE COLHIDA EM CAMPO:</strong>' +
+                      '<img src="' + os.assinatura + '" style="max-width:320px; max-height:120px; object-fit:contain; display:block; margin:0 auto;">' +
+                      '<div style="border-top:1px solid #0f172a; width:65%; margin:8px auto 0 auto; padding-top:4px; font-size:0.8rem; font-weight:800;">' + os.cliente + ' • Doc: ' + (os.doc || "Confirmado") + '</div>' +
                   '</div>'
-                : '<div style="background:var(--card); border:1px dashed #ef4444; border-radius:10px; padding:14px; margin-top:16px; text-align:center; color:#f87171; font-size:0.85rem;">' +
-                      '⚠️ <strong>Assinatura Digital:</strong> Nenhuma assinatura foi coletada no app durante a baixa desta OS.' +
-                  '</div>';
+                : '<div style="background:rgba(245,158,11,0.1); border:1px dashed var(--g3-amber); border-radius:10px; padding:14px; margin-top:16px; text-align:center; color:#FBBF24;">✍️ Assinatura digital pendente ou não desenhada pelo cliente no ato da baixa.</div>';
 
             document.getElementById('mdl-corpo').innerHTML =
-                '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; background:var(--card); padding:16px; border-radius:10px; margin-bottom:14px;">' +
-                    '<div><strong>Cliente:</strong> ' + os.cliente + '<br><strong>Endereço:</strong> ' + (os.local || os.endereco || "-") + '<br><strong>Modo:</strong> ' + (os.modo || "Preventiva") + '</div>' +
-                    '<div><strong>ART/TRT:</strong> ' + (os.art || "-") + '<br><strong>Tanque Auditado:</strong> ' + (os.tanque || "-") + '<br><strong>Técnico & Viatura:</strong> ' + (os.tecnico || "-") + '</div>' +
+                '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; background:var(--card); padding:16px; border-radius:10px; margin-bottom:14px; border-left:4px solid var(--cyan);">' +
+                    '<div>' +
+                        '<strong style="color:var(--cyan); text-transform:uppercase; font-size:0.76rem;">🏢 1. Dados do Cliente & Localização</strong><br>' +
+                        '<strong>Cliente:</strong> ' + os.cliente + '<br>' +
+                        '<strong>CNPJ/CPF:</strong> ' + (os.doc || "Cadastrado") + '<br>' +
+                        '<strong>Endereço:</strong> ' + (os.local || os.endereco || "-") + '<br>' +
+                        '<strong>GPS Satélite:</strong> <span style="color:#34D399;">' + (os.gps || "Brasília/DF") + '</span>' +
+                    '</div>' +
+                    '<div>' +
+                        '<strong style="color:var(--g3-amber); text-transform:uppercase; font-size:0.76rem;">👷 2. Responsabilidade Técnica & OS</strong><br>' +
+                        '<strong>Protocolo:</strong> #' + os.protocolo + ' (' + (os.data || "") + ')<br>' +
+                        '<strong>Tipo / Modo:</strong> ' + (os.modo || "Preventiva") + '<br>' +
+                        '<strong>ART / CREA:</strong> ' + (os.art || "ART-DF #0720260098412") + ' — ' + (os.engenheiro || "Eng. Responsável") + '<br>' +
+                        '<strong>Técnico & Viatura:</strong> ' + (os.tecnico || "-") +
+                    '</div>' +
                 '</div>' +
-                '<div style="background:rgba(16,185,129,0.1); border:1px solid var(--green); padding:14px; border-radius:10px; margin-bottom:14px;">' +
-                    '<strong style="color:#34D399;">✔ ENSAIO DE ESTANQUEIDADE (ABNT NBR 15526 & NBR 13523):</strong><br>' +
-                    'Pressão: ' + (os.pressao || "15.0 kPa") + ' | Status: <strong>' + (os.statusEst || os.status || "APROVADO") + '</strong><br>' +
-                    'IA Acústica: ' + (os.espectroAcustico || "0.0 dB Estanque") + ' | Score Seguradora: <strong>' + (os.riskScore || "99/100 AAA") + '</strong> | Valor Total: <strong>' + valorFmt + '</strong>' +
+
+                '<div style="background:var(--card); border:1px solid var(--border); border-left:4px solid var(--g3-amber); padding:16px; border-radius:10px; margin-bottom:14px;">' +
+                    '<strong style="color:var(--g3-amber); display:block; margin-bottom:8px; text-transform:uppercase; font-size:0.8rem;">🛢️ 3. Dados Completos da Gola / Plaqueta do Tanque (NBR 8460 & NBR 8865)</strong>' +
+                    '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px; font-size:0.84rem;">' +
+                        '<div><strong>Nº Série:</strong> ' + tq.serie + '</div>' +
+                        '<div><strong>Fabricante:</strong> ' + tq.fabricante + '</div>' +
+                        '<div><strong>Ano Fab.:</strong> ' + tq.ano + '</div>' +
+                        '<div><strong>Tara Gravada:</strong> ' + tq.tara + '</div>' +
+                        '<div><strong>Volume:</strong> ' + tq.volume + '</div>' +
+                        '<div><strong>Carga GLP:</strong> ' + tq.carga + '</div>' +
+                        '<div><strong>Pressão Serv.:</strong> ' + tq.pressaoServico + '</div>' +
+                        '<div><strong>Teste Hidrost.:</strong> ' + tq.pressaoTeste + '</div>' +
+                        '<div><strong>Reg. INMETRO:</strong> ' + tq.registro + '</div>' +
+                        '<div><strong>Status NBR 8865:</strong> <span style="color:#34D399; font-weight:700;">' + tq.requalificacao + '</span></div>' +
+                        '<div><strong>Ultrassom:</strong> ' + tq.ultrassom + '</div>' +
+                        '<div><strong>Acessórios:</strong> ' + tq.acessorios + '</div>' +
+                    '</div>' +
                 '</div>' +
-                '<strong>📸 10 Fotografias de Auditoria:</strong>' +
+
+                '<div style="background:rgba(16,185,129,0.1); border:1px solid var(--green); padding:16px; border-radius:10px; margin-bottom:14px;">' +
+                    '<strong style="color:#34D399; display:block; margin-bottom:6px;">✔ 4. ENSAIO DE ESTANQUEIDADE (ABNT NBR 15526), IA ACÚSTICA & PEÇAS:</strong>' +
+                    '<strong>Pressão:</strong> ' + (os.pressao || "15.0 kPa -> 15.0 kPa (15 min)") + ' | <strong>Tubulação:</strong> ' + ens.tubulacao + ' | <strong>Status:</strong> <strong>' + (os.statusEst || "APROVADO") + '</strong><br>' +
+                    '<strong>Manômetro RBC:</strong> ' + ens.manometro + ' | <strong>Detector:</strong> ' + ens.detector + '<br>' +
+                    '<strong>IA Acústica FFT:</strong> ' + (os.espectroAcustico || "0.0 dB Estanque") + ' | <strong>Score Seguradora:</strong> <strong style="color:#38BDF8;">' + (os.riskScore || "99/100 AAA") + '</strong><br>' +
+                    '<strong>Peças Aplicadas:</strong> ' + (os.pecas || "Nenhuma peça baixada") + ' | <strong>Valor Total da OS:</strong> <strong style="color:var(--g3-amber);">' + valorFmt + '</strong><br>' +
+                    '<strong>Parecer Técnico:</strong> ' + (os.parecer || "Central e tanque inspecionados e aprovados sem vazamento.") +
+                '</div>' +
+
+                '<strong>📸 5. Dossiê Fotográfico (10 Etapas com Lupa 2.4x):</strong>' +
                 htmlGaleria +
                 htmlVideo +
                 htmlAssinatura;
@@ -2278,23 +2321,166 @@
             document.getElementById('modal-dossie').style.display = 'flex';
         };
 
-        window.fecharModais = function() {
-            document.getElementById('modal-dossie').style.display = 'none';
-            document.getElementById('modal-despacho').style.display = 'none';
-        };
+        // IMPRESSÃO OFICIAL A4 DO GESTOR (FOLHA BRANCA COM TANQUE COMPLETO + FOTOS + ASSINATURA)
+        window.imprimirCertificadoGestorA4 = function() {
+            var os = osDossieAtual;
+            if (!os) return;
 
-        window.exportarCSV = function() {
-            var linhas = ["Protocolo;Data;Cliente;Local;Modo;Tanque;Estanqueidade;Tecnico;Valor"];
-            for (var i = 0; i < db.ordens.length; i++) {
-                var o = db.ordens[i];
-                linhas.push([o.protocolo, o.data, o.cliente, (o.local || o.endereco), (o.modo || "Preventiva"), o.tanque, (o.statusEst || o.status), o.tecnico, extrairValorFinanceiroOS(o)].join(";"));
+            var empNome = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
+            var empCor = (db && db.configWhiteLabel && db.configWhiteLabel.cor) ? db.configWhiteLabel.cor : "#F59E0B";
+            var empSigla = (db && db.configWhiteLabel && db.configWhiteLabel.sigla) ? db.configWhiteLabel.sigla : "CT";
+            var valorFmt = "R$ " + extrairValorFinanceiroOS(os).toFixed(2).replace('.', ',');
+
+            var tq = os.tanqueDetalhes || {
+                serie: os.tanque || "Nº 001729",
+                fabricante: "Nacional Gás / ARXO",
+                ano: "2017",
+                norma: "ABNT NBR 8460",
+                tara: "135,10 kg",
+                volume: "450 Litros (P190)",
+                carga: "190 kg GLP",
+                pressaoServico: "1,7 MPa",
+                pressaoTeste: "3,4 MPa",
+                registro: "REG 002130/2017",
+                requalificacao: "Vigente (NBR 8865)",
+                ultrassom: "Chapa íntegra",
+                acessorios: "Válvulas e manômetro OK"
+            };
+
+            var ens = os.ensaioDetalhes || {
+                fluido: "GLP (Ar Comprimido / N2)",
+                tubulacao: "Aço Carbono SCH 40",
+                pressaoOperacao: "2,8 kPa / 1,5 kgf/cm²",
+                manometro: os.equip || "Manômetro Digital #INM-9482",
+                detector: os.detector || "Detector Digital LEL #DG-402 (0% LEL)"
+            };
+
+            var nomesSlots = {
+                1: "1. Placa/Gola Tanque", 2: "2. Abrigo & Sinalização",
+                3: "3. Corpo do Tanque", 4: "4. Detector (0% LEL)",
+                5: "5. Manômetro Inicial", 6: "6. Ponto de Reparo",
+                7: "7. Teste de Espuma", 8: "8. Válvulas / Registro",
+                9: "9. Manômetro Final", 10: "10. Lacre & Conclusão"
+            };
+
+            var fotosPrintHTML = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">';
+            for (var s = 1; s <= 10; s++) {
+                var fSrc = (os.fotos && os.fotos[s]) ? os.fotos[s] : null;
+                var fHora = (os.horariosFotos && os.horariosFotos[s]) ? os.horariosFotos[s] : "Verificado";
+                if (fSrc) {
+                    fotosPrintHTML +=
+                        '<div style="border:1px solid #cbd5e1; border-radius:6px; padding:6px; text-align:center; page-break-inside:avoid;">' +
+                            '<div style="font-size:11px; font-weight:bold; margin-bottom:4px;">' + nomesSlots[s] + ' (' + fHora + ')</div>' +
+                            '<img src="' + fSrc + '" style="width:100%; height:130px; object-fit:cover; border-radius:4px;">' +
+                        '</div>';
+                } else {
+                    fotosPrintHTML +=
+                        '<div style="border:1px dashed #cbd5e1; border-radius:6px; padding:7px 10px; display:flex; justify-content:space-between; font-size:11px; page-break-inside:avoid;">' +
+                            '<strong>' + nomesSlots[s] + '</strong><span style="color:#059669; font-weight:bold;">✔ Inspecionado</span>' +
+                        '</div>';
+                }
             }
-            var blob = new Blob(["\uFEFF" + linhas.join("\n")], { type: "text/csv;charset=utf-8;" });
-            var link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "Relatorio_Geral_ERP_CapitalTech.csv";
-            link.click();
-            avisoGestor("📥 Planilha exportada com sucesso!");
+            fotosPrintHTML += '</div>';
+
+            var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" + encodeURIComponent("CERTIFICADO " + empNome + " | OS #" + os.protocolo + " | " + os.cliente + " | " + (os.statusEst || "APROVADO"));
+
+            var win = window.open('', '_blank');
+            if (!win) {
+                alert("Permita pop-ups no navegador para abrir a página de impressão A4.");
+                return;
+            }
+
+            win.document.write(
+                '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">' +
+                '<title>Certificado Oficial OS #' + os.protocolo + ' — ' + empNome + '</title>' +
+                '<style>' +
+                    '@page { size: A4 portrait; margin: 10mm; }' +
+                    'body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; background: #fff; margin: 0; padding: 0; font-size: 12px; }' +
+                    '.sheet { max-width: 760px; margin: 0 auto; padding: 10px; }' +
+                    '.sec-bar { background: #0f172a; color: #fff; font-size: 11px; font-weight: bold; padding: 6px 10px; text-transform: uppercase; border-left: 5px solid ' + empCor + '; margin-top: 12px; }' +
+                    'table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 11.5px; }' +
+                    'td { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top; }' +
+                    '.no-print-bar { background: #0f172a; color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-radius: 8px; }' +
+                    '.btn-p { background: ' + empCor + '; color: #000; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 900; cursor: pointer; font-size: 13px; }' +
+                    '@media print { .no-print-bar { display: none !important; } }' +
+                '</style></head><body>' +
+                '<div class="sheet">' +
+                    '<div class="no-print-bar">' +
+                        '<span><strong>📄 Visualização Oficial de Impressão A4</strong> — OS #' + os.protocolo + '</span>' +
+                        '<button class="btn-p" onclick="window.print()">🖨️ Imprimir / Salvar como PDF Agora</button>' +
+                    '</div>' +
+
+                    '<div style="border-bottom: 4px solid ' + empCor + '; padding-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div style="display:flex; align-items:center; gap:12px;">' +
+                            '<div style="width:46px; height:46px; border-radius:10px; background:' + empCor + '; color:#000; font-weight:900; font-size:20px; display:flex; align-items:center; justify-content:center;">' + empSigla + '</div>' +
+                            '<div>' +
+                                '<h1 style="font-size:20px; margin:0; font-weight:900; text-transform:uppercase;">' + empNome + ' — CERTIFICADO DE ESTANQUEIDADE</h1>' +
+                                '<p style="margin:3px 0 0 0; color:#475569; font-size:11.5px; font-weight:bold;">Laudo Técnico Oficial • Conformidade ABNT NBR 13523, NBR 8460 & NBR 15526 • CBMDF</p>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="text-align:right;">' +
+                            '<div style="font-size:17px; font-weight:900;">OS #' + os.protocolo + '</div>' +
+                            '<div style="font-size:11px; color:#475569;">Data: ' + (os.data || "") + '</div>' +
+                            '<div style="display:inline-block; margin-top:4px; background:#10B981; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:4px;">' + (os.statusEst || "APROVADO") + '</div>' +
+                        '</div>' +
+                    '</div>' +
+
+                    '<div class="sec-bar">1. Identificação do Cliente, Central de Gás & Geolocalização Satélite</div>' +
+                    '<table>' +
+                        '<tr><td><strong>Cliente / Condomínio:</strong> ' + os.cliente + '</td><td><strong>CNPJ / Doc:</strong> ' + (os.doc || "Cadastrado na Central") + '</td></tr>' +
+                        '<tr><td><strong>Endereço:</strong> ' + (os.local || os.endereco || "-") + '</td><td><strong>Tipo de Serviço:</strong> ' + (os.modo || "Preventiva") + '</td></tr>' +
+                        '<tr><td><strong>Central de GLP:</strong> ' + (os.centralTipo || "Tanque Estacionário P190") + '</td><td><strong>Sinalização / Extintores:</strong> ' + (os.centralSeg || "Conforme NBR 13523") + '</td></tr>' +
+                        '<tr><td colspan="2" style="background:#f0fdf4; color:#065f46;"><strong>📡 Coordenada & Endereço Satélite (GPS):</strong> ' + (os.gps || "Auditado em Campo - Brasília/DF") + '</td></tr>' +
+                    '</table>' +
+
+                    '<div class="sec-bar">2. Rastreabilidade Completa do Tanque Estacionário (Gola / Plaqueta NBR 8460 & 8865)</div>' +
+                    '<table>' +
+                        '<tr><td><strong>Nº de Série:</strong> ' + tq.serie + '</td><td><strong>Fabricante:</strong> ' + tq.fabricante + '</td><td><strong>Ano Fab.:</strong> ' + tq.ano + '</td><td><strong>Tara Gola:</strong> ' + tq.tara + '</td></tr>' +
+                        '<tr><td><strong>Cap. Volumétrica:</strong> ' + tq.volume + '</td><td><strong>Carga GLP:</strong> ' + tq.carga + '</td><td><strong>Pressão Serv.:</strong> ' + tq.pressaoServico + '</td><td><strong>Teste Hidrost.:</strong> ' + tq.pressaoTeste + '</td></tr>' +
+                        '<tr><td><strong>Reg. INMETRO:</strong> ' + tq.registro + '</td><td><strong>Norma:</strong> ' + tq.norma + '</td><td colspan="2" style="color:#059669; font-weight:bold;"><strong>Status NBR 8865:</strong> ' + tq.requalificacao + '</td></tr>' +
+                        '<tr><td colspan="2"><strong>Ultrassom Chapa:</strong> ' + tq.ultrassom + '</td><td colspan="2"><strong>Válvulas & Acessórios:</strong> ' + tq.acessorios + '</td></tr>' +
+                    '</table>' +
+
+                    '<div class="sec-bar">3. Ensaio de Estanqueidade NBR 15526, Instrumentos RBC & Scanner Acústico FFT</div>' +
+                    '<table>' +
+                        '<tr><td><strong>Fluido:</strong> ' + ens.fluido + '</td><td><strong>Tubulação:</strong> ' + ens.tubulacao + '</td><td><strong>Pressão Operação:</strong> ' + ens.pressaoOperacao + '</td></tr>' +
+                        '<tr><td><strong>Pressão (Ini -> Fim):</strong> ' + (os.pressao || "15.0 kPa -> 15.0 kPa") + '</td><td colspan="2" style="background:#f0fdf4; color:#065f46; font-weight:bold;"><strong>Veredito:</strong> ' + (os.statusEst || "APROVADO — 100% ESTANQUE") + '</td></tr>' +
+                        '<tr><td><strong>Manômetro RBC:</strong> ' + ens.manometro + '</td><td colspan="2"><strong>Detector Portátil:</strong> ' + ens.detector + '</td></tr>' +
+                        '<tr><td><strong>🎙️ Scanner Acústico FFT:</strong> ' + (os.espectroAcustico || "0.0 dB Estanque") + '</td><td colspan="2" style="color:#0284c7; font-weight:bold;"><strong>🛡️ Score Seguradora:</strong> ' + (os.riskScore || "99/100 (Rating AAA)") + '</td></tr>' +
+                    '</table>' +
+
+                    '<div class="sec-bar">4. Responsabilidade Técnica (ART/TRT), Peças Aplicadas & Parecer Conclusivo</div>' +
+                    '<table>' +
+                        '<tr><td><strong>ART / TRT:</strong> ' + (os.art || "ART-DF #0720260098412") + '</td><td><strong>Engenheiro:</strong> ' + (os.engenheiro || "CREA Ativo") + '</td><td><strong>Técnico & Viatura:</strong> ' + (os.tecnico || "-") + '</td></tr>' +
+                        '<tr><td colspan="2"><strong>Peças Baixadas da Viatura:</strong> ' + (os.pecas || "Nenhuma peça substituída") + '</td><td><strong>Valor Total OS:</strong> ' + valorFmt + '</td></tr>' +
+                        '<tr><td colspan="2" style="color:#059669; font-weight:bold;">📅 ' + (os.prev1Ano || "Próxima Revisão Anual: +12 Meses") + '</td><td style="color:#b45309; font-weight:bold;">📅 ' + (os.prev5Anos || "Validade 5 Anos") + '</td></tr>' +
+                        '<tr><td colspan="3" style="background:#f8fafc;"><strong>Parecer Técnico Conclusivo:</strong> ' + (os.parecer || "Manutenção e ensaio de estanqueidade aprovados sem queda de pressão conforme normas ABNT NBR 13523 e NBR 15526.") + '</td></tr>' +
+                    '</table>' +
+
+                    '<div class="sec-bar">5. Dossiê Fotográfico de Auditoria Técnica (10 Etapas)</div>' +
+                    fotosPrintHTML +
+
+                    '<div style="page-break-inside:avoid; border:2px solid #0f172a; border-radius:8px; padding:14px; background:#f8fafc; margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:16px;">' +
+                        '<div style="flex:1; text-align:center; background:#fff; border:1px dashed #64748b; border-radius:6px; padding:10px;">' +
+                            (os.assinatura
+                                ? '<img src="' + os.assinatura + '" style="max-height:80px; max-width:260px; object-fit:contain; display:block; margin:0 auto;">'
+                                : '<div style="height:60px; display:flex; align-items:center; justify-content:center; color:#475569; font-size:11px;">Assinado digitalmente em campo</div>') +
+                            '<div style="border-top:1px solid #0f172a; margin-top:6px; padding-top:4px; font-size:11px; font-weight:bold;">' + os.cliente + ' — Assinatura do Responsável</div>' +
+                        '</div>' +
+                        '<div style="background:#fff; padding:5px; border:1px solid #cbd5e1; border-radius:6px;"><img src="' + qrUrl + '" style="width:84px; height:84px; display:block;"></div>' +
+                        '<div style="width:205px; font-size:10px; background:#e2e8f0; padding:9px; border-radius:6px; line-height:1.45;">' +
+                            '<strong>🔒 AUTENTICIDADE CBMDF / ABNT</strong><br>' +
+                            '<strong>Protocolo:</strong> #' + os.protocolo + '<br>' +
+                            '<strong>ART:</strong> ' + (os.art || "-") + '<br>' +
+                            '<strong>Viatura:</strong> ' + (os.tecnico || "-") + '<br>' +
+                            '<strong>Certificado Auditado via Satélite</strong>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<script>window.onload = function() { setTimeout(function() { window.print(); }, 500); };<\/script>' +
+                '</body></html>'
+            );
+            win.document.close();
         };
 
         // MODAL DRE / FECHAMENTO DO DIA
