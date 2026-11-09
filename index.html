@@ -56,21 +56,12 @@
             padding: 7px 4%; font-size: 0.72rem; color: var(--muted);
             display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
         }
-        .status-pill-live {
-            display: inline-flex; align-items: center; gap: 7px;
-            color: #34D399; font-weight: 700; font-family: 'JetBrains Mono', monospace;
-        }
-        .pulse-dot {
-            width: 7px; height: 7px; border-radius: 50%; background: var(--green);
-            box-shadow: 0 0 10px var(--green); animation: pulseLive 1.5s infinite;
-        }
+        .status-pill-live { display: inline-flex; align-items: center; gap: 7px; color: #34D399; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulseLive 1.5s infinite; }
         @keyframes pulseLive { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.35); } }
 
         /* NAVBAR GLASSMORPHISM FLUTUANTE */
-        .nav-container {
-            position: sticky; top: 14px; z-index: 1000;
-            max-width: 1320px; margin: 14px auto 0 auto; padding: 0 4%;
-        }
+        .nav-container { position: sticky; top: 14px; z-index: 1000; max-width: 1320px; margin: 14px auto 0 auto; padding: 0 4%; }
         nav {
             background: rgba(12, 18, 32, 0.82); backdrop-filter: blur(20px);
             border: 1px solid var(--border-bright); border-radius: 16px;
@@ -87,11 +78,9 @@
         }
         .brand-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.3px; }
         .brand-title span { color: var(--brand); }
-
         .nav-links { display: flex; align-items: center; gap: 26px; }
         .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.87rem; font-weight: 600; transition: 0.2s; }
         .nav-links a:hover { color: #fff; }
-
         .nav-btns { display: flex; align-items: center; gap: 10px; }
 
         .btn-main {
@@ -102,7 +91,6 @@
             box-shadow: 0 8px 25px var(--brand-glow); transition: 0.25s;
         }
         .btn-main:hover { transform: translateY(-2px); filter: brightness(1.08); }
-
         .btn-ghost {
             background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-bright);
             color: #fff; font-weight: 700; font-size: 0.86rem;
@@ -112,28 +100,16 @@
         .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(56, 189, 248, 0.08); }
 
         /* HERO SECTION */
-        .hero {
-            max-width: 1280px; margin: 0 auto; padding: 65px 4% 40px 4%;
-            text-align: center; display: flex; flex-direction: column; align-items: center;
-        }
+        .hero { max-width: 1280px; margin: 0 auto; padding: 65px 4% 40px 4%; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .hero-kicker {
             display: inline-flex; align-items: center; gap: 10px;
             background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-bright);
-            padding: 6px 18px; border-radius: 50px; font-size: 0.78rem; font-weight: 700;
-            color: #E2E8F0; margin-bottom: 24px;
+            padding: 6px 18px; border-radius: 50px; font-size: 0.78rem; font-weight: 700; color: #E2E8F0;
+            margin-bottom: 24px;
         }
-        .hero h1 {
-            font-size: clamp(2.45rem, 5.2vw, 4.5rem); font-weight: 900;
-            line-height: 1.05; letter-spacing: -1.6px; max-width: 1040px; margin-bottom: 22px;
-        }
-        .grad-text {
-            background: linear-gradient(90deg, var(--brand) 0%, #FDE047 50%, var(--cyan) 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .hero p.lead {
-            font-size: clamp(1.05rem, 1.65vw, 1.24rem); color: var(--muted);
-            max-width: 780px; margin-bottom: 34px;
-        }
+        .hero h1 { font-size: clamp(2.45rem, 5.2vw, 4.5rem); font-weight: 900; line-height: 1.05; letter-spacing: -1.6px; max-width: 1040px; margin-bottom: 22px; }
+        .grad-text { background: linear-gradient(90deg, var(--brand) 0%, #FDE047 50%, var(--cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p.lead { font-size: clamp(1.05rem, 1.65vw, 1.24rem); color: var(--muted); max-width: 780px; margin-bottom: 34px; }
         .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 42px; }
         .btn-xl { padding: 16px 34px; font-size: 1rem; border-radius: 12px; }
 
@@ -151,18 +127,14 @@
             color: #fff; padding: 10px 14px; border-radius: 9px; font-size: 0.88rem; font-weight: 700; outline: none;
         }
         .input-wl-live:focus { border-color: var(--brand); }
-        .dot-swatch {
-            width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5);
-            cursor: pointer; transition: 0.2s;
-        }
+        .dot-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; }
         .dot-swatch:hover { transform: scale(1.15); }
 
-        /* COCKPIT INTERATIVO DE PRODUTO (MACBOOK + IPHONE SYNC) */
+        /* COCKPIT INTERATIVO DE PRODUTO */
         .cockpit-window {
-            width: 100%; max-width: 1180px;
-            background: var(--surface); border: 1px solid var(--border-bright); border-top: none;
-            border-radius: 0 0 22px 22px; overflow: hidden;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9); text-align: left;
+            width: 100%; max-width: 1180px; background: var(--surface);
+            border: 1px solid var(--border-bright); border-top: none; border-radius: 0 0 22px 22px;
+            overflow: hidden; box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9); text-align: left;
         }
         .cockpit-tabs {
             background: #060911; padding: 12px 22px; border-bottom: 1px solid var(--border);
@@ -171,52 +143,30 @@
         .tab-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .c-tab {
             background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--muted);
-            padding: 8px 16px; border-radius: 9px; font-size: 0.82rem; font-weight: 700;
-            cursor: pointer; transition: 0.2s;
+            padding: 8px 16px; border-radius: 9px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: 0.2s;
         }
         .c-tab:hover { color: #fff; }
         .c-tab.active { background: rgba(245, 158, 11, 0.16); border-color: var(--brand); color: var(--brand); }
-
         .cockpit-body { padding: 32px; }
         .c-pane { display: none; grid-template-columns: 1.05fr 0.95fr; gap: 30px; align-items: center; }
         .c-pane.active { display: grid; animation: fadeUp 0.25s ease; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-        .sim-stage-box {
-            background: #060A12; border: 1px solid var(--border-bright); border-radius: 16px;
-            padding: 22px; position: relative; overflow: hidden;
-        }
-        .scan-beam {
-            position: absolute; left: 0; right: 0; height: 3px;
-            background: var(--cyan); box-shadow: 0 0 20px var(--cyan);
-            top: 0; display: none; animation: beamMove 1.2s infinite ease-in-out;
-        }
+        .sim-stage-box { background: #060A12; border: 1px solid var(--border-bright); border-radius: 16px; padding: 22px; position: relative; overflow: hidden; }
+        .scan-beam { position: absolute; left: 0; right: 0; height: 3px; background: var(--cyan); box-shadow: 0 0 20px var(--cyan); top: 0; display: none; animation: beamMove 1.2s infinite ease-in-out; }
         @keyframes beamMove { 0% { top: 8%; } 50% { top: 92%; } 100% { top: 8%; } }
-
         .plate-cells { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-        .p-cell {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-            padding: 12px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; transition: 0.3s;
-        }
+        .p-cell { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; transition: 0.3s; }
         .p-cell.ok { border-color: var(--green); background: rgba(16, 185, 129, 0.12); }
         .p-cell small { display: block; font-size: 0.65rem; color: var(--muted); }
         .p-cell strong { font-size: 0.95rem; color: #fff; }
 
-        canvas#livePressureCanvas {
-            width: 100%; height: 155px; background: #03060C;
-            border: 1px solid var(--border); border-radius: 10px; margin: 12px 0;
-        }
+        canvas#livePressureCanvas { width: 100%; height: 155px; background: #03060C; border: 1px solid var(--border); border-radius: 10px; margin: 12px 0; }
 
-        /* =========================================================
-           O MOTOR DE PRECIFICAÇÃO ÚNICA & ROI (VALE DO SILÍCIO)
-           ========================================================= */
+        /* MOTOR DE PRECIFICAÇÃO ÚNICA & ROI */
         .section { max-width: 1240px; margin: 0 auto; padding: 95px 4%; }
         .sec-head { text-align: center; max-width: 760px; margin: 0 auto 54px auto; }
-        .eyebrow {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 800;
-            color: var(--brand); text-transform: uppercase; letter-spacing: 1.5px;
-            display: block; margin-bottom: 10px;
-        }
+        .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 10px; }
         .sec-head h2 { font-size: clamp(2rem, 3.8vw, 3rem); font-weight: 900; line-height: 1.12; margin-bottom: 14px; }
         .sec-head p { color: var(--muted); font-size: 1.05rem; }
 
@@ -224,8 +174,7 @@
             background: linear-gradient(145deg, #0E1629 0%, #070B14 100%);
             border: 2px solid var(--brand); border-radius: 26px; padding: 42px;
             box-shadow: 0 35px 95px rgba(0, 0, 0, 0.85), 0 0 60px rgba(245, 158, 11, 0.14);
-            display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center;
-            position: relative;
+            display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; position: relative;
         }
         .all-in-one-ribbon {
             position: absolute; top: -14px; left: 42px;
@@ -233,113 +182,58 @@
             font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; font-weight: 900;
             padding: 5px 16px; border-radius: 50px; text-transform: uppercase;
         }
+        .fleet-slider-box { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-bright); border-radius: 18px; padding: 26px; margin: 22px 0; }
+        .slider-top-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .fleet-count-badge { font-family: 'Outfit', sans-serif; font-size: 2.1rem; font-weight: 900; color: var(--brand); }
+        input[type="range"].master-slider { width: 100%; height: 10px; accent-color: var(--brand); border-radius: 10px; cursor: pointer; }
+        .slider-ticks { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); margin-top: 8px; }
 
-        .fleet-slider-box {
-            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-bright);
-            border-radius: 18px; padding: 26px; margin: 22px 0;
-        }
-        .slider-top-row {
-            display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
-        }
-        .fleet-count-badge {
-            font-family: 'Outfit', sans-serif; font-size: 2.1rem; font-weight: 900; color: var(--brand);
-        }
-        input[type="range"].master-slider {
-            width: 100%; height: 10px; accent-color: var(--brand);
-            border-radius: 10px; cursor: pointer;
-        }
-        .slider-ticks {
-            display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem; color: var(--muted); margin-top: 8px;
-        }
-
-        .included-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px;
-        }
-        .inc-item {
-            display: flex; align-items: center; gap: 9px; font-size: 0.88rem; color: #E2E8F0; font-weight: 600;
-        }
+        .included-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+        .inc-item { display: flex; align-items: center; gap: 9px; font-size: 0.88rem; color: #E2E8F0; font-weight: 600; }
         .inc-item span { color: var(--green); font-weight: 900; }
 
         .price-checkout-card {
-            background: #060911; border: 1.5px solid var(--border-bright);
-            border-radius: 22px; padding: 34px 28px; text-align: center;
-            display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+            background: #060911; border: 1.5px solid var(--border-bright); border-radius: 22px;
+            padding: 34px 28px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
         }
-        .dynamic-price-val {
-            font-family: 'Outfit', sans-serif; font-size: clamp(2.8rem, 4.5vw, 3.8rem);
-            font-weight: 900; color: #fff; line-height: 1;
-        }
+        .dynamic-price-val { font-family: 'Outfit', sans-serif; font-size: clamp(2.8rem, 4.5vw, 3.8rem); font-weight: 900; color: #fff; line-height: 1; }
         .dynamic-price-val small { font-size: 1rem; color: var(--muted); font-weight: 500; }
         .daily-cost-pill {
-            display: inline-block; margin: 0 auto;
-            background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3);
-            color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 0.76rem;
-            font-weight: 700; padding: 6px 14px; border-radius: 50px;
+            display: inline-block; margin: 0 auto; background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3); color: var(--cyan);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; font-weight: 700; padding: 6px 14px; border-radius: 50px;
         }
-        .roi-comparison-box {
-            background: rgba(16, 185, 129, 0.09); border: 1px solid var(--green);
-            border-radius: 14px; padding: 16px; text-align: left;
-        }
+        .roi-comparison-box { background: rgba(16, 185, 129, 0.09); border: 1px solid var(--green); border-radius: 14px; padding: 16px; text-align: left; }
 
         /* BENTO GRID DE DIFERENCIAIS */
         .bento-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; }
-        .bento-card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 18px; padding: 30px; transition: 0.25s;
-        }
+        .bento-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 30px; transition: 0.25s; }
         .bento-card:hover { border-color: var(--brand); transform: translateY(-4px); }
-        .bento-tag {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700;
-            color: var(--cyan); background: rgba(56, 189, 248, 0.1); padding: 4px 10px;
-            border-radius: 6px; display: inline-block; margin-bottom: 14px;
-        }
+        .bento-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700; color: var(--cyan); background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 6px; display: inline-block; margin-bottom: 14px; }
         .bento-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 10px; }
         .bento-card p { color: var(--muted); font-size: 0.92rem; }
 
         /* VALIDADOR OFICIAL CBMDF / ABNT */
         .validator-bar {
-            background: var(--surface); border: 1px solid var(--border-bright);
-            border-radius: 18px; padding: 24px 30px; display: flex; justify-content: space-between;
-            align-items: center; flex-wrap: wrap; gap: 20px;
+            background: var(--surface); border: 1px solid var(--border-bright); border-radius: 18px;
+            padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
         }
         .val-inputs { display: flex; gap: 10px; flex: 1; min-width: 280px; max-width: 520px; }
-        .input-std {
-            width: 100%; background: #050811; border: 1px solid var(--border-bright);
-            color: #fff; padding: 13px 16px; border-radius: 10px; font-size: 0.92rem; outline: none;
-        }
+        .input-std { width: 100%; background: #050811; border: 1px solid var(--border-bright); color: #fff; padding: 13px 16px; border-radius: 10px; font-size: 0.92rem; outline: none; }
         .input-std:focus { border-color: var(--brand); }
 
         /* CASES DF */
         .cases-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 24px; }
-        .case-card {
-            background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--brand);
-            border-radius: 18px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
-        }
+        .case-card { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--brand); border-radius: 18px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
 
-        /* MODAIS DE SELF-ONBOARDING E LOGIN */
-        .modal-backdrop {
-            position: fixed; inset: 0; z-index: 9999;
-            background: rgba(2, 4, 9, 0.88); backdrop-filter: blur(14px);
-            display: none; align-items: center; justify-content: center; padding: 20px;
-        }
-        .modal-window {
-            background: var(--surface); border: 1.5px solid var(--border-bright);
-            border-radius: 22px; width: 100%; max-width: 500px; padding: 36px 32px;
-            box-shadow: 0 35px 95px rgba(0, 0, 0, 0.95); position: relative;
-        }
-        .btn-close-modal {
-            position: absolute; top: 18px; right: 18px; width: 34px; height: 34px;
-            border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-            color: var(--muted); cursor: pointer; font-weight: 700;
-        }
+        /* MODAIS DE SELF-ONBOARDING, LOGIN E MARKETPLACE */
+        .modal-backdrop { position: fixed; inset: 0; z-index: 9999; background: rgba(2, 4, 9, 0.88); backdrop-filter: blur(14px); display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-window { background: var(--surface); border: 1.5px solid var(--border-bright); border-radius: 22px; width: 100%; max-width: 500px; padding: 36px 32px; box-shadow: 0 35px 95px rgba(0, 0, 0, 0.95); position: relative; }
+        .btn-close-modal { position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-weight: 700; }
         .form-row { margin-bottom: 15px; text-align: left; }
         .form-row label { display: block; font-size: 0.74rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
 
-        footer {
-            border-top: 1px solid var(--border); padding: 48px 4%; text-align: center;
-            color: var(--muted); font-size: 0.85rem; background: #010205;
-        }
+        footer { border-top: 1px solid var(--border); padding: 48px 4%; text-align: center; color: var(--muted); font-size: 0.85rem; background: #010205; }
 
         @media (max-width: 960px) {
             .c-pane.active, .unified-pricing-shell, .included-grid { grid-template-columns: 1fr; }
@@ -353,9 +247,7 @@
     <div class="bg-grid-mesh"></div>
     <div class="spotlight-hero"></div>
 
-    <!-- ============================================================== -->
-    <!-- MODAL 1: SELF-ONBOARDING 7 DIAS (JÁ LEVA A FROTA E O PREÇO!)   -->
-    <!-- ============================================================== -->
+    <!-- MODAL 1: SELF-ONBOARDING 7 DIAS -->
     <div class="modal-backdrop" id="modal-trial">
         <div class="modal-window" style="border-top: 4px solid var(--brand);">
             <button type="button" class="btn-close-modal" onclick="fecharModais()">✕</button>
@@ -366,22 +258,18 @@
                     Configuração selecionada: <strong>4 Viaturas</strong> • 100% White-Label Incluso
                 </p>
             </div>
-
             <div class="form-row">
                 <label>Nome da Sua Empresa de Gás / Engenharia</label>
                 <input type="text" id="trial-empresa" class="input-std" placeholder="Ex: Brasília Gás Engenharia">
             </div>
-
             <div class="form-row">
                 <label>Seu E-mail Corporativo (Login do Diretor)</label>
                 <input type="email" id="trial-email" class="input-std" placeholder="Ex: diretoria@brasiliagas.com.br">
             </div>
-
             <div class="form-row" style="margin-bottom:22px;">
                 <label>WhatsApp Executivo com DDD</label>
                 <input type="tel" id="trial-zap" class="input-std" placeholder="Ex: 61999999999">
             </div>
-
             <button type="button" class="btn-main" id="btn-confirmar-trial" style="width:100%; justify-content:center; padding:16px; font-size:0.96rem;" onclick="criarAmbienteTrialAutomatico()">
                 🚀 Criar Meu Painel White-Label & Entrar Agora
             </button>
@@ -391,9 +279,7 @@
         </div>
     </div>
 
-    <!-- ============================================================== -->
-    <!-- MODAL 2: ACESSO DIRETO AO SISTEMA (DESTRANCA SESSÃO NA HORA)   -->
-    <!-- ============================================================== -->
+    <!-- MODAL 2: ACESSO DIRETO AO SISTEMA -->
     <div class="modal-backdrop" id="modal-login">
         <div class="modal-window" style="border-top: 4px solid var(--cyan);">
             <button type="button" class="btn-close-modal" onclick="fecharModais()">✕</button>
@@ -402,17 +288,14 @@
                 <h3 style="font-size:1.45rem; font-weight:900;">Portal de Acesso Corporativo</h3>
                 <p style="font-size:0.85rem; color:var(--muted); margin-top:4px;">Entre direto na Torre de Controle ou no App de Campo.</p>
             </div>
-
             <div class="form-row">
                 <label>E-mail da Empresa</label>
                 <input type="email" id="login-quick-email" class="input-std" value="admin@capitaltech.com">
             </div>
-
             <div class="form-row">
                 <label>Chave de Acesso (Padrão: capital2026)</label>
                 <input type="password" id="login-quick-pass" class="input-std" value="capital2026">
             </div>
-
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:22px;">
                 <button type="button" class="btn-main" style="justify-content:center; padding:14px;" onclick="acessarModuloDireto('gestor.html')">
                     💻 Abrir Gestor
@@ -421,10 +304,34 @@
                     📱 Abrir App Rua
                 </button>
             </div>
-
             <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border); text-align:center;">
                 <a href="master.html" style="font-size:0.75rem; color:var(--muted); text-decoration:none;">👑 Acesso Exclusivo CEO: Command Center (Master)</a>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: MARKETPLACE DE SÍNDICOS & SEGURADORAS -->
+    <div class="modal-backdrop" id="modal-marketplace-sindico">
+        <div class="modal-window" style="border: 2px solid var(--green);">
+            <button type="button" class="btn-close-modal" onclick="fecharModais()">✕</button>
+            <span class="mono" style="font-size:0.72rem; color:var(--green); font-weight:800;">⚡ MARKETPLACE CAPITAL TECH • DESPACHO AUTOMÁTICO</span>
+            <h3 style="font-size:1.4rem; font-weight:900; margin:6px 0;">Solicitar Viatura Homologada</h3>
+            <p style="font-size:0.84rem; color:var(--muted); margin-bottom:18px;">Seu pedido cai diretamente no Radar da viatura credenciada mais próxima para emissão do Laudo ABNT + Score de Seguradora.</p>
+            <div class="form-row">
+                <label>Nome do Condomínio / Restaurante</label>
+                <input type="text" id="mkt-cond" class="input-std" placeholder="Ex: Condomínio Residencial Parque das Águas">
+            </div>
+            <div class="form-row">
+                <label>Endereço / Região Administrativa</label>
+                <input type="text" id="mkt-end" class="input-std" placeholder="Ex: Rua 36 Norte, Águas Claras - DF">
+            </div>
+            <div class="form-row" style="margin-bottom:20px;">
+                <label>WhatsApp do Síndico / Gestor</label>
+                <input type="tel" id="mkt-zap" class="input-std" placeholder="Ex: 61999998888">
+            </div>
+            <button type="button" onclick="dispararPedidoMarketplace()" style="width:100%; padding:15px; border-radius:10px; border:none; background:linear-gradient(90deg,#10B981,#059669); color:#000; font-weight:900; font-size:0.94rem; cursor:pointer;">
+                🚀 Despachar Chamado para Frota Credenciada
+            </button>
         </div>
     </div>
 
@@ -441,14 +348,12 @@
                 <div class="brand-logo-box" id="nav-sigla">CT</div>
                 <div class="brand-title"><span id="nav-nome" style="color:#fff;">CAPITAL TECH</span> <span>SaaS</span></div>
             </a>
-
             <div class="nav-links">
                 <a href="#cockpit">Simulador Ao Vivo</a>
                 <a href="#investimento">Simulador de Preço & ROI</a>
                 <a href="#validador">Validador CBMDF</a>
                 <a href="#cases">Cases DF</a>
             </div>
-
             <div class="nav-btns">
                 <button type="button" class="btn-ghost" onclick="abrirModal('modal-login')">🔐 Entrar</button>
                 <button type="button" class="btn-main" onclick="abrirModal('modal-trial')">Testar 7 Dias Grátis</button>
@@ -463,15 +368,12 @@
             <span style="color:var(--brand);">•</span>
             <span>OCR DE TANQUES P190 + LAUDO EM 1 SEGUNDO + ESTOQUE POR VIATURA</span>
         </div>
-
         <h1>
             O Sistema Operacional das Empresas de Gás que <span class="grad-text">Lideram o Mercado.</span>
         </h1>
-
         <p class="lead">
             Enquanto o seu técnico escaneia a gola do tanque P190 pelo celular no subsolo sem internet, o Certificado ABNT com <strong>10 fotos em Zoom 2.4x</strong>, <strong>vídeo do manômetro</strong> e <strong>baixa automática de peças da viatura</strong> já está na tela da diretoria.
         </p>
-
         <div class="hero-actions">
             <button type="button" class="btn-main btn-xl" onclick="abrirModal('modal-trial')">
                 🚀 Liberar 7 Dias Grátis com a Minha Marca
@@ -506,7 +408,6 @@
                 </div>
                 <span class="mono" style="font-size:0.74rem; color:var(--green);" id="cockpit-brand-indicator">● LICENÇA WHITE-LABEL: CAPITAL TECH</span>
             </div>
-
             <div class="cockpit-body">
                 <!-- ABA 1: OCR -->
                 <div class="c-pane active" id="c-pane-1">
@@ -520,7 +421,6 @@
                             🔍 Disparar Leitura Óptica na Plaqueta
                         </button>
                     </div>
-
                     <div class="sim-stage-box">
                         <div class="scan-beam" id="demo-beam"></div>
                         <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--cyan);" class="mono">
@@ -549,7 +449,6 @@
                             <button type="button" class="btn-main" onclick="mudarCurvaPressao('ESTANQUE')">✅ Estabilizar Rede em 15.0 kPa</button>
                         </div>
                     </div>
-
                     <div class="sim-stage-box">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span class="mono" style="font-size:0.72rem; color:var(--muted);">MANÔMETRO #INM-9482 CALIBRADO</span>
@@ -574,7 +473,6 @@
                             🔧 Baixar 1x Regulador da Viatura (+R$ 165)
                         </button>
                     </div>
-
                     <div class="sim-stage-box">
                         <div style="display:flex; justify-content:space-between; padding-bottom:14px; border-bottom:1px solid var(--border); margin-bottom:14px;">
                             <span>🚐 Viatura <strong>FROTA-DF04</strong> (Regulador Aliança 1º Est.)</span>
@@ -590,32 +488,24 @@
         </div>
     </header>
 
-    <!-- =========================================================
-         MOTOR ÚNICO DE PRECIFICAÇÃO DINÂMICA POR TÉCNICO + ROI
-         ========================================================= -->
+    <!-- MOTOR ÚNICO DE PRECIFICAÇÃO DINÂMICA POR TÉCNICO + ROI -->
     <section class="section" id="investimento">
         <div class="sec-head">
             <span class="eyebrow">MODELO VALE DO SILÍCIO • PLANO ÚNICO COMPLETO</span>
             <h2>Um Único Sistema Completo. Valor Justo pelo Tamanho da Sua Frota.</h2>
             <p>Sem planos limitados ou recursos bloqueados. Você recebe <strong>100% da plataforma White-Label com a sua marca</strong>, e a assinatura acompanha o número de técnicos/viaturas em campo:</p>
         </div>
-
         <div class="unified-pricing-shell">
             <div class="all-in-one-ribbon">★ TUDO LIBERADO • 100% WHITE-LABEL INCLUSO EM QUALQUER FROTA</div>
-
-            <!-- LADO ESQUERDO: CONTROLE DESLIZANTE DE TÉCNICOS + TUDO INCLUSO -->
             <div>
                 <h3 style="font-size:1.55rem; font-weight:900;">Quantos Técnicos ou Viaturas Sua Operação Possui?</h3>
                 <p style="font-size:0.92rem; color:var(--muted); margin-top:4px;">Arraste o seletor abaixo para calcular instantaneamente o investimento mensal e o retorno financeiro da sua equipe:</p>
-
                 <div class="fleet-slider-box">
                     <div class="slider-top-row">
                         <span style="font-size:0.86rem; font-weight:700; color:var(--muted); text-transform:uppercase;">Tamanho da Sua Frota em Campo:</span>
                         <span class="fleet-count-badge" id="lbl-num-tecnicos">4 Técnicos / Viaturas</span>
                     </div>
-
                     <input type="range" id="slider-tecnicos" class="master-slider" min="1" max="30" value="4" oninput="calcularPlanoUnicoInteligente()">
-
                     <div class="slider-ticks">
                         <span>1 Técnico (Autônomo)</span>
                         <span>5 Viaturas</span>
@@ -624,11 +514,9 @@
                         <span>30+ Frota Pesada</span>
                     </div>
                 </div>
-
                 <div style="font-size:0.78rem; font-weight:800; color:var(--cyan); text-transform:uppercase; letter-spacing:0.8px;" class="mono">
                     ✔ TODOS OS MOTORES INCLUSOS SEM CUSTO EXTRA:
                 </div>
-
                 <div class="included-grid">
                     <div class="inc-item"><span>✔</span> 100% White-Label (Sua Marca e Cores)</div>
                     <div class="inc-item"><span>✔</span> Ordens de Serviço & PDFs A4 Ilimitados</div>
@@ -637,11 +525,11 @@
                     <div class="inc-item"><span>✔</span> Controle de Estoque Móvel por Viatura</div>
                     <div class="inc-item"><span>✔</span> Funciona Offline no 2º Subsolo (PWA)</div>
                     <div class="inc-item"><span>✔</span> Validador Público de ART/QR Code CBMDF</div>
-                    <div class="inc-item"><span>✔</span> Despacho Direto no WhatsApp da Frota</div>
+                    <div class="inc-item"><span>✔</span> Despacho Direto no Radar da Frota</div>
                 </div>
             </div>
 
-            <!-- LADO DIREITO: CARTÃO DE VALOR DINÂMICO + ROI -->
+            <!-- CARTÃO DE VALOR DINÂMICO + ROI -->
             <div class="price-checkout-card">
                 <div>
                     <span class="mono" style="font-size:0.72rem; color:var(--muted); text-transform:uppercase; font-weight:700;">INVESTIMENTO MENSAL DA SUA FROTA</span>
@@ -652,7 +540,6 @@
                         Equivale a apenas R$ 4,55 / dia por técnico
                     </div>
                 </div>
-
                 <div class="roi-comparison-box">
                     <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:6px;">
                         <span style="color:var(--muted);">Horas Poupadas no Mês:</span>
@@ -666,7 +553,6 @@
                         ⚡ O SISTEMA SE PAGA EM 2,6 DIAS DE OPERAÇÃO
                     </div>
                 </div>
-
                 <div>
                     <button type="button" class="btn-main" style="width:100%; justify-content:center; padding:17px; font-size:1rem;" onclick="abrirModal('modal-trial')">
                         🚀 Testar 7 Dias Grátis Agora
@@ -700,7 +586,6 @@
             <span class="eyebrow">ENGENHARIA DE PONTA A PONTA</span>
             <h2>Por Que Diretores Trocam Planilhas e Sistemas Antigos pela Capital Tech?</h2>
         </div>
-
         <div class="bento-grid">
             <div class="bento-card">
                 <span class="bento-tag">01 • DOSSIÊ FOTOGRÁFICO HD</span>
@@ -726,7 +611,6 @@
             <span class="eyebrow">PROVA REAL DE CAMPO • BRASÍLIA / DF</span>
             <h2>Operações que Já Escalaram com Nossa Tecnologia</h2>
         </div>
-
         <div class="cases-grid">
             <div class="case-card">
                 <div>
@@ -739,7 +623,6 @@
                     <span class="mono" style="color:var(--green); font-weight:700;">-42 min por OS</span>
                 </div>
             </div>
-
             <div class="case-card" style="border-top-color:var(--cyan);">
                 <div>
                     <span class="bento-tag">ÁGUAS CLARAS & NOROESTE / DF</span>
@@ -751,7 +634,6 @@
                     <span class="mono" style="color:var(--cyan); font-weight:700;">100% Aprovado CBMDF</span>
                 </div>
             </div>
-
             <div class="case-card" style="border-top-color:var(--green);">
                 <div>
                     <span class="bento-tag">CEILÂNDIA, GUARÁ & ASA SUL / DF</span>
@@ -769,15 +651,15 @@
     <footer>
         <p><strong style="color:#fff;">CAPITAL TECH SaaS</strong> — Ecossistema Corporativo de Engenharia GLP, Estanqueidade e Gestão de Frota em Tempo Real.</p>
         <p style="margin-top:8px; font-size:0.78rem;">
-            Brasília - Distrito Federal •
-            <a href="gestor.html" style="color:var(--cyan); text-decoration:none;">Painel do Gestor</a> •
-            <a href="app.html" style="color:var(--brand); text-decoration:none;">App do Técnico</a> •
+            Brasília - Distrito Federal • 
+            <a href="gestor.html" style="color:var(--cyan); text-decoration:none;">Painel do Gestor</a> • 
+            <a href="app.html" style="color:var(--brand); text-decoration:none;">App do Técnico</a> • 
             <a href="master.html" style="color:var(--muted); text-decoration:none;">CEO Command Center</a>
         </p>
     </footer>
 
     <!-- =========================================================
-         MOTORES INTELIGENTES (PRECIFICAÇÃO DINÂMICA + FIREBASE)
+         MOTOR UNIFICADO (PRECIFICAÇÃO + AUTH + MARKETPLACE + FIREBASE)
          ========================================================= -->
     <script>
         var WHATSAPP_COMERCIAL = "5561986294465";
@@ -785,7 +667,6 @@
         var SESSION_AUTH_KEY = "CAPITAL_TECH_AUTH_SESSION";
         var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
 
-        // Estado global da simulação do cliente na página
         var estadoPlano = {
             tecnicos: 4,
             mensalidade: 547,
@@ -795,7 +676,7 @@
 
         var rtdb = null;
         try {
-            const firebaseConfig = {
+            var firebaseConfig = {
                 apiKey: "AIzaSyDf_mA78IgjnSXyrNasYId3ngq2lWho_9I",
                 authDomain: "g3-smartos.firebaseapp.com",
                 databaseURL: "https://g3-smartos-default-rtdb.firebaseio.com",
@@ -810,25 +691,21 @@
             rtdb = firebase.database();
         } catch (e) {}
 
-        // ==========================================================
-        // 1. MOTOR DE PRECIFICAÇÃO ÚNICA POR QUANTIDADE DE TÉCNICOS
-        // ==========================================================
+        // 1. PRECIFICAÇÃO DINÂMICA E ROI
         window.calcularPlanoUnicoInteligente = function() {
             var nTec = parseInt(document.getElementById('slider-tecnicos').value) || 1;
             estadoPlano.tecnicos = nTec;
 
-            // Fórmula Inteligente: Base Plataforma White-Label (R$ 197) + Escala progressiva por técnico
             var valorMensal = 297;
             if (nTec === 1) {
                 valorMensal = 297;
             } else if (nTec <= 5) {
-                valorMensal = 227 + (nTec * 80); // Ex: 2=387, 3=467, 4=547, 5=627
+                valorMensal = 227 + (nTec * 80);
             } else if (nTec <= 15) {
-                valorMensal = 627 + ((nTec - 5) * 65); // Desconto progressivo de frota
+                valorMensal = 627 + ((nTec - 5) * 65);
             } else {
-                valorMensal = 1277 + ((nTec - 15) * 50); // Escala distribuidora
+                valorMensal = 1277 + ((nTec - 15) * 50);
             }
-
             estadoPlano.mensalidade = valorMensal;
 
             var custoPorTecnicoDia = (valorMensal / (nTec * 30)).toFixed(2).replace('.', ',');
@@ -842,18 +719,13 @@
             document.getElementById('roi-horas-poupadas').innerText = horasEconomizadasMes + " horas/mês";
             document.getElementById('roi-economia-mensal').innerText = "+ R$ " + economiaTotalMes.toLocaleString('pt-BR') + " / mês";
             document.getElementById('roi-payback-txt').innerText = "⚡ O SISTEMA SE PAGA EM APENAS " + diasPayback + " DIAS DE OPERAÇÃO";
-
-            document.getElementById('modal-resumo-plano').innerHTML =
-                "Frota configurada: <strong>" + nTec + (nTec === 1 ? " Viatura" : " Viaturas") + " (R$ " + valorMensal + "/mês após os 7 dias grátis)</strong>";
+            document.getElementById('modal-resumo-plano').innerHTML = "Frota configurada: <strong>" + nTec + (nTec === 1 ? " Viatura" : " Viaturas") + " (R$ " + valorMensal + "/mês após os 7 dias grátis)</strong>";
         };
 
-        // ==========================================================
-        // 2. TRANSFORMAÇÃO WHITE-LABEL AO VIVO NA PÁGINA INTEIRA
-        // ==========================================================
+        // 2. TRANSFORMAÇÃO WHITE-LABEL AO VIVO
         window.transformarMarcaAoVivo = function(valor) {
             var limpo = (valor || "").trim().toUpperCase() || "CAPITAL TECH";
             estadoPlano.marcaDigitada = limpo;
-
             var partes = limpo.split(' ');
             var sigla = partes.length > 1 ? (partes[0][0] + partes[1][0]) : limpo.substring(0, 2);
 
@@ -868,9 +740,7 @@
             document.documentElement.style.setProperty('--brand', corHex);
         };
 
-        // ==========================================================
-        // 3. SELF-ONBOARDING DE 7 DIAS INTEGRADO AO MASTER.HTML
-        // ==========================================================
+        // 3. CONTROLE DE MODAIS E AUTENTICAÇÃO GLOBAL
         window.abrirModal = function(id) {
             if (id === 'modal-trial' && estadoPlano.marcaDigitada !== "CAPITAL TECH") {
                 document.getElementById('trial-empresa').value = estadoPlano.marcaDigitada;
@@ -881,14 +751,15 @@
         window.fecharModais = function() {
             document.getElementById('modal-trial').style.display = 'none';
             document.getElementById('modal-login').style.display = 'none';
+            document.getElementById('modal-marketplace-sindico').style.display = 'none';
         };
 
-       window.acessarModuloDireto = function(destino) {
+        window.acessarModuloDireto = function(destino) {
             var email = document.getElementById('login-quick-email').value.trim() || "admin@capitaltech.com";
-            localStorage.setItem("CAPITAL_TECH_AUTH_SESSION", email);
-            localStorage.setItem("CAPITAL_TECH_TEC_SESSION", email);
-            sessionStorage.setItem("CAPITAL_TECH_AUTH_SESSION", email);
-            sessionStorage.setItem("CAPITAL_TECH_TEC_SESSION", email);
+            localStorage.setItem(SESSION_AUTH_KEY, email);
+            localStorage.setItem(TEC_SESSION_KEY, email);
+            sessionStorage.setItem(SESSION_AUTH_KEY, email);
+            sessionStorage.setItem(TEC_SESSION_KEY, email);
             window.location.href = destino;
         };
 
@@ -901,9 +772,10 @@
                 }
                 return dom.replace(/[^a-z0-9]/g, '_').toUpperCase();
             }
-            return (nomeEmpresa || "CAPITALTECH").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+            return (nomeEmpresa || "CAPITALTECH_COM").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
         }
 
+        // 4. SELF-ONBOARDING DE 7 DIAS (CORRIGIDO COM LOCALSTORAGE GLOBAL)
         window.criarAmbienteTrialAutomatico = function() {
             var nome = document.getElementById('trial-empresa').value.trim();
             var email = document.getElementById('trial-email').value.trim();
@@ -922,7 +794,6 @@
             var sigla = partes.length > 1 ? (partes[0][0] + partes[1][0]) : marcaUpper.substring(0, 2);
             var tenantId = gerarTenantIdSeguro(email, marcaUpper);
 
-            // Gera a quantidade de viaturas que o cliente escolheu no slider!
             var listaTecnicosIniciais = [];
             var mapaEstoqueInicial = {};
             for (var t = 1; t <= Math.min(estadoPlano.tecnicos, 10); t++) {
@@ -934,7 +805,8 @@
                     placa: "BSB-" + t + "A26",
                     zap: zap,
                     regiao: "Distrito Federal",
-                    inmetro: "Manômetro Digital RBC #0" + t
+                    inmetro: "Manômetro Digital RBC #0" + t,
+                    statusOperacional: "DISPONIVEL"
                 });
                 mapaEstoqueInicial[tid] = 4;
             }
@@ -985,6 +857,8 @@
             try {
                 localStorage.setItem("ERP_SAAS_" + tenantId, JSON.stringify(dadosGavetaNova));
                 localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dadosGavetaNova));
+                localStorage.setItem(SESSION_AUTH_KEY, email);
+                localStorage.setItem(TEC_SESSION_KEY, email);
                 sessionStorage.setItem(SESSION_AUTH_KEY, email);
                 sessionStorage.setItem(TEC_SESSION_KEY, email);
 
@@ -1011,9 +885,7 @@
             }
         };
 
-        // ==========================================================
-        // 4. SIMULADORES INTERATIVOS DO COCKPIT
-        // ==========================================================
+        // 5. SIMULADORES INTERATIVOS DO COCKPIT
         window.mudarAbaCockpit = function(n) {
             for (var i = 1; i <= 3; i++) {
                 document.getElementById('c-btn-' + i).classList.remove('active');
@@ -1028,7 +900,6 @@
             var st = document.getElementById('demo-ocr-status');
             beam.style.display = 'block';
             st.innerText = "FILTRANDO ALTO CONTRASTE...";
-
             setTimeout(function() {
                 beam.style.display = 'none';
                 st.innerText = "✔ LEITURA CONCLUÍDA (99.4%)";
@@ -1039,10 +910,8 @@
             }, 950);
         };
 
-        // Gráfico de Pressão em Tempo Real
         var modoCurva = "ESTANQUE";
         var ptsPressao = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15];
-
         window.mudarCurvaPressao = function(m) {
             modoCurva = m;
             var pill = document.getElementById('live-press-pill');
@@ -1068,7 +937,6 @@
             var novo = modoCurva === 'VAZAMENTO' ? Math.max(10.2, +(ult - 0.35).toFixed(2)) : 15.0;
             ptsPressao.push(novo);
             if (ptsPressao.length > 16) ptsPressao.shift();
-
             ctx.clearRect(0, 0, w, h);
             ctx.strokeStyle = modoCurva === 'VAZAMENTO' ? "#F43F5E" : "#10B981";
             ctx.lineWidth = 3;
@@ -1084,17 +952,91 @@
 
         var qtdCarroDemo = 4, totalOSDemo = 280;
         window.simularAplicacaoPeca = function() {
-            if (qtdCarroDemo <= 0) { qtdCarroDemo = 4; totalOSDemo = 280; }
-            else { qtdCarroDemo--; totalOSDemo += 165; }
+            if (qtdCarroDemo <= 0) {
+                qtdCarroDemo = 4;
+                totalOSDemo = 280;
+            } else {
+                qtdCarroDemo--;
+                totalOSDemo += 165;
+            }
             document.getElementById('van-stock-count').innerText = qtdCarroDemo + " un. no carro";
             document.getElementById('van-os-total').innerText = "R$ " + totalOSDemo.toFixed(2).replace('.', ',');
         };
 
+        // 6. VALIDADOR PÚBLICO + MARKETPLACE INTEGRADO COM FIREBASE E GAVETA ATIVA
         window.validarProtocoloPublico = function() {
             var p = (document.getElementById('input-prot-publico').value || "CT-2026-8412").trim().toUpperCase();
             var box = document.getElementById('res-validador-publico');
+            if (!box) return;
             box.style.display = 'block';
-            box.innerHTML = "✔ <strong>PROTOCOLO #" + p + " AUTÊNTICO & VIGENTE:</strong> Ensaio NBR 15526 Estanque (15.0 kPa) • Manômetro RBC #INM-9482 • ART-DF #0720260098412";
+            box.innerHTML =
+                '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">' +
+                    '<div>' +
+                        '<div style="color:#34D399; font-weight:900; font-size:0.92rem;">✔ CERTIFICADO #' + p + ' AUTÊNTICO • PADRÃO SEGURADORA AAA</div>' +
+                        '<div style="font-size:0.82rem; color:#CBD5E1; margin-top:4px;">' +
+                            'Estanqueidade NBR 15526 (15.0 kPa) • <strong>IA Acústica FFT: 0.0 dB (Sem Fuga)</strong> • <strong>Risk Score: 99/100 (AAA)</strong>' +
+                        '</div>' +
+                    '</div>' +
+                    '<button type="button" onclick="abrirModal(\'modal-marketplace-sindico\')" style="background:linear-gradient(135deg,#F59E0B,#EA580C); color:#000; font-weight:900; font-size:0.8rem; padding:10px 16px; border-radius:9px; border:none; cursor:pointer; white-space:nowrap;">' +
+                        '⚡ Agendar Vistoria / Renovação para Meu Condomínio' +
+                    '</button>' +
+                '</div>';
+        };
+
+        window.dispararPedidoMarketplace = function() {
+            var cond = document.getElementById('mkt-cond').value.trim();
+            var end = document.getElementById('mkt-end').value.trim();
+            var zap = document.getElementById('mkt-zap').value.trim() || "61999998888";
+            if (!cond || !end) {
+                alert("Informe o nome do Condomínio e o Endereço para localizarmos a viatura.");
+                return;
+            }
+
+            var emailAtivo = localStorage.getItem(SESSION_AUTH_KEY) || "admin@capitaltech.com";
+            var tenantAtivo = gerarTenantIdSeguro(emailAtivo, "CAPITALTECH_COM");
+            var chaveGaveta = "ERP_SAAS_" + tenantAtivo;
+
+            var dbLocal = {};
+            try {
+                dbLocal = JSON.parse(localStorage.getItem(chaveGaveta) || localStorage.getItem("G3_ERP_MASTER_DB_V2") || "{}");
+            } catch (e) {}
+
+            var nomePrimeiroTecnico = (dbLocal.tecnicos && dbLocal.tecnicos.length > 0) ? dbLocal.tecnicos[0].nome : "Habner T. Fernandes";
+
+            var novaOSMarketplace = {
+                id: "mkt_" + Date.now(),
+                protocolo: "MKT-" + Math.floor(1000 + Math.random() * 9000),
+                data: new Date().toLocaleDateString('pt-BR'),
+                cliente: cond + " (Lead Marketplace)",
+                endereco: end,
+                zap: zap,
+                tecnico: nomePrimeiroTecnico,
+                servico: "Renovação Anual NBR 15526 + Score Seguradora AAA",
+                status: "Pendente",
+                prioridade: "URGENTE",
+                valorTotal: 450.00,
+                origem: "MARKETPLACE_SINDICO"
+            };
+
+            try {
+                if (!dbLocal.ordens) dbLocal.ordens = [];
+                dbLocal.ordens.unshift(novaOSMarketplace);
+                localStorage.setItem(chaveGaveta, JSON.stringify(dbLocal));
+                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dbLocal));
+            } catch (e) {}
+
+            if (rtdb) {
+                rtdb.ref('MARKETPLACE_DEMANDAS').push(novaOSMarketplace);
+                rtdb.ref('EMPRESAS/' + tenantAtivo + '/ordens').once('value', function(snap) {
+                    var ordensNuvem = snap.val() || [];
+                    if (!Array.isArray(ordensNuvem)) ordensNuvem = Object.values(ordensNuvem);
+                    ordensNuvem.unshift(novaOSMarketplace);
+                    rtdb.ref('EMPRESAS/' + tenantAtivo + '/ordens').set(ordensNuvem);
+                });
+            }
+
+            fecharModais();
+            alert("✔ Chamado #" + novaOSMarketplace.protocolo + " despachado com prioridade URGENTE para " + nomePrimeiroTecnico + "!");
         };
 
         window.enviarSimulacaoWhatsApp = function() {
@@ -1107,97 +1049,12 @@
             window.open("https://wa.me/" + WHATSAPP_COMERCIAL + "?text=" + encodeURIComponent(msg), '_blank');
         };
 
+        // Defesa contra congelamento de cache (bfcache)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) window.location.reload();
+        });
+
         window.calcularPlanoUnicoInteligente();
     </script>
-    <!-- ====================================================================
-     CÁPSULA MARKETPLACE DE SÍNDICOS & API DE SEGURADORAS PREDIAIS
-     ==================================================================== -->
-<script>
-(function() {
-    // Turbina o Validador Público para exibir o Score da Seguradora + Botão de Chamar Viatura (Marketplace)
-    var validarOrig = window.validarProtocoloPublico;
-    window.validarProtocoloPublico = function() {
-        if (typeof validarOrig === 'function') validarOrig();
-        var p = (document.getElementById('input-prot-publico').value || "CT-2026-8412").trim().toUpperCase();
-        var box = document.getElementById('res-validador-publico');
-        if (!box) return;
-
-        box.style.display = 'block';
-        box.innerHTML =
-            '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">' +
-                '<div>' +
-                    '<div style="color:#34D399; font-weight:900; font-size:0.92rem;">✔ CERTIFICADO #' + p + ' AUTÊNTICO • PADRÃO SEGURADORA AAA</div>' +
-                    '<div style="font-size:0.82rem; color:#CBD5E1; margin-top:4px;">' +
-                        'Estanqueidade NBR 15526 (15.0 kPa) • <strong>IA Acústica FFT: 0.0 dB (Sem Fuga)</strong> • <strong>Risk Score: 99/100 (AAA)</strong>' +
-                    '</div>' +
-                '</div>' +
-                '<button type="button" onclick="abrirModalMarketplaceSindico()" style="background:linear-gradient(135deg,#F59E0B,#EA580C); color:#000; font-weight:900; font-size:0.8rem; padding:10px 16px; border-radius:9px; border:none; cursor:pointer; white-space:nowrap;">' +
-                    '⚡ Agendar Vistoria / Renovação para Meu Condomínio' +
-                '</button>' +
-            '</div>';
-    };
-
-    // Cria o Modal do Marketplace onde o Síndico chama uma viatura e gera OS automática
-    var modalMkt = document.createElement('div');
-    modalMkt.id = "modal-marketplace-sindico";
-    modalMkt.style.cssText = "position:fixed; inset:0; z-index:99999; background:rgba(2,4,9,0.88); backdrop-filter:blur(14px); display:none; align-items:center; justify-content:center; padding:20px;";
-    modalMkt.innerHTML =
-        '<div style="background:#0C1220; border:2px solid #10B981; border-radius:22px; width:100%; max-width:490px; padding:32px 28px; color:#fff; position:relative; box-shadow:0 30px 90px rgba(0,0,0,0.95);">' +
-            '<button type="button" onclick="document.getElementById(\'modal-marketplace-sindico\').style.display=\'none\'" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.08); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer;">✕</button>' +
-            '<span style="font-family:monospace; font-size:0.72rem; color:#10B981; font-weight:800;">⚡ MARKETPLACE CAPITAL TECH • DESPACHO AUTOMÁTICO</span>' +
-            '<h3 style="font-size:1.4rem; font-weight:900; margin:6px 0;">Solicitar Viatura Homologada</h3>' +
-            '<p style="font-size:0.84rem; color:#94A3B8; margin-bottom:18px;">Seu pedido cai diretamente no Radar da viatura credenciada mais próxima para emissão do Laudo ABNT + Score de Seguradora.</p>' +
-            '<div style="margin-bottom:12px;"><label style="font-size:0.72rem; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px;">NOME DO CONDOMÍNIO / RESTAURANTE</label><input id="mkt-cond" class="input-std" placeholder="Ex: Condomínio Residencial Parque das Águas"></div>' +
-            '<div style="margin-bottom:12px;"><label style="font-size:0.72rem; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px;">ENDEREÇO / REGIÃO ADMINISTRATIVA</label><input id="mkt-end" class="input-std" placeholder="Ex: Rua 36 Norte, Águas Claras - DF"></div>' +
-            '<div style="margin-bottom:18px;"><label style="font-size:0.72rem; color:#94A3B8; font-weight:700; display:block; margin-bottom:4px;">WHATSAPP DO SÍNDICO / GESTOR</label><input id="mkt-zap" class="input-std" placeholder="Ex: 61999998888"></div>' +
-            '<button type="button" onclick="dispararPedidoMarketplace()" style="width:100%; padding:15px; border-radius:10px; border:none; background:linear-gradient(90deg,#10B981,#059669); color:#000; font-weight:900; font-size:0.94rem; cursor:pointer;">🚀 Despachar Chamado para Frota Credenciada</button>' +
-        '</div>';
-    document.body.appendChild(modalMkt);
-
-    window.abrirModalMarketplaceSindico = function() {
-        document.getElementById('modal-marketplace-sindico').style.display = 'flex';
-    };
-
-    window.dispararPedidoMarketplace = function() {
-        var cond = document.getElementById('mkt-cond').value.trim();
-        var end = document.getElementById('mkt-end').value.trim();
-        var zap = document.getElementById('mkt-zap').value.trim();
-        if (!cond || !end) {
-            alert("Informe o nome do Condomínio e o Endereço para localizarmos a viatura.");
-            return;
-        }
-
-        var novaOSMarketplace = {
-            id: "mkt_" + Date.now(),
-            protocolo: "MKT-" + Math.floor(1000 + Math.random() * 9000),
-            data: new Date().toLocaleDateString('pt-BR'),
-            cliente: cond + " (Lead Marketplace)",
-            endereco: end,
-            zap: zap,
-            tecnico: "Técnico 01",
-            servico: "Renovação Anual NBR 15526 + Score Seguradora AAA",
-            status: "Pendente",
-            prioridade: "URGENTE",
-            valorTotal: 450.00,
-            origem: "MARKETPLACE_SINDICO"
-        };
-
-        // Injeta direto na fila da empresa para tocar no Radar iFood do Técnico e aparecer na Torre do Gestor!
-        try {
-            var dbLocal = JSON.parse(localStorage.getItem("G3_ERP_MASTER_DB_V2") || "{}");
-            if (!dbLocal.ordens) dbLocal.ordens = [];
-            dbLocal.ordens.unshift(novaOSMarketplace);
-            localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dbLocal));
-        } catch (e) {}
-
-        if (typeof rtdb !== 'undefined' && rtdb) {
-            rtdb.ref('MARKETPLACE_DEMANDAS').push(novaOSMarketplace);
-        }
-
-        document.getElementById('modal-marketplace-sindico').style.display = 'none';
-        alert("✔ Chamado #" + novaOSMarketplace.protocolo + " enviado para o Radar da Frota! A viatura mais próxima já recebeu o alerta sonoro.");
-    };
-})();
-</script>
 </body>
 </html>

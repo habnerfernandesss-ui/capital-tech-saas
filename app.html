@@ -17,9 +17,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-<script>
+    <script>
         var chaveSessao = localStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || sessionStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || "admin@capitaltech.com";
         localStorage.setItem("CAPITAL_TECH_AUTH_SESSION", chaveSessao);
+        localStorage.setItem("CAPITAL_TECH_TEC_SESSION", chaveSessao);
         sessionStorage.setItem("CAPITAL_TECH_AUTH_SESSION", chaveSessao);
         sessionStorage.setItem("CAPITAL_TECH_TEC_SESSION", chaveSessao);
     </script>
@@ -45,117 +46,193 @@
         html, body { background: var(--bg); color: var(--text); width: 100%; max-width: 100%; overflow-x: hidden; scroll-behavior: smooth; }
         body { padding-bottom: 80px; }
 
-        /* =========================================
-           PORTA DE AÇO: TELA DE LOGIN DO TÉCNICO
-           ========================================= */
-        #login-overlay {
-            position: fixed; inset: 0; z-index: 99999;
-            background: radial-gradient(circle at top, #0F172A 0%, #05070B 100%);
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column; padding: 20px;
-        }
-        .login-box {
-            background: var(--panel); border: 1.5px solid var(--g3-amber);
-            border-radius: 18px; padding: 34px 26px; width: 100%; max-width: 400px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.9); text-align: center;
-        }
-        .login-logo {
-            width: 66px; height: 66px; border-radius: 16px; margin: 0 auto 14px auto;
-            background: linear-gradient(135deg, var(--g3-amber), #D97706);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 1.9rem; color: #000;
-            box-shadow: 0 0 25px var(--g3-amber-glow);
-        }
-        .login-title { font-size: 1.35rem; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; color: #fff; }
-        .login-sub { font-size: 0.75rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; margin-bottom: 22px; text-transform: uppercase; }
-        .login-btn {
-            width: 100%; padding: 14px; border: none; border-radius: 10px; margin-top: 14px;
-            background: linear-gradient(90deg, var(--g3-amber), #D97706);
-            color: #000; font-weight: 900; font-size: 0.95rem; text-transform: uppercase;
-            cursor: pointer; box-shadow: 0 8px 25px var(--g3-amber-glow); transition: 0.2s;
-        }
-        .login-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
-        .login-error {
-            background: rgba(225, 29, 72, 0.15); border: 1px solid var(--red); color: #fda4af;
-            font-size: 0.78rem; padding: 10px; border-radius: 8px; margin-top: 12px; display: none; font-weight: 600;
-        }
-        .login-hint {
-            margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--border);
-            font-size: 0.72rem; color: var(--muted); line-height: 1.4;
-        }
+        /* OCULTA A SEGUNDA TELA DE LOGIN DO TÉCNICO */
+        #login-overlay { display: none !important; }
 
         /* =========================================
-           INTERFACE DO APLICATIVO DE CAMPO
+           CABEÇALHO PRINCIPAL + BARRA CO-PILOTO DESLIZANTE
            ========================================= */
+        .sticky-header-stack {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.75);
+        }
+
         .topbar {
-            background: rgba(14, 19, 31, 0.96); backdrop-filter: blur(16px);
-            border-bottom: 2px solid var(--g3-amber); padding: 12px 4%;
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 1000; box-shadow: 0 6px 30px rgba(0,0,0,0.7);
-            flex-wrap: wrap; gap: 10px;
+            background: rgba(14, 19, 31, 0.98);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+            padding: 12px 4%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .brand { display: flex; align-items: center; gap: 12px; }
         .brand-logo {
-            width: 44px; height: 44px; border-radius: 10px;
+            width: 42px; height: 42px; border-radius: 10px;
             background: linear-gradient(135deg, var(--g3-amber), #D97706);
             display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 1.3rem; color: #000;
+            font-weight: 900; font-size: 1.25rem; color: #000;
             box-shadow: 0 0 18px var(--g3-amber-glow); flex-shrink: 0;
         }
-        .brand-title { font-weight: 900; font-size: 1.22rem; letter-spacing: 0.5px; line-height: 1.1; text-transform: uppercase; }
+        .brand-title { font-weight: 900; font-size: 1.15rem; letter-spacing: 0.4px; line-height: 1.1; text-transform: uppercase; }
         .brand-title span { color: var(--g3-amber); }
-        .brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; }
+        .brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
         
-        .top-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .top-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            padding-top: 2px;
+        }
+        .top-meta::-webkit-scrollbar { display: none; }
+
+        @media (min-width: 768px) {
+            .top-meta { width: auto; padding-top: 0; }
+        }
+
         .badge-os {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; font-weight: 700;
             background: rgba(245, 158, 11, 0.15); border: 1px solid var(--g3-amber);
-            color: var(--g3-amber); padding: 6px 12px; border-radius: 6px;
+            color: var(--g3-amber); padding: 6px 11px; border-radius: 6px; flex-shrink: 0;
         }
         .badge-gps {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.74rem;
             background: rgba(16, 185, 129, 0.15); border: 1px solid var(--green);
-            color: #34D399; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+            color: #34D399; padding: 6px 11px; border-radius: 6px; cursor: pointer; flex-shrink: 0;
         }
         .btn-logout-tec {
             font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700;
             background: rgba(225, 29, 72, 0.15); border: 1px solid var(--red);
-            color: #fda4af; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+            color: #fda4af; padding: 6px 11px; border-radius: 6px; cursor: pointer; flex-shrink: 0;
+        }
+
+        /* FAIXA CO-PILOTO EMBAIXO DA LOGO (LINHA ÚNICA COM SCROLL LATERAL) */
+        .copilot-dock {
+            background: #070B14;
+            border-bottom: 2px solid var(--g3-amber);
+            padding: 8px 4%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .cp-status-scroll {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            overflow-x: auto;
+            white-space: nowrap;
+            flex: 1;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            padding-right: 4px;
+        }
+        .cp-status-scroll::-webkit-scrollbar { display: none; }
+        .cp-status-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.66rem;
+            color: #94A3B8;
+            font-weight: 800;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .cp-status-btn {
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.14);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #CBD5E1;
+            background: #121A2E;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: 0.2s;
+        }
+        .cp-status-btn.disponivel { background: rgba(16, 185, 129, 0.18); border-color: #10B981; color: #34D399; box-shadow: 0 0 12px rgba(16,185,129,0.2); }
+        .cp-status-btn.rota { background: rgba(56, 189, 248, 0.18); border-color: #38BDF8; color: #38BDF8; box-shadow: 0 0 12px rgba(56,189,248,0.2); }
+        .cp-status-btn.vistoria { background: rgba(245, 158, 11, 0.18); border-color: #F59E0B; color: #FBBF24; box-shadow: 0 0 12px rgba(245,158,11,0.2); }
+
+        .cp-queue-trigger {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: #000;
+            font-weight: 900;
+            font-size: 0.74rem;
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+        }
+        .cp-badge-count {
+            background: #000;
+            color: #F59E0B;
+            padding: 1px 7px;
+            border-radius: 50px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 900;
         }
 
         .quick-nav {
-            background: #090D15; border-bottom: 1px solid var(--border);
-            padding: 10px 4%; display: flex; gap: 8px; overflow-x: auto;
+            background: #090D15;
+            border-bottom: 1px solid var(--border);
+            padding: 9px 4%;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
         }
+        .quick-nav::-webkit-scrollbar { display: none; }
         .nav-pill {
             background: var(--card); border: 1px solid var(--border); color: var(--muted);
-            padding: 7px 13px; border-radius: 50px; font-size: 0.8rem; font-weight: 600;
-            text-decoration: none; white-space: nowrap; transition: 0.2s;
+            padding: 6px 13px; border-radius: 50px; font-size: 0.78rem; font-weight: 600;
+            text-decoration: none; white-space: nowrap; transition: 0.2s; flex-shrink: 0;
         }
         .nav-pill:hover { border-color: var(--g3-amber); color: #fff; }
 
-        .container { max-width: 1040px; margin: 20px auto; padding: 0 3.5%; width: 100%; }
+        /* =========================================
+           MÓDULOS E CARDS PRINCIPAIS
+           ========================================= */
+        .container { max-width: 1040px; margin: 18px auto; padding: 0 3.5%; width: 100%; }
 
         .module-card {
             background: var(--panel); border: 1px solid var(--border);
-            border-radius: 16px; padding: 24px; margin-bottom: 24px;
+            border-radius: 16px; padding: 22px; margin-bottom: 22px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.55); width: 100%; overflow: hidden;
         }
         .module-header {
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 20px;
+            border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 18px;
             flex-wrap: wrap; gap: 10px;
         }
-        .module-title { font-size: 1.12rem; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .module-title { font-size: 1.08rem; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
         .module-title span { color: var(--g3-amber); font-family: 'JetBrains Mono', monospace; }
-        .module-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--cyan); background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.25); }
+        .module-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--cyan); background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.25); }
 
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
         .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; width: 100%; margin-bottom: 14px; }
         
         .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; width: 100%; }
-        .field label { font-size: 0.76rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .field label { font-size: 0.75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .field input, .field select, .field textarea {
             background: var(--card); border: 1px solid var(--border); color: #fff;
             padding: 12px; border-radius: 8px; font-size: 0.9rem; outline: none;
@@ -165,16 +242,16 @@
             border-color: var(--g3-amber); box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
         }
 
-        .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; width: 100%; }
+        .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px; width: 100%; }
         .mode-btn {
             background: var(--card); border: 2px solid var(--border); color: var(--text);
-            padding: 15px 12px; border-radius: 12px; cursor: pointer; text-align: center;
-            transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; gap: 5px;
+            padding: 14px 12px; border-radius: 12px; cursor: pointer; text-align: center;
+            transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; gap: 4px;
             width: 100%; user-select: none;
         }
         .mode-btn:hover { border-color: rgba(245, 158, 11, 0.5); transform: translateY(-2px); }
-        .mode-btn strong { font-size: 0.95rem; text-transform: uppercase; pointer-events: none; }
-        .mode-btn small { font-size: 0.74rem; color: var(--muted); pointer-events: none; }
+        .mode-btn strong { font-size: 0.92rem; text-transform: uppercase; pointer-events: none; }
+        .mode-btn small { font-size: 0.72rem; color: var(--muted); pointer-events: none; }
         .mode-btn.active {
             border-color: var(--g3-amber) !important;
             background: rgba(245, 158, 11, 0.18) !important;
@@ -188,49 +265,49 @@
 
         .mode-status-bar {
             background: rgba(245, 158, 11, 0.1); border: 1px solid var(--g3-amber);
-            color: var(--g3-amber); padding: 10px 15px; border-radius: 8px;
-            font-weight: 700; font-size: 0.88rem; margin-bottom: 18px;
+            color: var(--g3-amber); padding: 10px 14px; border-radius: 8px;
+            font-weight: 700; font-size: 0.84rem; margin-bottom: 16px;
             display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
         }
 
         .emergency-banner {
             display: none; background: rgba(225, 29, 72, 0.16); border: 2px solid var(--red);
             color: #fecdd3; padding: 14px 18px; border-radius: 10px; margin-bottom: 18px;
-            font-size: 0.9rem; font-weight: 600; line-height: 1.4;
+            font-size: 0.88rem; font-weight: 600; line-height: 1.4;
         }
 
         .history-panel {
             background: #090D16; border: 1px solid rgba(56, 189, 248, 0.25);
-            border-left: 4px solid var(--cyan); border-radius: 10px; padding: 15px; margin-top: 14px;
+            border-left: 4px solid var(--cyan); border-radius: 10px; padding: 14px; margin-top: 14px;
         }
-        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.82rem; color: var(--cyan); font-weight: 700; text-transform: uppercase; flex-wrap: wrap; gap: 6px; }
-        .history-list { list-style: none; font-size: 0.85rem; color: #cbd5e1; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.8rem; color: var(--cyan); font-weight: 700; text-transform: uppercase; flex-wrap: wrap; gap: 6px; }
+        .history-list { list-style: none; font-size: 0.84rem; color: #cbd5e1; }
         .history-list li { padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
         .history-list li:last-child { border-bottom: none; }
 
-        .gps-bar { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+        .gps-bar { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
         .btn-mini {
             background: rgba(56, 189, 248, 0.12); border: 1px solid var(--cyan); color: var(--cyan);
-            padding: 9px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+            padding: 9px 13px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;
             display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
         }
         .btn-mini:hover { background: var(--cyan); color: #000; }
 
-        /* ESTILO DO SCANNER OCR DE PLAQUETA DO TANQUE E ATALHOS RÁPIDOS */
+        /* SCANNER OCR DE PLAQUETA */
         .ocr-scanner-box {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(56, 189, 248, 0.08));
-            border: 2px dashed var(--g3-amber); border-radius: 12px; padding: 18px;
+            border: 2px dashed var(--g3-amber); border-radius: 12px; padding: 16px;
             margin-bottom: 16px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: center;
         }
         .ocr-cam-btn {
             background: rgba(14, 19, 31, 0.9); border: 1.5px solid var(--g3-amber); border-radius: 10px;
-            padding: 16px; text-align: center; position: relative; cursor: pointer; transition: 0.25s;
+            padding: 15px; text-align: center; position: relative; cursor: pointer; transition: 0.25s;
             box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
         }
         .ocr-cam-btn:hover { background: rgba(245, 158, 11, 0.18); transform: translateY(-2px); }
         .ocr-cam-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 5; }
-        .ocr-cam-btn strong { display: block; color: var(--g3-amber); font-size: 1rem; text-transform: uppercase; margin-bottom: 4px; }
-        .ocr-cam-btn span { font-size: 0.78rem; color: #cbd5e1; display: block; }
+        .ocr-cam-btn strong { display: block; color: var(--g3-amber); font-size: 0.96rem; text-transform: uppercase; margin-bottom: 4px; }
+        .ocr-cam-btn span { font-size: 0.76rem; color: #cbd5e1; display: block; }
         .ocr-presets { display: flex; flex-direction: column; gap: 8px; }
         .ocr-presets-title { font-size: 0.74rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.5px; }
         .preset-btns { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -249,10 +326,10 @@
 
         .safety-bar-bg { width: 100%; height: 8px; background: #1e293b; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
         .safety-bar-fill { height: 100%; width: 100%; background: var(--green); transition: 0.3s; }
-        .safety-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
-        .safety-col { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-        .safety-col h4 { font-size: 0.88rem; text-transform: uppercase; color: var(--g3-amber); margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .chk-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.86rem; cursor: pointer; color: #e2e8f0; line-height: 1.35; }
+        .safety-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+        .safety-col { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; }
+        .safety-col h4 { font-size: 0.86rem; text-transform: uppercase; color: var(--g3-amber); margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .chk-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.85rem; cursor: pointer; color: #e2e8f0; line-height: 1.35; }
         .chk-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--green); margin-top: 2px; flex-shrink: 0; cursor: pointer; }
 
         .timer-box {
@@ -269,29 +346,29 @@
         .calib-err { background: rgba(225, 29, 72, 0.18); border: 1px solid var(--red); color: #fda4af; }
 
         .verdict-banner {
-            padding: 18px; border-radius: 12px; display: flex; justify-content: space-between;
+            padding: 16px; border-radius: 12px; display: flex; justify-content: space-between;
             align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 12px;
         }
         .verdict-ok { background: rgba(16, 185, 129, 0.12); border: 2px solid var(--green); box-shadow: 0 0 25px var(--green-glow); }
         .verdict-fail { background: rgba(225, 29, 72, 0.15); border: 2px solid var(--red); box-shadow: 0 0 25px var(--red-glow); }
 
         .table-wrap { width: 100%; overflow-x: auto; margin-bottom: 15px; }
-        .stock-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 520px; }
-        .stock-table th { text-align: left; padding: 10px; background: #090D16; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .stock-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; min-width: 500px; }
+        .stock-table th { text-align: left; padding: 10px; background: #090D16; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
         .stock-table td { padding: 10px; border-bottom: 1px solid var(--border); }
         .stock-qty { font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); }
         .btn-stock {
             background: rgba(245, 158, 11, 0.15); border: 1px solid var(--g3-amber); color: var(--g3-amber);
-            padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.76rem; cursor: pointer;
+            padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer;
         }
         .btn-stock:hover { background: var(--g3-amber); color: #000; }
 
-        /* SLOTS DE FOTO COM SUPORTE A CLIQUE PARA ZOOM */
-        .media-grid-10 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; width: 100%; }
+        /* SLOTS DE FOTO */
+        .media-grid-10 { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; width: 100%; }
         .photo-slot {
             background: var(--card); border: 2px dashed rgba(245, 158, 11, 0.35);
             border-radius: 10px; padding: 10px; text-align: center; position: relative;
-            min-height: 165px; display: flex; flex-direction: column; align-items: center;
+            min-height: 160px; display: flex; flex-direction: column; align-items: center;
             justify-content: center; overflow: hidden; cursor: pointer; transition: 0.2s;
         }
         .photo-slot:hover { border-color: var(--g3-amber); }
@@ -299,13 +376,49 @@
         .photo-slot input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; width: 100%; height: 100%; }
         .photo-slot.filled input[type="file"] { height: 38px; bottom: auto; }
         .slot-img {
-            width: 100%; height: 105px; object-fit: cover; border-radius: 6px;
+            width: 100%; height: 100px; object-fit: cover; border-radius: 6px;
             display: none; margin: 6px 0 4px 0; cursor: zoom-in; position: relative; z-index: 6;
             border: 1px solid rgba(56, 189, 248, 0.5);
         }
-        .slot-title { font-size: 0.76rem; font-weight: 700; color: var(--g3-amber); display: block; }
+        .slot-title { font-size: 0.75rem; font-weight: 700; color: var(--g3-amber); display: block; }
         .slot-sub { font-size: 0.68rem; color: var(--muted); }
         .slot-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #34D399; display: none; position: relative; z-index: 6; }
+
+        /* SCANNER ACÚSTICO DEEP TECH */
+        .deeptech-card {
+            background: linear-gradient(145deg, #090F1E 0%, #050811 100%);
+            border: 1.5px solid #38BDF8; border-radius: 18px;
+            padding: 20px; margin-bottom: 22px; width: 100%;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6); color: #F8FAFC;
+        }
+        .dt-header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;
+        }
+        .dt-badge {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 900;
+            padding: 5px 12px; border-radius: 50px;
+            background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #34D399;
+        }
+        canvas#fftAcousticCanvas {
+            width: 100%; height: 120px; background: #03050A;
+            border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px;
+            display: block; margin-bottom: 12px;
+        }
+        .dt-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .dt-btn {
+            flex: 1; min-width: 170px; padding: 11px 14px; border-radius: 10px;
+            font-weight: 800; font-size: 0.8rem; cursor: pointer; border: none;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .dt-btn-mic { background: linear-gradient(135deg, #38BDF8, #0284C7); color: #000; }
+        .dt-btn-sim { background: #131C31; color: #CBD5E1; border: 1px solid rgba(255,255,255,0.14); }
+        .dt-score-box {
+            background: rgba(16, 185, 129, 0.08); border: 1px solid #10B981;
+            border-radius: 14px; padding: 14px 16px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+        }
 
         .sig-box {
             background: #ffffff; border: 2px solid var(--g3-amber); border-radius: 10px;
@@ -324,9 +437,9 @@
         .qr-wrap { background: #fff; padding: 8px; border-radius: 10px; width: 126px; height: 126px; display: flex; align-items: center; justify-content: center; }
         .qr-wrap img { width: 110px; height: 110px; }
 
-        .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 22px; width: 100%; }
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 20px; width: 100%; }
         .btn-action {
-            padding: 16px 14px; border: none; border-radius: 10px; font-weight: 900; font-size: 0.9rem;
+            padding: 15px 14px; border: none; border-radius: 10px; font-weight: 900; font-size: 0.88rem;
             text-transform: uppercase; cursor: pointer; transition: 0.2s; display: flex;
             align-items: center; justify-content: center; gap: 8px; text-align: center; width: 100%;
         }
@@ -339,10 +452,10 @@
             position: fixed; bottom: 20px; right: 20px; z-index: 9999;
             background: #10B981; color: #000; font-weight: 800; padding: 12px 20px;
             border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-            display: none; font-size: 0.9rem;
+            display: none; font-size: 0.88rem;
         }
 
-        /* MODAL DE ZOOM DAS FOTOS (LIGHTBOX COM LUPA 2.2X) */
+        /* LIGHTBOX DE ZOOM E MODAIS DO RADAR CO-PILOTO */
         .img-modal {
             display: none; position: fixed; z-index: 10000; inset: 0;
             background-color: rgba(0,0,0,0.94); backdrop-filter: blur(8px);
@@ -353,9 +466,7 @@
             border-radius: 10px; box-shadow: 0 0 40px rgba(245, 158, 11, 0.4);
             object-fit: contain; cursor: zoom-in; transition: transform 0.25s ease;
         }
-        .img-modal-content.zoomed {
-            transform: scale(2.2); transform-origin: center center; cursor: zoom-out;
-        }
+        .img-modal-content.zoomed { transform: scale(2.2); transform-origin: center center; cursor: zoom-out; }
         .img-modal-bar {
             position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
             z-index: 10002; display: flex; gap: 10px; align-items: center;
@@ -367,18 +478,38 @@
             border-radius: 50px; font-weight: 800; font-size: 0.78rem; cursor: pointer;
         }
 
+        #cp-silent-toast {
+            position: fixed; top: 115px; right: 16px; z-index: 9998;
+            background: #0F172A; border: 2px solid #38BDF8; color: #fff;
+            padding: 14px 18px; border-radius: 14px; max-width: 340px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9); display: none;
+        }
+        #cp-radar-modal, #cp-queue-drawer {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(3, 5, 10, 0.9); backdrop-filter: blur(12px);
+            display: none; align-items: center; justify-content: center; padding: 18px;
+        }
+        .cp-radar-card {
+            background: #0D1322; border: 2px solid #10B981; border-radius: 22px;
+            width: 100%; max-width: 460px; padding: 26px 22px; text-align: center;
+            box-shadow: 0 0 60px rgba(16, 185, 129, 0.28);
+        }
+        .cp-radar-card.urgente { border-color: #F43F5E; box-shadow: 0 0 60px rgba(244, 63, 94, 0.35); }
+        .cp-queue-item {
+            background: #121A2E; border: 1px solid rgba(255,255,255,0.1);
+            border-left: 4px solid #F59E0B; border-radius: 12px; padding: 14px;
+            margin-bottom: 10px; text-align: left; display: flex; justify-content: space-between;
+            align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+        .cp-queue-item.urgente { border-left-color: #F43F5E; background: rgba(244, 63, 94, 0.08); }
+
         @media print {
             body { background: #fff !important; color: #000 !important; padding: 0; }
-            #login-overlay { display: none !important; }
-            .topbar { position: static; background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; box-shadow: none; }
+            .sticky-header-stack { position: static; box-shadow: none; }
+            .topbar { background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; }
             .brand-title { color: #000 !important; }
-            .quick-nav, .gps-bar, .btn-stock, .action-grid, .btn-mini, #btn-limpar-sig, #timer-controls, .ocr-scanner-box, .btn-logout-tec { display: none !important; }
-            .module-card { background: #fff !important; color: #000 !important; border: 1px solid #bbb !important; box-shadow: none !important; page-break-inside: avoid; margin-bottom: 12px; padding: 14px; }
-            .module-title, .chk-item, .history-list li { color: #000 !important; }
-            .field input, .field select, .field textarea, .safety-col, .history-panel, .timer-box {
-                background: #f8fafc !important; color: #000 !important; border: 1px solid #ccc !important;
-            }
-            .cert-banner { background: #f8fafc !important; border: 2px solid #000 !important; color: #000 !important; }
+            .copilot-dock, .quick-nav, .gps-bar, .btn-stock, .action-grid, .btn-mini, #btn-limpar-sig, #timer-controls, .ocr-scanner-box, .btn-logout-tec, .dt-controls { display: none !important; }
+            .module-card, .deeptech-card { background: #fff !important; color: #000 !important; border: 1px solid #bbb !important; box-shadow: none !important; page-break-inside: avoid; margin-bottom: 12px; padding: 14px; }
         }
 
         @media (max-width: 768px) {
@@ -390,45 +521,16 @@
         }
     </style>
 </head>
-
-<script>
-    // DEFESA CONTRA O BACK-FORWARD CACHE (Bfcache)
-    // Se o navegador tentar carregar a página congelada, força um reload limpo para reconectar o Firebase
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-            console.log("Página restaurada do cache. Forçando reconexão do Firebase...");
-            window.location.reload();
-        }
-    });
-</script>
-
 <body>
 
-    <!-- ============================================================== -->
-    <!-- PORTA DE AÇO: LOGIN DO TÉCNICO EM CAMPO (SAAS MULTI-TENANT)    -->
-    <!-- ============================================================== -->
+    <!-- ELEMENTO OCULTO DE LOGIN INTERNO PARA COMPATIBILIDADE -->
     <div id="login-overlay">
-        <div class="login-box">
-            <div class="login-logo" id="login-logo-sigla">CT</div>
-            <div class="login-title" id="login-empresa-nome">CAPITAL TECH SaaS</div>
-            <div class="login-sub">Terminal Móvel de Auditoria & Engenharia GLP</div>
-            
-            <div class="field" style="text-align: left; margin-bottom: 12px;">
-                <label>E-mail do Técnico / Credencial</label>
-                <input type="email" id="login-email" placeholder="tecnico@capitaltech.com" value="tecnico@capitaltech.com">
-            </div>
-            <div class="field" style="text-align: left;">
-                <label>PIN / Senha de Campo</label>
-                <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter') fazerLoginTecnico()">
-            </div>
-            
-            <button type="button" class="login-btn" id="btn-login-tec" onclick="fazerLoginTecnico()">🔓 Destrancar Terminal de Campo</button>
-            <div id="login-msg" class="login-error"></div>
-
-            <div class="login-hint">
-                💡 <strong>Acesso Rápido de Campo:</strong> Use a senha corporativa <code>capital2026</code> (ou seu login cadastrado no Firebase Auth).
-            </div>
-        </div>
+        <div id="login-logo-sigla">CT</div>
+        <div id="login-empresa-nome">CAPITAL TECH SaaS</div>
+        <input type="email" id="login-email" value="tecnico@capitaltech.com">
+        <input type="password" id="login-senha" value="capital2026">
+        <button type="button" id="btn-login-tec" onclick="fazerLoginTecnico()">Entrar</button>
+        <div id="login-msg"></div>
     </div>
 
     <div id="toast-msg">✔ Ação executada com sucesso!</div>
@@ -442,30 +544,47 @@
         <img class="img-modal-content" id="img-zoom-result" onclick="alternarLupaZoom()">
     </div>
 
-    <!-- TOPBAR ISOLADA (SEM ATALHO PARA O PAINEL DO GESTOR) -->
-    <header class="topbar">
-        <div class="brand">
-            <div class="brand-logo" id="ui-tec-sigla">CT</div>
-            <div>
-                <div class="brand-title"><span id="ui-tec-empresa" style="color:#fff;">CAPITAL TECH</span> <span>APP TÉCNICO</span></div>
-                <div class="brand-sub" id="ui-tec-sub">Auditoria de Campo • Sincronizado c/ Central SaaS • NBR 13523 & 15526</div>
+    <!-- BLOCO SUPERIOR FIXO E ALINHADO: 1º MARCA DA EMPRESA -> 2º BARRA CO-PILOTO DESLIZANTE -->
+    <div class="sticky-header-stack">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-logo" id="ui-tec-sigla">CT</div>
+                <div>
+                    <div class="brand-title"><span id="ui-tec-empresa" style="color:#fff;">CAPITAL TECH</span> <span>APP TÉCNICO</span></div>
+                    <div class="brand-sub" id="ui-tec-sub">Auditoria de Campo • Sincronizado c/ Central SaaS • NBR 13523 & 15526</div>
+                </div>
             </div>
+            <div class="top-meta">
+                <div class="badge-gps" id="gps-status" onclick="capturarGPS()">📍 Capturar GPS</div>
+                <div class="badge-os" id="os-number">OS #CT-2026-0001</div>
+                <button type="button" class="btn-logout-tec" onclick="fazerLogoutTecnico()">🔒 Sair</button>
+            </div>
+        </header>
+
+        <!-- BARRA CO-PILOTO EM LINHA ÚNICA COM SCROLL HORIZONTAL SUAVE -->
+        <div class="copilot-dock" id="copilot-top-bar">
+            <div class="cp-status-scroll">
+                <span class="cp-status-label">STATUS:</span>
+                <button type="button" class="cp-status-btn disponivel" id="btn-st-disp" onclick="mudarStatusOperacionalTecnico('DISPONIVEL')">🟢 Disponível</button>
+                <button type="button" class="cp-status-btn" id="btn-st-rota" onclick="mudarStatusOperacionalTecnico('EM_ROTA')">🚗 Em Rota</button>
+                <button type="button" class="cp-status-btn" id="btn-st-vist" onclick="mudarStatusOperacionalTecnico('EM_VISTORIA')">🔧 Em Vistoria</button>
+            </div>
+
+            <button type="button" class="cp-queue-trigger" onclick="abrirGavetaFilaOS()">
+                📋 Fila <span class="cp-badge-count" id="cp-fila-contador">0</span>
+            </button>
         </div>
-        <div class="top-meta">
-            <div class="badge-gps" id="gps-status" onclick="capturarGPS()">📍 Capturar GPS</div>
-            <div class="badge-os" id="os-number">OS #CT-2026-0001</div>
-            <button type="button" class="btn-logout-tec" onclick="fazerLogoutTecnico()">🔒 Sair</button>
-        </div>
-    </header>
+    </div>
 
     <nav class="quick-nav">
-        <a href="#mod-os" class="nav-pill">1. OS, Central & Histórico</a>
-        <a href="#mod-tanque" class="nav-pill">2. Rastreabilidade Tanque (OCR)</a>
-        <a href="#mod-seg" class="nav-pill">3. Segurança NBR 13523</a>
+        <a href="#mod-os" class="nav-pill">1. OS & Cliente</a>
+        <a href="#mod-tanque" class="nav-pill">2. Tanque (OCR)</a>
+        <a href="#mod-seg" class="nav-pill">3. Segurança</a>
         <a href="#mod-estanq" class="nav-pill">4. Estanqueidade</a>
-        <a href="#mod-estoque" class="nav-pill">5. Estoque da Viatura</a>
+        <a href="#mod-estoque" class="nav-pill">5. Estoque Viatura</a>
         <a href="#mod-midia" class="nav-pill">6. 10 Fotos & Vídeo</a>
-        <a href="#mod-laudo" class="nav-pill">7. ART & Envio</a>
+        <a href="#modulo-deeptech-acustico" class="nav-pill">7. IA Acústica</a>
+        <a href="#mod-laudo" class="nav-pill">8. ART & PDF</a>
     </nav>
 
     <div class="container">
@@ -498,7 +617,7 @@
 
             <div class="mode-status-bar" id="barra-modo-ativo">
                 <span id="texto-modo-ativo">✔ CLASSIFICAÇÃO ATIVA: MANUTENÇÃO PREVENTIVA PROGRAMADA</span>
-                <span style="font-family:'JetBrains Mono',monospace; font-size:0.78rem;">SINCRONIZADO C/ CENTRAL SAAS</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:0.74rem;">SINCRONIZADO C/ CENTRAL SAAS</span>
             </div>
 
             <div class="emergency-banner" id="banner-emergencia">
@@ -811,9 +930,9 @@
             <div class="verdict-banner verdict-ok" id="verdict-box">
                 <div>
                     <span style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; font-weight:700;">Resultado Automatizado do Ensaio:</span>
-                    <h3 id="verdict-title" style="font-size:1.25rem; font-weight:900; color:#fff; margin-top:3px;">APROVADO — REDE 100% ESTANQUE (VARIAÇÃO: 0.0 kPa)</h3>
+                    <h3 id="verdict-title" style="font-size:1.2rem; font-weight:900; color:#fff; margin-top:3px;">APROVADO — REDE 100% ESTANQUE (VARIAÇÃO: 0.0 kPa)</h3>
                 </div>
-                <div id="verdict-badge" style="font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.95rem; color:#34D399;">
+                <div id="verdict-badge" style="font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.92rem; color:#34D399;">
                     ✔ LIBERADO P/ OPERAÇÃO
                 </div>
             </div>
@@ -862,7 +981,7 @@
             </div>
         </section>
 
-        <!-- MÓDULO 6: 10 FOTOS + VÍDEO (COM ZOOM E ENVIO DIRETO AO GESTOR) -->
+        <!-- MÓDULO 6: 10 FOTOS + VÍDEO -->
         <section class="module-card" id="mod-midia">
             <div class="module-header">
                 <div class="module-title"><span>[06]</span> Auditoria Visual (10 Fotos Obrigatórias + Vídeo 10s)</div>
@@ -890,209 +1009,48 @@
             </div>
         </section>
 
-        <!-- ====================================================================
-     MÓDULO DEEP TECH: IA ACÚSTICA (FFT) & SCORE ATUARIAL
-     (Posicionado antes da Emissão de Laudo e Assinatura)
-     ==================================================================== -->
-<style>
-    .deeptech-card {
-        background: linear-gradient(145deg, #090F1E 0%, #050811 100%);
-        border: 1.5px solid #38BDF8; border-radius: 18px;
-        padding: 20px; margin-bottom: 24px; width: 100%;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6); color: #F8FAFC;
-    }
-    .dt-header {
-        display: flex; justify-content: space-between; align-items: center;
-        flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
-        border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;
-    }
-    .dt-badge {
-        font-family: monospace; font-size: 0.72rem; font-weight: 900;
-        padding: 5px 12px; border-radius: 50px;
-        background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #34D399;
-    }
-    canvas#fftAcousticCanvas {
-        width: 100%; height: 120px; background: #03050A;
-        border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px;
-        display: block; margin-bottom: 12px;
-    }
-    .dt-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-    .dt-btn {
-        flex: 1; min-width: 170px; padding: 11px 14px; border-radius: 10px;
-        font-weight: 800; font-size: 0.8rem; cursor: pointer; border: none;
-        text-transform: uppercase; transition: 0.2s;
-    }
-    .dt-btn-mic { background: linear-gradient(135deg, #38BDF8, #0284C7); color: #000; }
-    .dt-btn-sim { background: #131C31; color: #CBD5E1; border: 1px solid rgba(255,255,255,0.14); }
-    .dt-score-box {
-        background: rgba(16, 185, 129, 0.08); border: 1px solid #10B981;
-        border-radius: 14px; padding: 14px 16px;
-        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-    }
-</style>
-
-<div class="deeptech-card" id="modulo-deeptech-acustico">
-    <div class="dt-header">
-        <div>
-            <div style="font-family:monospace; font-size:0.7rem; color:#38BDF8; font-weight:800;">
-                🎙️ NEURAL ACOUSTIC FFT • ESPECTRO (12kHz–20kHz)
+        <!-- MÓDULO DEEP TECH: IA ACÚSTICA (FFT) & SCORE ATUARIAL -->
+        <div class="deeptech-card" id="modulo-deeptech-acustico">
+            <div class="dt-header">
+                <div>
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:#38BDF8; font-weight:800;">
+                        🎙️ NEURAL ACOUSTIC FFT • ESPECTRO (12kHz–20kHz)
+                    </div>
+                    <h3 style="font-size:1.1rem; font-weight:900; margin-top:2px;">
+                        Scanner Acústico de Microvazamento & Score Seguradora
+                    </h3>
+                </div>
+                <span class="dt-badge" id="dt-acoustic-status">● ESPECTRO ESTANQUE (0 dB FUGA)</span>
             </div>
-            <h3 style="font-size:1.1rem; font-weight:900; margin-top:2px;">
-                Scanner Acústico de Microvazamento
-            </h3>
-        </div>
-        <span class="dt-badge" id="dt-acoustic-status">● ESPECTRO ESTANQUE (0 dB FUGA)</span>
-    </div>
 
-    <canvas id="fftAcousticCanvas" width="600" height="120"></canvas>
+            <canvas id="fftAcousticCanvas" width="600" height="120"></canvas>
 
-    <div class="dt-controls">
-        <button type="button" class="dt-btn dt-btn-mic" id="btn-start-mic" onclick="iniciarScannerMicrofoneReal()">
-            🎙️ Ativar Microfone Ultrassônico Real
-        </button>
-        <button type="button" class="dt-btn dt-btn-sim" onclick="alternarSimulacaoAcustica()">
-            ⚡ Testar Simulação (Estanque / Fuga)
-        </button>
-    </div>
-
-    <div class="dt-score-box" id="dt-insurance-box">
-        <div>
-            <div style="font-family:monospace; font-size:0.68rem; color:#34D399; font-weight:900;">
-                🛡️ CAPITAL TECH RISK SCORE (SEGURADORAS)
+            <div class="dt-controls">
+                <button type="button" class="dt-btn dt-btn-mic" id="btn-start-mic" onclick="iniciarScannerMicrofoneReal()">
+                    🎙️ Ativar Microfone Ultrassônico Real
+                </button>
+                <button type="button" class="dt-btn dt-btn-sim" onclick="alternarSimulacaoAcustica()">
+                    ⚡ Testar Simulação (Estanque / Fuga)
+                </button>
             </div>
-            <div style="font-size:0.84rem; color:#E2E8F0; margin-top:3px;" id="dt-insurance-desc">
-                Elegível para redução de apólice • FFT + Satélite
+
+            <div class="dt-score-box" id="dt-insurance-box">
+                <div>
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:#34D399; font-weight:900;">
+                        🛡️ CAPITAL TECH RISK SCORE (SEGURADORAS)
+                    </div>
+                    <div style="font-size:0.84rem; color:#E2E8F0; margin-top:3px;" id="dt-insurance-desc">
+                        Elegível para redução de apólice • FFT + Satélite
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:1.5rem; font-weight:900; color:#10B981; font-family:'JetBrains Mono',monospace;" id="dt-score-val">
+                        99/100 (AAA)
+                    </div>
+                    <div style="font-size:0.68rem; color:#94A3B8; font-family:'JetBrains Mono',monospace;">CERTIFICADO BLINDADO</div>
+                </div>
             </div>
         </div>
-        <div style="text-align:right;">
-            <div style="font-size:1.5rem; font-weight:900; color:#10B981; font-family:monospace;" id="dt-score-val">
-                99/100 (AAA)
-            </div>
-            <div style="font-size:0.68rem; color:#94A3B8; font-family:monospace;">CERTIFICADO BLINDADO</div>
-        </div>
-    </div>
-</div>
-
-<script>
-(function() {
-    var audioCtx = null;
-    var analyser = null;
-    var dataArray = null;
-    var micAtivo = false;
-    var modoFugaSimulada = false;
-
-    window.dadosDeepTechOS = {
-        espectroAcustico: "0.0 dB Ultrassônico (Sem Fuga Acústica)",
-        riskScore: "99/100 (Rating AAA - Risco Mínimo)",
-        elegivelDescontoSeguro: "SIM (-18% Apólice Condominial)"
-    };
-
-    window.iniciarScannerMicrofoneReal = function() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("Navegador bloqueou o microfone. Usando telemetria assistida.");
-            return;
-        }
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-        .then(function(stream) {
-            var AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContextClass();
-            var source = audioCtx.createMediaStreamSource(stream);
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 128;
-            source.connect(analyser);
-            dataArray = new Uint8Array(analyser.frequencyBinCount);
-            micAtivo = true;
-            document.getElementById('btn-start-mic').innerText = "🟢 Captando Frequências...";
-        })
-        .catch(function() {
-            alert("Permissão de microfone negada. O modo de simulação continua ativo!");
-        });
-    };
-
-    window.alternarSimulacaoAcustica = function() {
-        modoFugaSimulada = !modoFugaSimulada;
-        atualizarScoreAtuarial();
-    };
-
-    function atualizarScoreAtuarial() {
-        var badge = document.getElementById('dt-acoustic-status');
-        var box = document.getElementById('dt-insurance-box');
-        var scoreEl = document.getElementById('dt-score-val');
-        var descEl = document.getElementById('dt-insurance-desc');
-
-        if (modoFugaSimulada) {
-            badge.innerText = "🚨 PICO ULTRASSÔNICO 16.4 kHz (FUGA)";
-            badge.style.background = "rgba(244, 63, 94, 0.18)";
-            badge.style.borderColor = "#F43F5E";
-            badge.style.color = "#FDA4AF";
-            box.style.borderColor = "#F43F5E";
-            box.style.background = "rgba(244, 63, 94, 0.08)";
-            scoreEl.innerText = "34/100 (CRÍTICO)";
-            scoreEl.style.color = "#F43F5E";
-            descEl.innerText = "Apólice bloqueada: turbulência acústica detectada.";
-
-            window.dadosDeepTechOS = {
-                espectroAcustico: "ALERTA 16.4 kHz (Fuga Detectada)",
-                riskScore: "34/100 (Rating D)",
-                elegivelDescontoSeguro: "NÃO (Requer Reparo)"
-            };
-        } else {
-            badge.innerText = "● ESPECTRO ESTANQUE (0 dB FUGA)";
-            badge.style.background = "rgba(16, 185, 129, 0.15)";
-            badge.style.borderColor = "#10B981";
-            badge.style.color = "#34D399";
-            box.style.borderColor = "#10B981";
-            box.style.background = "rgba(16, 185, 129, 0.08)";
-            scoreEl.innerText = "99/100 (AAA)";
-            scoreEl.style.color = "#10B981";
-            descEl.innerText = "Elegível para redução de apólice • FFT + Satélite";
-
-            window.dadosDeepTechOS = {
-                espectroAcustico: "0.0 dB Ultrassônico (Estanqueidade Confirmada)",
-                riskScore: "99/100 (Rating AAA)",
-                elegivelDescontoSeguro: "SIM (Certificado Ativo)"
-            };
-        }
-    }
-
-    setInterval(function() {
-        var cvs = document.getElementById('fftAcousticCanvas');
-        if (!cvs) return;
-        var ctx = cvs.getContext('2d');
-        var w = cvs.width, h = cvs.height;
-        ctx.clearRect(0, 0, w, h);
-        var barras = 48, larg = (w / barras) - 3;
-        if (micAtivo && analyser && dataArray) analyser.getByteFrequencyData(dataArray);
-
-        for (var i = 0; i < barras; i++) {
-            var val = 12;
-            if (micAtivo && dataArray) {
-                val = (dataArray[i] / 255) * (h - 15) + 6;
-            } else if (modoFugaSimulada && i > 28 && i < 42) {
-                val = Math.random() * (h - 25) + 45;
-            } else {
-                val = Math.random() * 18 + 6;
-            }
-            ctx.fillStyle = (modoFugaSimulada && i > 28) ? "#F43F5E" : (i > 28 ? "#38BDF8" : "#10B981");
-            ctx.fillRect(i * (larg + 3), h - val, larg, val);
-        }
-    }, 90);
-
-    // Integrando os dados da IA Acústica diretamente na função de salvar banco, de forma segura
-    var _salvarBancoOrig = window.salvarBanco;
-    if (typeof _salvarBancoOrig === 'function') {
-        window.salvarBanco = function() {
-            try {
-                if (typeof db !== 'undefined' && db && db.ordens && db.ordens.length > 0) {
-                    db.ordens[0].espectroAcustico = window.dadosDeepTechOS.espectroAcustico;
-                    db.ordens[0].riskScore = window.dadosDeepTechOS.riskScore;
-                }
-            } catch (e) {}
-            _salvarBancoOrig();
-        };
-    }
-})();
-</script>
 
         <!-- MÓDULO 7: ART, ASSINATURA E ENVIO -->
         <section class="module-card" id="mod-laudo">
@@ -1171,15 +1129,74 @@
 
     </div>
 
+    <!-- MODAIS DO CO-PILOTO DE FILA E RADAR ESTILO IFOOD -->
+    <div id="cp-silent-toast">
+        <div style="font-size:0.72rem; color:#38BDF8; font-weight:900; text-transform:uppercase;">📡 CO-PILOTO • NOVA OS NA FILA</div>
+        <div style="font-size:0.9rem; font-weight:800; margin:4px 0;" id="cp-toast-cli">Condomínio Sol Nascente</div>
+        <div style="font-size:0.76rem; color:#94A3B8;" id="cp-toast-pos">Adicionada na sua fila para não interromper sua vistoria atual.</div>
+    </div>
+
+    <div id="cp-radar-modal">
+        <div class="cp-radar-card" id="cp-radar-box">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; font-weight:900; color:#10B981; text-transform:uppercase; margin-bottom:6px;" id="cp-radar-kicker">
+                🔔 NOVA ORDEM DE SERVIÇO DESPACHADA
+            </div>
+            <h2 style="font-size:1.5rem; font-weight:900; color:#fff; margin-bottom:6px;" id="cp-radar-cliente">Condomínio Bella Vita</h2>
+            <p style="font-size:0.86rem; color:#94A3B8; margin-bottom:16px;" id="cp-radar-endereco">📍 Rua 24 Norte - Águas Claras/DF</p>
+
+            <div style="background:#070B14; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; margin-bottom:18px; text-align:left; font-size:0.82rem; color:#CBD5E1;">
+                <div><strong>Protocolo:</strong> <span id="cp-radar-prot">#CT-8490</span></div>
+                <div style="margin-top:4px;"><strong>Serviço:</strong> <span id="cp-radar-serv">Ensaio de Estanqueidade NBR 15526</span></div>
+            </div>
+
+            <button type="button" onclick="aceitarOSDoRadar(true)" style="width:100%; padding:15px; border-radius:12px; border:none; background:linear-gradient(90deg,#10B981,#059669); color:#000; font-weight:900; font-size:0.94rem; cursor:pointer; margin-bottom:10px;">
+                🚀 ACEITAR OS & ABRIR ROTA NO WAZE/MAPS
+            </button>
+            <button type="button" onclick="aceitarOSDoRadar(false)" style="width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#121A2E; color:#fff; font-weight:700; font-size:0.84rem; cursor:pointer; margin-bottom:8px;">
+                📋 Aceitar e Carregar Dados no Painel (Sem GPS)
+            </button>
+            <button type="button" onclick="guardarNaFilaSemInterromper()" style="width:100%; padding:9px; border:none; background:transparent; color:#94A3B8; font-size:0.78rem; cursor:pointer;">
+                Manter na Fila de Espera (Atender Depois)
+            </button>
+        </div>
+    </div>
+
+    <div id="cp-queue-drawer">
+        <div class="cp-radar-card" style="max-width:560px; border-color:#F59E0B;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-size:1.2rem; font-weight:900; color:#fff;">📋 Minha Fila de Atendimento</h3>
+                <button type="button" onclick="document.getElementById('cp-queue-drawer').style.display='none'" style="background:none; border:none; color:#94A3B8; font-size:1.2rem; cursor:pointer;">✕</button>
+            </div>
+            <div id="cp-queue-list-container" style="max-height:360px; overflow-y:auto; margin-bottom:14px;"></div>
+            <p style="font-size:0.75rem; color:#94A3B8;">💡 Ao concluir o PDF de uma OS, o Co-Piloto puxa automaticamente a próxima da fila.</p>
+        </div>
+    </div>
+    <!-- FIM DA PARTE 1 DO APP.HTML -->
+     <!-- ==========================================================
+         MOTOR CENTRAL UNIFICADO DO APP TÉCNICO (SEM DUPLICAÇÕES)
+         ========================================================== -->
     <script>
-        // CHAVE UNIFICADA COM O PAINEL DO GESTOR PARA SINCRONIZAÇÃO EM TEMPO REAL
         var STORAGE_KEY = "G3_ERP_MASTER_DB_V2";
+        var SESSION_AUTH_KEY = "CAPITAL_TECH_AUTH_SESSION";
         var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
+
+        // Defesa contra congelamento de cache (bfcache)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
 
         var fotosContadas = {};
         var fotosBase64 = {};
         var horariosFotos = {};
         var videoBase64 = "";
+
+        window.dadosDeepTechOS = {
+            espectroAcustico: "0.0 dB Ultrassônico (Sem Fuga Acústica)",
+            riskScore: "99/100 (Rating AAA - Risco Mínimo)",
+            elegivelDescontoSeguro: "SIM (-18% Apólice Condominial)"
+        };
 
         window.mostrarAviso = function(texto) {
             var t = document.getElementById('toast-msg');
@@ -1216,9 +1233,9 @@
                     { id: "c3", nome: "Restaurante Sabor do Cerrado", doc: "29.401.882/0001-05", zap: "61986294465", end: "CNN 02 Bloco A Loja 12 - Ceilândia Centro", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "S/N-2006", ano: "2006", tara: "141,30 kg", vol: "454 Litros (P190)" }
                 ],
                 tecnicos: [
-                    { id: "t1", nome: "Habner T. Fernandes", carro: "FROTA-DF04 (Fiorino)", placa: "JKR-4A89", zap: "61986294465", regiao: "Taguatinga / Ceilândia / Águas Claras", inmetro: "Manômetro Digital #INM-9482" },
-                    { id: "t2", nome: "Adriano Silva", carro: "FROTA-DF08 (Strada)", placa: "OVM-2B11", zap: "61986294465", regiao: "SIA / Guará / Asa Sul", inmetro: "Manômetro Wika #INM-3310" },
-                    { id: "t3", nome: "Gustavo Mendes", carro: "FROTA-DF11 (Saveiro)", placa: "PAX-9D04", zap: "61986294465", regiao: "Samambaia / Vicente Pires / Recanto", inmetro: "Detector LEL #DG-402" }
+                    { id: "t1", nome: "Habner T. Fernandes", carro: "FROTA-DF04 (Fiorino)", placa: "JKR-4A89", zap: "61986294465", regiao: "Taguatinga / Ceilândia / Águas Claras", inmetro: "Manômetro Digital #INM-9482", statusOperacional: "DISPONIVEL" },
+                    { id: "t2", nome: "Adriano Silva", carro: "FROTA-DF08 (Strada)", placa: "OVM-2B11", zap: "61986294465", regiao: "SIA / Guará / Asa Sul", inmetro: "Manômetro Wika #INM-3310", statusOperacional: "DISPONIVEL" },
+                    { id: "t3", nome: "Gustavo Mendes", carro: "FROTA-DF11 (Saveiro)", placa: "PAX-9D04", zap: "61986294465", regiao: "Samambaia / Vicente Pires / Recanto", inmetro: "Detector LEL #DG-402", statusOperacional: "DISPONIVEL" }
                 ],
                 materiais: [
                     { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: { "t1": 4, "t2": 3, "t3": 2 } },
@@ -1234,13 +1251,26 @@
             };
         }
 
-        var db = null;
+        var db = obterDadosPadrao();
         var usadoNestaOS = {};
 
         function carregarBanco() {
             try {
-                var salvo = localStorage.getItem(STORAGE_KEY);
-                db = salvo ? JSON.parse(salvo) : obterDadosPadrao();
+                var salvo = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("G3_ERP_MASTER_DB_V2");
+                if (salvo) {
+                    var parsed = JSON.parse(salvo);
+                    var padrao = obterDadosPadrao();
+                    db = {
+                        configWhiteLabel: parsed.configWhiteLabel || padrao.configWhiteLabel,
+                        clientes: parsed.clientes || padrao.clientes,
+                        tecnicos: parsed.tecnicos || padrao.tecnicos,
+                        materiais: parsed.materiais || padrao.materiais,
+                        tanques: parsed.tanques || padrao.tanques,
+                        ordens: parsed.ordens || padrao.ordens
+                    };
+                } else {
+                    db = obterDadosPadrao();
+                }
             } catch (e) {
                 db = obterDadosPadrao();
             }
@@ -1249,6 +1279,7 @@
         function salvarBancoLocal() {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(db));
             } catch (e) {
                 try {
                     var copiaLeve = JSON.parse(JSON.stringify(db));
@@ -1258,11 +1289,12 @@
                         }
                     }
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaLeve));
+                    localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(copiaLeve));
                 } catch (err2) {}
             }
         }
 
-  // ==========================================================
+        // ==========================================================
         // CONEXÃO FIREBASE MULTI-TENANT + DISJUNTOR DO TÉCNICO
         // ==========================================================
         var rtdb = null;
@@ -1274,18 +1306,28 @@
             if (params.has('tenant')) {
                 return params.get('tenant').toUpperCase();
             }
-            var limpo = (emailOuTenant || "tecnico@capitaltech.com").trim().toLowerCase();
+            var limpo = (emailOuTenant || "admin@capitaltech.com").trim().toLowerCase();
             if (limpo.indexOf('@') !== -1) {
                 return limpo.split('@')[1].replace(/[^a-z0-9]/g, '_').toUpperCase();
             }
             return limpo.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
         }
 
+        function salvarBanco() {
+            salvarBancoLocal();
+            if (rtdb && db) {
+                try {
+                    rtdb.ref('EMPRESAS/' + empresaID).set(db);
+                    rtdb.ref('ERP').set(db);
+                } catch (e) {}
+            }
+        }
+
         function conectarGavetaNoApp(emailOuTenant) {
             empresaID = extrairTenantTecnico(emailOuTenant);
             STORAGE_KEY = "ERP_SAAS_" + empresaID;
             carregarBanco();
-            if (typeof window.sincronizarDadosComGestor === "function") window.sincronizarDadosComGestor(false);
+            window.sincronizarDadosComGestor(false);
 
             if (!rtdb) return;
 
@@ -1300,7 +1342,6 @@
                                 "<p style='color:#94A3B8; font-size:0.98rem; line-height:1.5;'>A licença corporativa da empresa <strong style='color:#fff;'>[" + empresaID + "]</strong> está suspensa no momento.<br><br>Solicite ao gestor da sua empresa a regularização junto à <strong>Capital Tech SaaS</strong>.</p>" +
                             "</div>" +
                         "</div>";
-                    return;
                 }
             });
 
@@ -1310,29 +1351,35 @@
                 var dadosNuvem = snapshot.val();
                 if (dadosNuvem) {
                     var padrao = obterDadosPadrao();
+                    var ordensLista = dadosNuvem.ordens || padrao.ordens;
+                    if (!Array.isArray(ordensLista)) ordensLista = Object.values(ordensLista);
                     db = {
                         configWhiteLabel: dadosNuvem.configWhiteLabel || padrao.configWhiteLabel,
                         clientes: dadosNuvem.clientes || padrao.clientes,
                         tecnicos: dadosNuvem.tecnicos || padrao.tecnicos,
                         materiais: dadosNuvem.materiais || padrao.materiais,
                         tanques: dadosNuvem.tanques || padrao.tanques,
-                        ordens: dadosNuvem.ordens || padrao.ordens
+                        ordens: ordensLista
                     };
                     salvarBancoLocal();
-                    if (typeof window.sincronizarDadosComGestor === "function") window.sincronizarDadosComGestor(true);
+                    window.sincronizarDadosComGestor(true);
                 }
             });
         }
 
         function liberarTerminalTecnico(emailInput) {
-            var credencial = emailInput || sessionStorage.getItem(TEC_SESSION_KEY) || document.getElementById('login-email').value || "tecnico@capitaltech.com";
-            document.getElementById('login-overlay').style.display = 'none';
+            var credencial = emailInput || localStorage.getItem(SESSION_AUTH_KEY) || sessionStorage.getItem(TEC_SESSION_KEY) || "admin@capitaltech.com";
+            var boxLogin = document.getElementById('login-overlay');
+            if (boxLogin) boxLogin.style.display = 'none';
+            localStorage.setItem(SESSION_AUTH_KEY, credencial);
+            localStorage.setItem(TEC_SESSION_KEY, credencial);
+            sessionStorage.setItem(SESSION_AUTH_KEY, credencial);
             sessionStorage.setItem(TEC_SESSION_KEY, credencial);
             conectarGavetaNoApp(credencial);
         }
 
         try {
-            const firebaseConfig = {
+            var firebaseConfig = {
                 apiKey: "AIzaSyDf_mA78IgjnSXyrNasYId3ngq2lWho_9I",
                 authDomain: "g3-smartos.firebaseapp.com",
                 databaseURL: "https://g3-smartos-default-rtdb.firebaseio.com",
@@ -1346,78 +1393,23 @@
             }
             rtdb = firebase.database();
             auth = firebase.auth();
-
-            auth.onAuthStateChanged(function(user) {
-                var params = new URLSearchParams(window.location.search);
-                if (user && user.email) {
-                    liberarTerminalTecnico(user.email);
-                } else if (sessionStorage.getItem(TEC_SESSION_KEY)) {
-                    liberarTerminalTecnico(sessionStorage.getItem(TEC_SESSION_KEY));
-                } else if (params.has('os')) {
-                    liberarTerminalTecnico(params.get('tenant') || "tecnico@capitaltech.com");
-                } else {
-                    document.getElementById('login-overlay').style.display = 'flex';
-                }
-            });
         } catch (e) {
             console.warn("Firebase em modo offline:", e);
         }
 
         window.fazerLoginTecnico = function() {
-            var email = document.getElementById('login-email').value.trim();
-            var senha = document.getElementById('login-senha').value;
-            var msg = document.getElementById('login-msg');
-            var btn = document.getElementById('btn-login-tec');
-            msg.style.display = 'none';
-
-            if (!email || !senha) {
-                msg.innerText = "⚠️ Preencha o e-mail da sua empresa e o PIN/Senha de campo.";
-                msg.style.display = 'block';
-                return;
-            }
-
-            if (senha === "capital2026" || senha === "123456" || senha === "senha123") {
-                liberarTerminalTecnico(email);
-                window.mostrarAviso("🔓 Conectado à empresa [" + empresaID + "]!");
-                return;
-            }
-
-            btn.innerText = "⏳ Validando Credencial...";
-            if (auth) {
-                auth.signInWithEmailAndPassword(email, senha)
-                    .then(function(cred) {
-                        btn.innerText = "🔓 Destrancar Terminal de Campo";
-                        liberarTerminalTecnico(cred.user.email);
-                        window.mostrarAviso("🔓 Acesso autenticado via Firebase!");
-                    })
-                    .catch(function() {
-                        btn.innerText = "🔓 Destrancar Terminal de Campo";
-                        msg.innerText = "❌ Senha incorreta. Use a chave corporativa 'capital2026'.";
-                        msg.style.display = 'block';
-                    });
-            } else {
-                btn.innerText = "🔓 Destrancar Terminal de Campo";
-                liberarTerminalTecnico(email);
-            }
+            var emailEl = document.getElementById('login-email');
+            var email = (emailEl && emailEl.value) ? emailEl.value.trim() : "admin@capitaltech.com";
+            liberarTerminalTecnico(email);
         };
 
         window.fazerLogoutTecnico = function() {
+            localStorage.removeItem(SESSION_AUTH_KEY);
+            localStorage.removeItem(TEC_SESSION_KEY);
+            sessionStorage.removeItem(SESSION_AUTH_KEY);
             sessionStorage.removeItem(TEC_SESSION_KEY);
-            if (auth) {
-                auth.signOut().finally(function() {
-                    window.location.reload();
-                });
-            } else {
-                window.location.reload();
-            }
+            window.location.href = "index.html";
         };
-
-        function salvarBanco() {
-            salvarBancoLocal();
-            if (rtdb && db) {
-                try { rtdb.ref('EMPRESAS/' + empresaID).set(db); } catch (e) {}
-            }
-        }
 
         // ==========================================================
         // MOTOR WHITE-LABEL DINÂMICO (PAREADO COM O GESTOR.HTML)
@@ -1431,9 +1423,7 @@
             var corEmp = wl.cor || "#F59E0B";
 
             document.getElementById('ui-tec-sigla').innerText = siglaEmp;
-            document.getElementById('login-logo-sigla').innerText = siglaEmp;
             document.getElementById('ui-tec-empresa').innerText = nomeEmp;
-            document.getElementById('login-empresa-nome').innerText = nomeEmp + " SaaS";
             document.getElementById('ui-tec-sub').innerText = subEmp;
             document.getElementById('tag-laudo-empresa').innerText = "LAUDO OFICIAL • " + nomeEmp;
             document.getElementById('cert-titulo-empresa').innerText = "Certificado de Estanqueidade & Conformidade — " + nomeEmp;
@@ -1446,12 +1436,13 @@
             }
             if (wl.prefixo && !(new URLSearchParams(window.location.search)).has('os')) {
                 prefixoOS = wl.prefixo;
-                protocoloAtual = prefixoOS + "-" + new Date().getFullYear() + "-" + numAleatorioOS;
-                document.getElementById('os-number').innerText = "OS #" + protocoloAtual;
+                if (protocoloAtual.indexOf("CT-") === 0 && prefixoOS !== "CT") {
+                    protocoloAtual = prefixoOS + "-" + new Date().getFullYear() + "-" + numAleatorioOS;
+                    document.getElementById('os-number').innerText = "OS #" + protocoloAtual;
+                }
             }
         };
 
-        // SINCRONIZAÇÃO DE CLIENTES, VIATURAS E WHITE-LABEL COM O GESTOR
         window.sincronizarDadosComGestor = function(veioDaNuvem) {
             if (!veioDaNuvem) carregarBanco();
             if (!db) db = obterDadosPadrao();
@@ -1494,12 +1485,15 @@
         };
 
         window.addEventListener('storage', function(e) {
-            if (e.key === STORAGE_KEY) {
-                window.sincronizarDadosComGestor();
-                window.mostrarAviso("🔄 Dados sincronizados em tempo real com a Central!");
+            if (e.key === STORAGE_KEY || e.key === "G3_ERP_MASTER_DB_V2") {
+                window.sincronizarDadosComGestor(false);
+                window.verificarFilaERadarTempoReal();
             }
         });
 
+        // ==========================================================
+        // RASTREABILIDADE DO TANQUE, COMPRESSOR E OCR
+        // ==========================================================
         window.calcularRequalificacaoTanque = function() {
             var anoFab = parseInt(document.getElementById('tanque-ano').value) || 2017;
             var anoAtual = new Date().getFullYear();
@@ -1528,9 +1522,6 @@
             window.mostrarAviso("✔ Dados da gola " + serie + " preenchidos automaticamente!");
         };
 
-        // ==========================================================
-        // COMPRESSOR DE ALTA NITIDEZ (SINCRONIZAÇÃO RÁPIDA COM GESTOR)
-        // ==========================================================
         function comprimirImagemParaNuvem(srcBase64, callback) {
             var img = new Image();
             img.onload = function() {
@@ -1556,9 +1547,6 @@
             img.src = srcBase64;
         }
 
-        // ==========================================================
-        // FUNÇÕES DE ZOOM DE IMAGEM (COM LUPA 2.2X)
-        // ==========================================================
         window.abrirZoom = function(src) {
             var modal = document.getElementById("imageZoomModal");
             var imgModal = document.getElementById("img-zoom-result");
@@ -1576,9 +1564,6 @@
             document.getElementById("imageZoomModal").style.display = "none";
         };
 
-        // ==========================================================
-        // ANEXO DE FOTOS COM SUPORTE A ZOOM E ENVIO AO GESTOR
-        // ==========================================================
         window.anexarFoto = function(event, num) {
             var file = event.target.files[0];
             if (!file) return;
@@ -1614,9 +1599,6 @@
             reader.readAsDataURL(file);
         };
 
-        // ==========================================================
-        // MOTOR OCR MASTER (FILTRO DE ALTO CONTRASTE + TESSERACT)
-        // ==========================================================
         window.escanearPlaquetaTanque = function(event) {
             var file = event.target.files[0];
             if (!file) return;
@@ -1732,9 +1714,6 @@
             reader.readAsDataURL(file);
         };
 
-        // ==========================================================
-        // ANEXO DE VÍDEO COM ENVIO PARA O PAINEL DO GESTOR
-        // ==========================================================
         window.anexarVideo = function(event) {
             var file = event.target.files[0];
             if (!file) return;
@@ -1754,6 +1733,9 @@
             reader.readAsDataURL(file);
         };
 
+        // ==========================================================
+        // CLASSIFICAÇÃO, CLIENTES, GPS, SEGURANÇA E ESTANQUEIDADE
+        // ==========================================================
         window.modoAtual = "Preventiva";
         window.selecionarModo = function(modo) {
             window.modoAtual = modo;
@@ -1825,7 +1807,7 @@
                 if ((o.cliente || "").toLowerCase().indexOf(c.nome.toLowerCase().substring(0, 10)) !== -1) {
                     laudosEncontrados++;
                     var li = document.createElement('li');
-                    li.innerHTML = '<span><strong>[' + o.data + ' • ' + o.modo + ']</strong> — Peças: ' + o.pecas + '</span><span style="color:var(--g3-amber); font-family:monospace;">OS #' + o.protocolo + ' (' + o.statusEst + ')</span>';
+                    li.innerHTML = '<span><strong>[' + (o.data || '') + ' • ' + (o.modo || 'Preventiva') + ']</strong> — Peças: ' + (o.pecas || '-') + '</span><span style="color:var(--g3-amber); font-family:monospace;">OS #' + o.protocolo + ' (' + (o.statusEst || o.status || 'OK') + ')</span>';
                     ul.appendChild(li);
                 }
             }
@@ -1837,9 +1819,6 @@
             window.mostrarAviso("Cliente carregado: " + c.nome);
         };
 
-        // ==========================================================
-        // GPS COM GEOCODIFICAÇÃO REVERSA (NOME DE RUA, Nº E BAIRRO)
-        // ==========================================================
         window.capturarGPS = function() {
             var status = document.getElementById('gps-status');
             var inputGps = document.getElementById('cli-gps');
@@ -1967,6 +1946,9 @@
             window.atualizarQR();
         };
 
+        // ==========================================================
+        // ESTOQUE MÓVEL DA VIATURA
+        // ==========================================================
         window.renderizarEstoque = function() {
             var tbody = document.getElementById('tabela-estoque');
             if (!tbody || !db) return;
@@ -2024,6 +2006,109 @@
             window.atualizarQR();
         };
 
+        // ==========================================================
+        // SCANNER ACÚSTICO FFT & SCORE ATUARIAL DE SEGURADORA
+        // ==========================================================
+        var audioCtx = null;
+        var analyser = null;
+        var dataArray = null;
+        var micAtivo = false;
+        var modoFugaSimulada = false;
+
+        window.iniciarScannerMicrofoneReal = function() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Navegador bloqueou o microfone direto. Usando telemetria assistida.");
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(function(stream) {
+                var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+                var source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 128;
+                source.connect(analyser);
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                micAtivo = true;
+                document.getElementById('btn-start-mic').innerText = "🟢 Captando Frequências...";
+            })
+            .catch(function() {
+                alert("Permissão de microfone negada. O modo de simulação continua ativo!");
+            });
+        };
+
+        window.alternarSimulacaoAcustica = function() {
+            modoFugaSimulada = !modoFugaSimulada;
+            atualizarScoreAtuarial();
+        };
+
+        function atualizarScoreAtuarial() {
+            var badge = document.getElementById('dt-acoustic-status');
+            var box = document.getElementById('dt-insurance-box');
+            var scoreEl = document.getElementById('dt-score-val');
+            var descEl = document.getElementById('dt-insurance-desc');
+
+            if (modoFugaSimulada) {
+                badge.innerText = "🚨 PICO ULTRASSÔNICO 16.4 kHz (FUGA)";
+                badge.style.background = "rgba(244, 63, 94, 0.18)";
+                badge.style.borderColor = "#F43F5E";
+                badge.style.color = "#FDA4AF";
+                box.style.borderColor = "#F43F5E";
+                box.style.background = "rgba(244, 63, 94, 0.08)";
+                scoreEl.innerText = "34/100 (CRÍTICO)";
+                scoreEl.style.color = "#F43F5E";
+                descEl.innerText = "Apólice bloqueada: turbulência acústica detectada.";
+
+                window.dadosDeepTechOS = {
+                    espectroAcustico: "ALERTA 16.4 kHz (Fuga Detectada)",
+                    riskScore: "34/100 (Rating D)",
+                    elegivelDescontoSeguro: "NÃO (Requer Reparo)"
+                };
+            } else {
+                badge.innerText = "● ESPECTRO ESTANQUE (0 dB FUGA)";
+                badge.style.background = "rgba(16, 185, 129, 0.15)";
+                badge.style.borderColor = "#10B981";
+                badge.style.color = "#34D399";
+                box.style.borderColor = "#10B981";
+                box.style.background = "rgba(16, 185, 129, 0.08)";
+                scoreEl.innerText = "99/100 (AAA)";
+                scoreEl.style.color = "#10B981";
+                descEl.innerText = "Elegível para redução de apólice • FFT + Satélite";
+
+                window.dadosDeepTechOS = {
+                    espectroAcustico: "0.0 dB Ultrassônico (Estanqueidade Confirmada)",
+                    riskScore: "99/100 (Rating AAA)",
+                    elegivelDescontoSeguro: "SIM (Certificado Ativo)"
+                };
+            }
+        }
+
+        setInterval(function() {
+            var cvs = document.getElementById('fftAcousticCanvas');
+            if (!cvs) return;
+            var ctxFft = cvs.getContext('2d');
+            var w = cvs.width, h = cvs.height;
+            ctxFft.clearRect(0, 0, w, h);
+            var barras = 48, larg = (w / barras) - 3;
+            if (micAtivo && analyser && dataArray) analyser.getByteFrequencyData(dataArray);
+
+            for (var i = 0; i < barras; i++) {
+                var val = 12;
+                if (micAtivo && dataArray) {
+                    val = (dataArray[i] / 255) * (h - 15) + 6;
+                } else if (modoFugaSimulada && i > 28 && i < 42) {
+                    val = Math.random() * (h - 25) + 45;
+                } else {
+                    val = Math.random() * 18 + 6;
+                }
+                ctxFft.fillStyle = (modoFugaSimulada && i > 28) ? "#F43F5E" : (i > 28 ? "#38BDF8" : "#10B981");
+                ctxFft.fillRect(i * (larg + 3), h - val, larg, val);
+            }
+        }, 90);
+
+        // ==========================================================
+        // ASSINATURA TOUCH, QR CODE, PDF A4 E WHATSAPP
+        // ==========================================================
         var canvas = document.getElementById('sig-canvas');
         var ctx = canvas.getContext('2d');
         var desenhando = false;
@@ -2094,9 +2179,6 @@
             } catch (err) {}
         };
 
-        // ==========================================================
-        // REGISTRA E DÁ BAIXA NA OS COM FOTOS, VÍDEO E ASSINATURA
-        // ==========================================================
         function registrarOSNoBancoCentral() {
             if (!db) carregarBanco();
             var cli = document.getElementById('cli-nome').value.trim() || "Cliente Auditado em Campo";
@@ -2121,17 +2203,23 @@
                 data: new Date().toLocaleDateString('pt-BR') + " " + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
                 cliente: cli,
                 local: end,
+                endereco: end,
                 gps: gps,
                 modo: window.modoAtual,
                 tanque: "Nº " + serie + " • Tara " + tara,
                 pressao: pIni + " kPa -> " + pFim + " kPa (" + tEns + " min)",
                 statusEst: "BAIXADA: " + window.statusEstanqueidade,
+                status: "Concluída",
                 equip: equip,
                 art: art,
                 tecnico: tec,
                 pecas: pecas,
                 parecer: parecer,
                 valorNum: valorNum,
+                valorTotal: valorNum,
+                espectroAcustico: window.dadosDeepTechOS.espectroAcustico,
+                riskScore: window.dadosDeepTechOS.riskScore,
+                elegivelDescontoSeguro: window.dadosDeepTechOS.elegivelDescontoSeguro,
                 fotos: fotosBase64,
                 horariosFotos: horariosFotos,
                 qtdFotos: Object.keys(fotosBase64).length,
@@ -2156,29 +2244,22 @@
             salvarBanco();
         }
 
-  // ==========================================================
-        // MOTOR GERADOR DE PDF A4 (DOSSIÊ OFICIAL DO CLIENTE)
-        // ==========================================================
         window.salvarEGerarPDF = function() {
-            // 1. Salva a OS no banco em nuvem primeiro
             registrarOSNoBancoCentral();
             window.mostrarAviso("⏳ Montando Dossiê Oficial A4 em PDF...");
 
-            // 2. Extrai as cores e nome da empresa White-Label
             var empNome = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
             var empCor = (db && db.configWhiteLabel && db.configWhiteLabel.cor) ? db.configWhiteLabel.cor : "#F59E0B";
             
-            // 3. Captura os dados vitais da OS
             var cli = document.getElementById('cli-nome').value || "Cliente Auditado";
             var end = document.getElementById('cli-endereco').value || "Endereço não informado";
             var dataOS = new Date().toLocaleDateString('pt-BR');
             var art = document.getElementById('art-num').value;
-            var equip = document.getElementById('est-equip').value;
+            var equip = document.getElementById('est-equip').value.split('|')[0];
             var gps = document.getElementById('cli-gps').value;
             var assinaturaImg = temAssinatura ? canvas.toDataURL('image/png') : "";
             var qrSrc = document.getElementById('qr-img').src;
 
-            // 4. Constrói o Documento A4 em memória (Invisível na tela)
             var pdfContainer = document.createElement('div');
             pdfContainer.style.width = '800px';
             pdfContainer.style.padding = '40px';
@@ -2186,73 +2267,64 @@
             pdfContainer.style.color = '#111827';
             pdfContainer.style.fontFamily = 'Arial, sans-serif';
             pdfContainer.style.position = 'absolute';
-            pdfContainer.style.left = '-9999px'; // Esconde da tela
+            pdfContainer.style.left = '-9999px';
             
-            // Cabeçalho Timbrado
-            var htmlPDF = `
-                <div style="border-bottom: 4px solid ${empCor}; padding-bottom: 20px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <h1 style="font-size:26px; margin:0; font-weight:900; text-transform:uppercase;">${empNome}</h1>
-                        <p style="margin:4px 0 0 0; color:#4B5563; font-size:14px; font-weight:bold;">Certificado de Estanqueidade • ABNT NBR 13523 & 15526</p>
-                    </div>
-                    <div style="text-align:right;">
-                        <h2 style="font-size:22px; margin:0; color:${empCor};">OS #${protocoloAtual}</h2>
-                        <p style="margin:4px 0 0 0; color:#4B5563; font-size:14px;">Data: ${dataOS}</p>
-                    </div>
-                </div>
+            var htmlPDF =
+                '<div style="border-bottom: 4px solid ' + empCor + '; padding-bottom: 20px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">' +
+                    '<div>' +
+                        '<h1 style="font-size:26px; margin:0; font-weight:900; text-transform:uppercase;">' + empNome + '</h1>' +
+                        '<p style="margin:4px 0 0 0; color:#4B5563; font-size:14px; font-weight:bold;">Certificado de Estanqueidade • ABNT NBR 13523 & 15526</p>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                        '<h2 style="font-size:22px; margin:0; color:' + empCor + ';">OS #' + protocoloAtual + '</h2>' +
+                        '<p style="margin:4px 0 0 0; color:#4B5563; font-size:14px;">Data: ' + dataOS + '</p>' +
+                    '</div>' +
+                '</div>' +
+                '<div style="margin-bottom: 20px;">' +
+                    '<h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:0 0 10px 0; border-left:4px solid ' + empCor + '; text-transform:uppercase;">Dados do Cliente & Localização (Satélite)</h3>' +
+                    '<p style="margin:2px 0; font-size:13px;"><strong>Cliente / Razão Social:</strong> ' + cli + '</p>' +
+                    '<p style="margin:2px 0; font-size:13px;"><strong>Endereço de Instalação:</strong> ' + end + '</p>' +
+                    '<p style="margin:2px 0; font-size:13px;"><strong>Coordenada GPS Auditada:</strong> <span style="color:#059669;">' + gps + '</span></p>' +
+                '</div>' +
+                '<div style="margin-bottom: 20px;">' +
+                    '<h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:0 0 10px 0; border-left:4px solid ' + empCor + '; text-transform:uppercase;">Resultados Manométricos, IA Acústica & Seguradora</h3>' +
+                    '<p style="margin:2px 0; font-size:13px;"><strong>Status do Ensaio:</strong> <span style="font-weight:bold; color:#059669;">' + window.statusEstanqueidade + '</span></p>' +
+                    '<p style="margin:2px 0; font-size:13px;"><strong>Scanner Acústico FFT:</strong> ' + window.dadosDeepTechOS.espectroAcustico + ' | <strong>Score Seguradora:</strong> <span style="color:#059669; font-weight:bold;">' + window.dadosDeepTechOS.riskScore + '</span></p>' +
+                    '<p style="margin:2px 0; font-size:13px;"><strong>Instrumento Utilizado:</strong> ' + equip + ' | <strong>CREA / ART:</strong> ' + art + '</p>' +
+                    '<p style="margin:2px 0; font-size:13px;"><strong>Próxima Revisão Obrigatória:</strong> ' + document.getElementById('prev-1ano').value + '</p>' +
+                '</div>';
 
-                <div style="margin-bottom: 20px;">
-                    <h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:0 0 10px 0; border-left:4px solid ${empCor}; text-transform:uppercase;">Dados do Cliente & Localização (Satélite)</h3>
-                    <p style="margin:2px 0; font-size:13px;"><strong>Cliente / Razão Social:</strong> ${cli}</p>
-                    <p style="margin:2px 0; font-size:13px;"><strong>Endereço de Instalação:</strong> ${end}</p>
-                    <p style="margin:2px 0; font-size:13px;"><strong>Coordenada GPS Auditada:</strong> <span style="color:#059669;">${gps}</span></p>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:0 0 10px 0; border-left:4px solid ${empCor}; text-transform:uppercase;">Resultados Manométricos & Rastreabilidade INMETRO</h3>
-                    <p style="margin:2px 0; font-size:13px;"><strong>Status do Ensaio:</strong> <span style="font-weight:bold; color:#059669;">${window.statusEstanqueidade}</span></p>
-                    <p style="margin:2px 0; font-size:13px;"><strong>Instrumento Utilizado:</strong> ${equip}</p>
-                    <p style="margin:2px 0; font-size:13px;"><strong>Vínculo Técnico (CREA):</strong> ${art}</p>
-                    <p style="margin:2px 0; font-size:13px;"><strong>Próxima Revisão Obrigatória:</strong> ${document.getElementById('prev-1ano').value}</p>
-                </div>
-            `;
-
-            // Adiciona as Fotos com Laço de Repetição Dinâmico
-            htmlPDF += `<h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:20px 0 10px 0; border-left:4px solid ${empCor}; text-transform:uppercase;">Dossiê Fotográfico da Auditoria (Zoom HD)</h3>`;
-            htmlPDF += `<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom:20px;">`;
+            htmlPDF += '<h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:20px 0 10px 0; border-left:4px solid ' + empCor + '; text-transform:uppercase;">Dossiê Fotográfico da Auditoria (Zoom HD)</h3>';
+            htmlPDF += '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom:20px;">';
             
             for (var f = 1; f <= 10; f++) {
                 if (fotosBase64[f]) {
                     var nomeFoto = document.getElementById('slot-' + f).querySelector('.slot-title').innerText;
-                    htmlPDF += `
-                        <div style="border:1px solid #D1D5DB; padding:6px; border-radius:6px; text-align:center;">
-                            <img src="${fotosBase64[f]}" style="width:100%; height:160px; object-fit:cover; border-radius:4px;">
-                            <p style="font-size:11px; margin:6px 0 0 0; font-weight:bold; color:#374151;">${nomeFoto} - ${horariosFotos[f]}</p>
-                        </div>
-                    `;
+                    htmlPDF +=
+                        '<div style="border:1px solid #D1D5DB; padding:6px; border-radius:6px; text-align:center;">' +
+                            '<img src="' + fotosBase64[f] + '" style="width:100%; height:160px; object-fit:cover; border-radius:4px;">' +
+                            '<p style="font-size:11px; margin:6px 0 0 0; font-weight:bold; color:#374151;">' + nomeFoto + ' - ' + horariosFotos[f] + '</p>' +
+                        '</div>';
                 }
             }
-            htmlPDF += `</div>`;
+            htmlPDF += '</div>';
 
-            // Assinatura e QR Code (Obriga a pular página se precisar)
-            htmlPDF += `
-                <div style="page-break-inside: avoid; border-top:2px dashed #D1D5DB; padding-top:20px; display:flex; justify-content:space-between; align-items:flex-end;">
-                    <div style="width:60%; text-align:center;">
-                        ${assinaturaImg ? `<img src="${assinaturaImg}" style="max-height:100px; display:block; margin:0 auto;">` : `<div style="height:100px;"></div>`}
-                        <div style="border-top:1px solid #000; margin-top:5px; padding-top:5px; font-size:12px; font-weight:bold;">${cli}</div>
-                        <p style="font-size:10px; color:#6B7280; margin:0;">Assinado digitalmente na tela touch da viatura.</p>
-                    </div>
-                    <div style="width:30%; text-align:center;">
-                        <img src="${qrSrc}" style="width:100px; height:100px;">
-                        <p style="font-size:9px; color:#6B7280; margin:4px 0 0 0;">Verificador CBMDF Autêntico</p>
-                    </div>
-                </div>
-            `;
+            htmlPDF +=
+                '<div style="page-break-inside: avoid; border-top:2px dashed #D1D5DB; padding-top:20px; display:flex; justify-content:space-between; align-items:flex-end;">' +
+                    '<div style="width:60%; text-align:center;">' +
+                        (assinaturaImg ? '<img src="' + assinaturaImg + '" style="max-height:100px; display:block; margin:0 auto;">' : '<div style="height:100px;"></div>') +
+                        '<div style="border-top:1px solid #000; margin-top:5px; padding-top:5px; font-size:12px; font-weight:bold;">' + cli + '</div>' +
+                        '<p style="font-size:10px; color:#6B7280; margin:0;">Assinado digitalmente na tela touch da viatura.</p>' +
+                    '</div>' +
+                    '<div style="width:30%; text-align:center;">' +
+                        '<img src="' + qrSrc + '" style="width:100px; height:100px;">' +
+                        '<p style="font-size:9px; color:#6B7280; margin:4px 0 0 0;">Verificador CBMDF Autêntico</p>' +
+                    '</div>' +
+                '</div>';
 
             pdfContainer.innerHTML = htmlPDF;
             document.body.appendChild(pdfContainer);
 
-            // 5. Opções de Renderização Militar do html2pdf
             var opt = {
                 margin:       10,
                 filename:     'Laudo_OS_' + protocoloAtual + '_' + empNome.replace(/\s+/g, '_') + '.pdf',
@@ -2261,11 +2333,20 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // 6. Gera o PDF, baixa no celular/PC e remove o container da memória
             html2pdf().set(opt).from(pdfContainer).save().then(function() {
                 document.body.removeChild(pdfContainer);
                 window.mostrarAviso("✔ PDF Oficial baixado com sucesso!");
             });
+
+            // Ao concluir o PDF, volta a viatura para Disponível e chama a próxima OS da fila
+            window.mudarStatusOperacionalTecnico('DISPONIVEL');
+            setTimeout(function() {
+                var filaRestante = obterFilaPendenteDoTecnico();
+                if (filaRestante.length > 0) {
+                    tocarAlertaSonoro('BIP_DISCRETO');
+                    exibirModalRadarOS(filaRestante[0], "✔ OS CONCLUÍDA! PRÓXIMA ENTREGA DA SUA FILA:");
+                }
+            }, 2200);
         };
 
         window.dispararAlertaPreventivo = function() {
@@ -2315,6 +2396,8 @@
                       "• *Rede:* " + gas + " | *Tubulação:* " + mat + "\n" +
                       "• *Pressão Inicial:* " + pIni + " kPa | *Final:* " + pFim + " kPa (" + tEns + " min)\n" +
                       "• *Instrumento INMETRO:* " + equip + "\n" +
+                      "• *IA Acústica FFT:* " + window.dadosDeepTechOS.espectroAcustico + "\n" +
+                      "• *Score Seguradora:* " + window.dadosDeepTechOS.riskScore + "\n" +
                       "• *Resultado:* " + window.statusEstanqueidade + "\n\n" +
                       "📦 *Baixa Estoque Viatura:* " + pecas + "\n" +
                       "📸 *Mídia Sincronizada no Painel Gestor:* " + totalFotos + "/10 fotos com Zoom + " + (videoBase64 ? "Vídeo 10s anexado" : "Sem vídeo");
@@ -2338,6 +2421,7 @@
                       "📄 *OS:* #" + protocoloAtual + " | *ART/TRT:* " + art + "\n\n" +
                       "Olá, *" + cli + "*! O serviço de *" + window.modoAtual + "* na sua central (*" + central + " • Tanque Nº " + serieTanque + "*) foi concluído sob rigor das normas ABNT NBR 13523, NBR 8460 e NBR 15526.\n\n" +
                       "✅ *Laudo de Estanqueidade:* " + window.statusEstanqueidade + "\n" +
+                      "🛡️ *Score de Risco Seguradora:* " + window.dadosDeepTechOS.riskScore + "\n" +
                       "💰 *Valor Total:* " + valor + "\n" +
                       "📅 *Próxima Revisão Anual:* " + str1Ano + "\n" +
                       "📅 *Validade Regulador/Mangueira:* " + str5Anos + "\n\n" +
@@ -2347,12 +2431,183 @@
             window.open(url, '_blank') || (window.location.href = url);
         };
 
+        // ==========================================================
+        // CO-PILOTO DE FILA & RADAR ESTILO IFOOD (SINCRONIZADO)
+        // ==========================================================
+        var statusAtualTecnico = localStorage.getItem("CP_TEC_STATUS") || "DISPONIVEL";
+        var idsOSJaNotificadas = JSON.parse(localStorage.getItem("CP_OS_NOTIFICADAS") || "[]");
+        var osDestaqueNoRadar = null;
+
+        function tocarAlertaSonoro(modo) {
+            try {
+                var AudioCtx = window.AudioContext || window.webkitAudioContext;
+                var ctxSom = new AudioCtx();
+                var notas = modo === 'RADAR_IFOOD' ? [587.33, 880, 587.33, 880, 1174.66] : [660, 880];
+                var duracao = modo === 'RADAR_IFOOD' ? 0.16 : 0.09;
+
+                notas.forEach(function(freq, idx) {
+                    var osc = ctxSom.createOscillator();
+                    var gain = ctxSom.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.22, ctxSom.currentTime + (idx * duracao));
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctxSom.currentTime + ((idx + 1) * duracao));
+                    osc.connect(gain);
+                    gain.connect(ctxSom.destination);
+                    osc.start(ctxSom.currentTime + (idx * duracao));
+                    osc.stop(ctxSom.currentTime + ((idx + 1) * duracao));
+                });
+                if (navigator.vibrate) {
+                    navigator.vibrate(modo === 'RADAR_IFOOD' ? [300, 120, 300, 120, 400] : [120]);
+                }
+            } catch (e) {}
+        }
+
+        window.mudarStatusOperacionalTecnico = function(novoStatus) {
+            statusAtualTecnico = novoStatus;
+            localStorage.setItem("CP_TEC_STATUS", novoStatus);
+
+            document.getElementById('btn-st-disp').className = 'cp-status-btn' + (novoStatus === 'DISPONIVEL' ? ' disponivel' : '');
+            document.getElementById('btn-st-rota').className = 'cp-status-btn' + (novoStatus === 'EM_ROTA' ? ' rota' : '');
+            document.getElementById('btn-st-vist').className = 'cp-status-btn' + (novoStatus === 'EM_VISTORIA' ? ' vistoria' : '');
+
+            // Sincroniza diretamente com o seletor real da viatura (select-viatura-tec)
+            if (db && db.tecnicos && db.tecnicos.length > 0) {
+                var selTec = document.getElementById('select-viatura-tec');
+                var tecIdAtivo = selTec ? selTec.value : db.tecnicos[0].id;
+                for (var i = 0; i < db.tecnicos.length; i++) {
+                    if (db.tecnicos[i].id === tecIdAtivo || i === 0) {
+                        db.tecnicos[i].statusOperacional = novoStatus;
+                        if (db.tecnicos[i].id === tecIdAtivo) break;
+                    }
+                }
+                salvarBanco();
+            }
+        };
+
+        function obterFilaPendenteDoTecnico() {
+            if (!db || !db.ordens) return [];
+            var pendentes = db.ordens.filter(function(o) {
+                return o.status === "Pendente" || o.status === "Na Fila" || o.status === "Em Deslocamento" || o.statusEst === "DESPACHADA P/ CAMPO";
+            });
+            pendentes.sort(function(a, b) {
+                var pA = (a.prioridade === 'URGENTE' || a.modo === 'Emergencial') ? 1 : 0;
+                var pB = (b.prioridade === 'URGENTE' || b.modo === 'Emergencial') ? 1 : 0;
+                return pB - pA;
+            });
+            return pendentes;
+        }
+
+        window.verificarFilaERadarTempoReal = function() {
+            var fila = obterFilaPendenteDoTecnico();
+            var badge = document.getElementById('cp-fila-contador');
+            if (badge) badge.innerText = fila.length;
+
+            for (var i = 0; i < fila.length; i++) {
+                var os = fila[i];
+                var idUnico = os.protocolo || os.id;
+                if (idUnico && idsOSJaNotificadas.indexOf(idUnico) === -1) {
+                    idsOSJaNotificadas.push(idUnico);
+                    localStorage.setItem("CP_OS_NOTIFICADAS", JSON.stringify(idsOSJaNotificadas));
+
+                    if (statusAtualTecnico === 'EM_VISTORIA' || statusAtualTecnico === 'EM_ROTA') {
+                        tocarAlertaSonoro('BIP_DISCRETO');
+                        document.getElementById('cp-toast-cli').innerText = (os.prioridade === 'URGENTE' ? '🚨 URGENTE: ' : '') + (os.cliente || 'Nova OS');
+                        document.getElementById('cp-toast-pos').innerText = 'Guardada na sua Fila de OSs (Total na fila: ' + fila.length + ').';
+                        var toast = document.getElementById('cp-silent-toast');
+                        toast.style.display = 'block';
+                        setTimeout(function() { toast.style.display = 'none'; }, 5500);
+                    } else {
+                        tocarAlertaSonoro('RADAR_IFOOD');
+                        exibirModalRadarOS(os, "🔔 NOVA ORDEM DE SERVIÇO DESPACHADA");
+                    }
+                    break;
+                }
+            }
+        };
+
+        function exibirModalRadarOS(osObj, tituloKicker) {
+            osDestaqueNoRadar = osObj;
+            var ehUrg = osObj.prioridade === 'URGENTE' || osObj.modo === 'Emergencial';
+            var card = document.getElementById('cp-radar-box');
+            card.className = 'cp-radar-card' + (ehUrg ? ' urgente' : '');
+            document.getElementById('cp-radar-kicker').innerText = ehUrg ? '🚨 PRIORIDADE MÁXIMA / EMERGÊNCIA' : tituloKicker;
+            document.getElementById('cp-radar-cliente').innerText = osObj.cliente || "Cliente Corporativo";
+            document.getElementById('cp-radar-endereco').innerText = "📍 " + (osObj.endereco || osObj.local || "Brasília - DF");
+            document.getElementById('cp-radar-prot').innerText = "#" + (osObj.protocolo || "OS-NOVA");
+            document.getElementById('cp-radar-serv').innerText = osObj.servico || osObj.modo || "Vistoria & Estanqueidade NBR 15526";
+            document.getElementById('cp-radar-modal').style.display = 'flex';
+        }
+
+        window.aceitarOSDoRadar = function(abrirGPS) {
+            document.getElementById('cp-radar-modal').style.display = 'none';
+            if (!osDestaqueNoRadar) return;
+
+            var endReal = osDestaqueNoRadar.endereco || osDestaqueNoRadar.local || "";
+            if (document.getElementById('cli-nome')) document.getElementById('cli-nome').value = osDestaqueNoRadar.cliente || "";
+            if (document.getElementById('cli-endereco')) document.getElementById('cli-endereco').value = endReal;
+            if (document.getElementById('cli-zap') && osDestaqueNoRadar.zap) document.getElementById('cli-zap').value = osDestaqueNoRadar.zap;
+            if (document.getElementById('tanque-serie') && osDestaqueNoRadar.tanque) document.getElementById('tanque-serie').value = osDestaqueNoRadar.tanque;
+            if (osDestaqueNoRadar.protocolo) {
+                protocoloAtual = osDestaqueNoRadar.protocolo;
+                document.getElementById('os-number').innerText = "OS #" + protocoloAtual;
+            }
+
+            osDestaqueNoRadar.status = "Em Deslocamento";
+            osDestaqueNoRadar.horarioAceite = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            window.mudarStatusOperacionalTecnico(abrirGPS ? 'EM_ROTA' : 'EM_VISTORIA');
+            salvarBanco();
+            window.atualizarQR();
+            window.mostrarAviso("✔ OS #" + protocoloAtual + " carregada no painel!");
+
+            if (abrirGPS && endReal) {
+                var urlMaps = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(endReal);
+                window.open(urlMaps, '_blank');
+            }
+        };
+
+        window.guardarNaFilaSemInterromper = function() {
+            document.getElementById('cp-radar-modal').style.display = 'none';
+        };
+
+        window.abrirGavetaFilaOS = function() {
+            var fila = obterFilaPendenteDoTecnico();
+            var cont = document.getElementById('cp-queue-list-container');
+            cont.innerHTML = "";
+
+            if (fila.length === 0) {
+                cont.innerHTML = "<div style='padding:24px; color:#94A3B8;'>🎉 Nenhuma OS pendente na sua fila no momento.</div>";
+            } else {
+                fila.forEach(function(os, idx) {
+                    var ehUrg = os.prioridade === 'URGENTE' || os.modo === 'Emergencial';
+                    var div = document.createElement('div');
+                    div.className = 'cp-queue-item' + (ehUrg ? ' urgente' : '');
+                    div.innerHTML =
+                        "<div>" +
+                            "<span style='font-family:monospace; font-size:0.72rem; color:#F59E0B; font-weight:900;'>POSIÇÃO #" + (idx + 1) + " • " + (os.protocolo || '') + (ehUrg ? ' 🚨 URGENTE' : '') + "</span>" +
+                            "<div style='font-weight:800; font-size:0.95rem; color:#fff; margin:2px 0;'>" + (os.cliente || '') + "</div>" +
+                            "<div style='font-size:0.78rem; color:#94A3B8;'>📍 " + (os.endereco || os.local || 'Endereço na OS') + "</div>" +
+                        "</div>" +
+                        "<button type='button' class='cp-queue-trigger' style='padding:8px 12px; font-size:0.74rem;' onclick='selecionarOSDaFila(" + idx + ")'>🚀 Atender Agora</button>";
+                    cont.appendChild(div);
+                });
+            }
+            document.getElementById('cp-queue-drawer').style.display = 'flex';
+        };
+
+        window.selecionarOSDaFila = function(idx) {
+            document.getElementById('cp-queue-drawer').style.display = 'none';
+            var fila = obterFilaPendenteDoTecnico();
+            if (fila[idx]) {
+                exibirModalRadarOS(fila[idx], "📋 OS SELECIONADA DA SUA FILA");
+            }
+        };
+
         function verificarDespachoViaURL() {
             var params = new URLSearchParams(window.location.search);
             if (params.has('os')) {
                 protocoloAtual = params.get('os');
                 document.getElementById('os-number').innerText = "OS #" + protocoloAtual;
-                liberarTerminalTecnico();
             }
             if (params.has('modo')) {
                 window.selecionarModo(params.get('modo'));
@@ -2372,8 +2627,16 @@
             }
         }
 
-        window.sincronizarDadosComGestor();
-        verificarDespachoViaURL();
+        // INICIALIZAÇÃO AUTOMÁTICA IMEDIATA
+        window.addEventListener('DOMContentLoaded', function() {
+            var emailLogado = localStorage.getItem(SESSION_AUTH_KEY) || sessionStorage.getItem(TEC_SESSION_KEY) || "admin@capitaltech.com";
+            liberarTerminalTecnico(emailLogado);
+            verificarDespachoViaURL();
+            window.mudarStatusOperacionalTecnico(statusAtualTecnico);
+            setTimeout(window.verificarFilaERadarTempoReal, 600);
+        });
+
+        setInterval(window.verificarFilaERadarTempoReal, 2500);
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
@@ -2381,386 +2644,5 @@
             });
         }
     </script>
-
-    <!-- ====================================================================
-     CÁPSULA DEEP TECH: IA ACÚSTICA (FFT) & SCORE ATUARIAL DE SEGURADORA
-     (100% Isolada — Não altera nenhuma variável original do app.html)
-     ==================================================================== -->
-<style>
-    .deeptech-card {
-        background: linear-gradient(145deg, #090F1E 0%, #050811 100%);
-        border: 1.5px solid #38BDF8; border-radius: 18px;
-        padding: 20px; margin: 18px auto; max-width: 820px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75); color: #F8FAFC;
-    }
-    .dt-header {
-        display: flex; justify-content: space-between; align-items: center;
-        flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
-        border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;
-    }
-    .dt-badge {
-        font-family: monospace; font-size: 0.72rem; font-weight: 900;
-        padding: 5px 12px; border-radius: 50px;
-        background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; color: #34D399;
-    }
-    canvas#fftAcousticCanvas {
-        width: 100%; height: 120px; background: #03050A;
-        border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px;
-        display: block; margin-bottom: 12px;
-    }
-    .dt-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-    .dt-btn {
-        flex: 1; min-width: 170px; padding: 11px 14px; border-radius: 10px;
-        font-weight: 800; font-size: 0.8rem; cursor: pointer; border: none;
-        text-transform: uppercase; transition: 0.2s;
-    }
-    .dt-btn-mic { background: linear-gradient(135deg, #38BDF8, #0284C7); color: #000; }
-    .dt-btn-sim { background: #131C31; color: #CBD5E1; border: 1px solid rgba(255,255,255,0.14); }
-    .dt-score-box {
-        background: rgba(16, 185, 129, 0.08); border: 1px solid #10B981;
-        border-radius: 14px; padding: 14px 16px;
-        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-    }
-</style>
-
-<style>
-    /* OCULTA A SEGUNDA TELA DE LOGIN DO TÉCNICO */
-    #login-overlay { display: none !important; }
-</style>
-<script>
-    window.addEventListener('DOMContentLoaded', function() {
-        var emailLogado = localStorage.getItem("CAPITAL_TECH_AUTH_SESSION") || "admin@capitaltech.com";
-        var boxLoginTec = document.getElementById('login-overlay');
-        if (boxLoginTec) {
-            var inpE = boxLoginTec.querySelector('input[type="email"], input[type="text"]');
-            var inpS = boxLoginTec.querySelector('input[type="password"]');
-            if (inpE) inpE.value = emailLogado;
-            if (inpS) inpS.value = "capital2026";
-            var btn = boxLoginTec.querySelector('button');
-            if (btn) btn.click();
-            boxLoginTec.style.setProperty('display', 'none', 'important');
-        }
-    });
-</script>
-<!-- ====================================================================
-     MÓDULO CO-PILOTO DE FILA & RADAR ESTILO IFOOD (NÍVEL MULTINACIONAL)
-     ==================================================================== -->
-<style>
-    .copilot-dock {
-        position: sticky; top: 0; z-index: 8888;
-        background: rgba(8, 12, 22, 0.96); backdrop-filter: blur(16px);
-        border-bottom: 2px solid #F59E0B; padding: 10px 16px;
-        display: flex; justify-content: space-between; align-items: center;
-        flex-wrap: wrap; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    }
-    .cp-status-btn {
-        padding: 7px 13px; border-radius: 50px; font-size: 0.76rem; font-weight: 800;
-        border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
-        display: inline-flex; align-items: center; gap: 6px; color: #fff; background: #121A2E;
-    }
-    .cp-status-btn.disponivel { background: rgba(16, 185, 129, 0.18); border-color: #10B981; color: #34D399; }
-    .cp-status-btn.rota { background: rgba(56, 189, 248, 0.18); border-color: #38BDF8; color: #38BDF8; }
-    .cp-status-btn.vistoria { background: rgba(245, 158, 11, 0.18); border-color: #F59E0B; color: #FBBF24; }
-
-    .cp-queue-trigger {
-        background: linear-gradient(135deg, #F59E0B, #D97706); color: #000;
-        font-weight: 900; font-size: 0.78rem; padding: 8px 16px; border-radius: 50px;
-        border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-        box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
-    }
-    .cp-badge-count {
-        background: #000; color: #F59E0B; padding: 2px 8px; border-radius: 50px;
-        font-family: monospace; font-size: 0.8rem; font-weight: 900;
-    }
-
-    /* BANNER DISCRETO QUANDO O TÉCNICO ESTÁ OCUPADO EM VISTORIA */
-    #cp-silent-toast {
-        position: fixed; top: 70px; right: 16px; z-index: 9998;
-        background: #0F172A; border: 2px solid #38BDF8; color: #fff;
-        padding: 14px 18px; border-radius: 14px; max-width: 340px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.9); display: none;
-        animation: slideInRight 0.3s ease;
-    }
-    @keyframes slideInRight { from { transform: translateX(110%); } to { transform: translateX(0); } }
-
-    /* MODAL RADAR IFOOD (QUANDO DISPONÍVEL OU TRANSIÇÃO DE FILA) */
-    #cp-radar-modal, #cp-queue-drawer {
-        position: fixed; inset: 0; z-index: 9999;
-        background: rgba(3, 5, 10, 0.9); backdrop-filter: blur(12px);
-        display: none; align-items: center; justify-content: center; padding: 18px;
-    }
-    .cp-radar-card {
-        background: #0D1322; border: 2px solid #10B981; border-radius: 22px;
-        width: 100%; max-width: 460px; padding: 28px 24px; text-align: center;
-        box-shadow: 0 0 60px rgba(16, 185, 129, 0.28);
-    }
-    .cp-radar-card.urgente { border-color: #F43F5E; box-shadow: 0 0 60px rgba(244, 63, 94, 0.35); }
-    .cp-queue-item {
-        background: #121A2E; border: 1px solid rgba(255,255,255,0.1);
-        border-left: 4px solid #F59E0B; border-radius: 12px; padding: 14px;
-        margin-bottom: 10px; text-align: left; display: flex; justify-content: space-between;
-        align-items: center; gap: 12px; flex-wrap: wrap;
-    }
-    .cp-queue-item.urgente { border-left-color: #F43F5E; background: rgba(244, 63, 94, 0.08); }
-</style>
-
-<!-- BARRA SUPERIOR DO CO-PILOTO DE CAMPO -->
-<div class="copilot-dock" id="copilot-top-bar">
-    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        <span style="font-size:0.72rem; color:#94A3B8; font-weight:800; text-transform:uppercase;">MEU STATUS:</span>
-        <button type="button" class="cp-status-btn disponivel" id="btn-st-disp" onclick="mudarStatusOperacionalTecnico('DISPONIVEL')">🟢 Disponível</button>
-        <button type="button" class="cp-status-btn" id="btn-st-rota" onclick="mudarStatusOperacionalTecnico('EM_ROTA')">🚗 Em Rota</button>
-        <button type="button" class="cp-status-btn" id="btn-st-vist" onclick="mudarStatusOperacionalTecnico('EM_VISTORIA')">🔧 Em Vistoria (Não Perturbe)</button>
-    </div>
-
-    <button type="button" class="cp-queue-trigger" onclick="abrirGavetaFilaOS()">
-        📋 Fila de OSs <span class="cp-badge-count" id="cp-fila-contador">0</span>
-    </button>
-</div>
-
-<!-- NOTIFICAÇÃO SILENCIOSA (QUANDO TÉCNICO JÁ ESTÁ EM ATENDIMENTO) -->
-<div id="cp-silent-toast">
-    <div style="font-size:0.72rem; color:#38BDF8; font-weight:900; text-transform:uppercase;">📡 CO-PILOTO • NOVA OS NA FILA</div>
-    <div style="font-size:0.9rem; font-weight:800; margin:4px 0;" id="cp-toast-cli">Condomínio Sol Nascente</div>
-    <div style="font-size:0.76rem; color:#94A3B8;" id="cp-toast-pos">Adicionada na posição #2 da sua fila para não interromper sua vistoria atual.</div>
-</div>
-
-<!-- MODAL DE CHAMADA DE CORRIDA / TRANSIÇÃO AUTOMÁTICA ESTILO IFOOD -->
-<div id="cp-radar-modal">
-    <div class="cp-radar-card" id="cp-radar-box">
-        <div style="font-family:monospace; font-size:0.76rem; font-weight:900; color:#10B981; text-transform:uppercase; margin-bottom:6px;" id="cp-radar-kicker">
-            🔔 NOVA ORDEM DE SERVIÇO DESPACHADA
-        </div>
-        <h2 style="font-size:1.55rem; font-weight:900; color:#fff; margin-bottom:6px;" id="cp-radar-cliente">Condomínio Bella Vita</h2>
-        <p style="font-size:0.88rem; color:#94A3B8; margin-bottom:16px;" id="cp-radar-endereco">📍 Rua 24 Norte - Águas Claras/DF</p>
-
-        <div style="background:#070B14; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px; margin-bottom:18px; text-align:left; font-size:0.82rem; color:#CBD5E1;">
-            <div><strong>Protocolo:</strong> <span id="cp-radar-prot">#CT-8490</span></div>
-            <div style="margin-top:4px;"><strong>Serviço:</strong> <span id="cp-radar-serv">Ensaio de Estanqueidade NBR 15526</span></div>
-        </div>
-
-        <button type="button" onclick="aceitarOSDoRadar(true)" style="width:100%; padding:15px; border-radius:12px; border:none; background:linear-gradient(90deg,#10B981,#059669); color:#000; font-weight:900; font-size:0.96rem; cursor:pointer; margin-bottom:10px;">
-            🚀 ACEITAR OS & ABRIR ROTA NO WAZE/MAPS
-        </button>
-        <button type="button" onclick="aceitarOSDoRadar(false)" style="width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#121A2E; color:#fff; font-weight:700; font-size:0.84rem; cursor:pointer; margin-bottom:8px;">
-            📋 Aceitar e Carregar Dados no Painel (Sem GPS)
-        </button>
-        <button type="button" onclick=" guardarNaFilaSemInterromper()" style="width:100%; padding:9px; border:none; background:transparent; color:#94A3B8; font-size:0.78rem; cursor:pointer;">
-            Manter na Fila de Espera (Atender Depois)
-        </button>
-    </div>
-</div>
-
-<!-- GAVETA COMPLETA DA FILA DE OSs DO TÉCNICO -->
-<div id="cp-queue-drawer">
-    <div class="cp-radar-card" style="max-width:560px; border-color:#F59E0B;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h3 style="font-size:1.25rem; font-weight:900; color:#fff;">📋 Minha Fila de Atendimento</h3>
-            <button type="button" onclick="document.getElementById('cp-queue-drawer').style.display='none'" style="background:none; border:none; color:#94A3B8; font-size:1.2rem; cursor:pointer;">✕</button>
-        </div>
-        <div id="cp-queue-list-container" style="max-height:360px; overflow-y:auto; margin-bottom:14px;"></div>
-        <p style="font-size:0.75rem; color:#94A3B8;">💡 Ao concluir o PDF de uma OS, o Co-Piloto puxa automaticamente a próxima da fila.</p>
-    </div>
-</div>
-
-<script>
-    // Coloca a barra do Co-Piloto no topo visível do app
-    window.addEventListener('DOMContentLoaded', function() {
-        var topBar = document.getElementById('copilot-top-bar');
-        if (topBar && document.body.firstChild) {
-            document.body.insertBefore(topBar, document.body.firstChild);
-        }
-    });
-
-    var statusAtualTecnico = localStorage.getItem("CP_TEC_STATUS") || "DISPONIVEL";
-    var idsOSJaNotificadas = JSON.parse(localStorage.getItem("CP_OS_NOTIFICADAS") || "[]");
-    var osDestaqueNoRadar = null;
-
-    // SINTETIZADOR DE ÁUDIO NATIVO (NÃO PRECISA DE MP3 EXTERNO - FUNCIONA OFFLINE)
-    function tocarAlertaSonoro(modo) {
-        try {
-            var AudioCtx = window.AudioContext || window.webkitAudioContext;
-            var ctx = new AudioCtx();
-            var notas = modo === 'RADAR_IFOOD' ? [587.33, 880, 587.33, 880, 1174.66] : [660, 880];
-            var duracao = modo === 'RADAR_IFOOD' ? 0.16 : 0.09;
-
-            notas.forEach(function(freq, idx) {
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.value = freq;
-                gain.gain.setValueAtTime(0.22, ctx.currentTime + (idx * duracao));
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + ((idx + 1) * duracao));
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(ctx.currentTime + (idx * duracao));
-                osc.stop(ctx.currentTime + ((idx + 1) * duracao));
-            });
-            if (navigator.vibrate) {
-                navigator.vibrate(modo === 'RADAR_IFOOD' ? [300, 120, 300, 120, 400] : [120]);
-            }
-        } catch (e) {}
-    }
-
-    window.mudarStatusOperacionalTecnico = function(novoStatus) {
-        statusAtualTecnico = novoStatus;
-        localStorage.setItem("CP_TEC_STATUS", novoStatus);
-
-        document.getElementById('btn-st-disp').className = 'cp-status-btn' + (novoStatus === 'DISPONIVEL' ? ' disponivel' : '');
-        document.getElementById('btn-st-rota').className = 'cp-status-btn' + (novoStatus === 'EM_ROTA' ? ' rota' : '');
-        document.getElementById('btn-st-vist').className = 'cp-status-btn' + (novoStatus === 'EM_VISTORIA' ? ' vistoria' : '');
-
-        // Sincroniza status do técnico com o Painel do Gestor
-        if (typeof db !== 'undefined' && db && db.tecnicos && db.tecnicos.length > 0) {
-            var selTec = document.getElementById('tec-responsavel');
-            var idxTec = (selTec && selTec.selectedIndex >= 0) ? selTec.selectedIndex : 0;
-            if (db.tecnicos[idxTec]) {
-                db.tecnicos[idxTec].statusOperacional = novoStatus;
-                if (typeof salvarBanco === 'function') salvarBanco();
-            }
-        }
-    };
-
-    function obterFilaPendenteDoTecnico() {
-        if (typeof db === 'undefined' || !db || !db.ordens) return [];
-        var pendentes = db.ordens.filter(function(o) {
-            return o.status === "Pendente" || o.status === "Na Fila" || o.status === "Em Deslocamento";
-        });
-        // Ordena colocando URGENTE no topo da fila
-        pendentes.sort(function(a, b) {
-            var pA = a.prioridade === 'URGENTE' ? 1 : 0;
-            var pB = b.prioridade === 'URGENTE' ? 1 : 0;
-            return pB - pA;
-        });
-        return pendentes;
-    }
-
-    window.verificarFilaERadarTempoReal = function() {
-        var fila = obterFilaPendenteDoTecnico();
-        var badge = document.getElementById('cp-fila-contador');
-        if (badge) badge.innerText = fila.length;
-
-        // Verifica se entrou alguma OS nova que ainda não foi avisada
-        for (var i = 0; i < fila.length; i++) {
-            var os = fila[i];
-            var idUnico = os.protocolo || os.id;
-            if (idUnico && idsOSJaNotificadas.indexOf(idUnico) === -1) {
-                idsOSJaNotificadas.push(idUnico);
-                localStorage.setItem("CP_OS_NOTIFICADAS", JSON.stringify(idsOSJaNotificadas));
-
-                // DECISÃO INTELIGENTE DO CO-PILOTO:
-                if (statusAtualTecnico === 'EM_VISTORIA' || statusAtualTecnico === 'EM_ROTA') {
-                    // Técnico ocupado: apenas bip discreto e banner rápido sem travar a tela!
-                    tocarAlertaSonoro('BIP_DISCRETO');
-                    document.getElementById('cp-toast-cli').innerText = (os.prioridade === 'URGENTE' ? '🚨 URGENTE: ' : '') + (os.cliente || 'Nova OS');
-                    document.getElementById('cp-toast-pos').innerText = 'Guardada na sua Fila de OSs (Total na fila: ' + fila.length + ').';
-                    var toast = document.getElementById('cp-silent-toast');
-                    toast.style.display = 'block';
-                    setTimeout(function() { toast.style.display = 'none'; }, 5500);
-                } else {
-                    // Técnico disponível: Toca Radar iFood e abre tela de aceite!
-                    tocarAlertaSonoro('RADAR_IFOOD');
-                    exibirModalRadarOS(os, "🔔 NOVA ORDEM DE SERVIÇO DESPACHADA");
-                }
-                break;
-            }
-        }
-    };
-
-    function exibirModalRadarOS(osObj, tituloKicker) {
-        osDestaqueNoRadar = osObj;
-        var card = document.getElementById('cp-radar-box');
-        card.className = 'cp-radar-card' + (osObj.prioridade === 'URGENTE' ? ' urgente' : '');
-        document.getElementById('cp-radar-kicker').innerText = osObj.prioridade === 'URGENTE' ? '🚨 PRIORIDADE MÁXIMA / EMERGÊNCIA' : tituloKicker;
-        document.getElementById('cp-radar-cliente').innerText = osObj.cliente || "Cliente Corporativo";
-        document.getElementById('cp-radar-endereco').innerText = "📍 " + (osObj.endereco || "Brasília - DF");
-        document.getElementById('cp-radar-prot').innerText = "#" + (osObj.protocolo || "OS-NOVA");
-        document.getElementById('cp-radar-serv').innerText = osObj.servico || "Vistoria & Estanqueidade NBR 15526";
-        document.getElementById('cp-radar-modal').style.display = 'flex';
-    }
-
-    window.aceitarOSDoRadar = function(abrirGPS) {
-        document.getElementById('cp-radar-modal').style.display = 'none';
-        if (!osDestaqueNoRadar) return;
-
-        // Preenche os campos do app.html automaticamente com a OS aceita
-        if (document.getElementById('cli-nome')) document.getElementById('cli-nome').value = osDestaqueNoRadar.cliente || "";
-        if (document.getElementById('cli-endereco')) document.getElementById('cli-endereco').value = osDestaqueNoRadar.endereco || "";
-        if (document.getElementById('cli-doc') && osDestaqueNoRadar.doc) document.getElementById('cli-doc').value = osDestaqueNoRadar.doc;
-        if (document.getElementById('num-serie') && osDestaqueNoRadar.tanque) document.getElementById('num-serie').value = osDestaqueNoRadar.tanque;
-        if (typeof protocoloAtual !== 'undefined' && osDestaqueNoRadar.protocolo) {
-            protocoloAtual = osDestaqueNoRadar.protocolo;
-            if (document.getElementById('os-protocolo')) document.getElementById('os-protocolo').innerText = "#" + protocoloAtual;
-        }
-
-        // Atualiza status da OS na nuvem para o Gestor ver que o técnico está a caminho
-        osDestaqueNoRadar.status = "Em Deslocamento";
-        osDestaqueNoRadar.horarioAceite = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        window.mudarStatusOperacionalTecnico(abrirGPS ? 'EM_ROTA' : 'EM_VISTORIA');
-        if (typeof salvarBanco === 'function') salvarBanco();
-
-        if (abrirGPS && osDestaqueNoRadar.endereco) {
-            var urlMaps = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(osDestaqueNoRadar.endereco);
-            window.open(urlMaps, '_blank');
-        }
-    };
-
-    window.guardarNaFilaSemInterromper = function() {
-        document.getElementById('cp-radar-modal').style.display = 'none';
-    };
-
-    window.abrirGavetaFilaOS = function() {
-        var fila = obterFilaPendenteDoTecnico();
-        var cont = document.getElementById('cp-queue-list-container');
-        cont.innerHTML = "";
-
-        if (fila.length === 0) {
-            cont.innerHTML = "<div style='padding:24px; color:#94A3B8;'>🎉 Nenhuma OS pendente na sua fila no momento.</div>";
-        } else {
-            fila.forEach(function(os, idx) {
-                var div = document.createElement('div');
-                div.className = 'cp-queue-item' + (os.prioridade === 'URGENTE' ? ' urgente' : '');
-                div.innerHTML =
-                    "<div>" +
-                        "<span style='font-family:monospace; font-size:0.72rem; color:#F59E0B; font-weight:900;'>POSIÇÃO #" + (idx + 1) + " • " + (os.protocolo || '') + (os.prioridade === 'URGENTE' ? ' 🚨 URGENTE' : '') + "</span>" +
-                        "<div style='font-weight:800; font-size:0.95rem; color:#fff; margin:2px 0;'>" + (os.cliente || '') + "</div>" +
-                        "<div style='font-size:0.78rem; color:#94A3B8;'>📍 " + (os.endereco || 'Endereço na OS') + "</div>" +
-                    "</div>" +
-                    "<button type='button' class='cp-queue-trigger' style='padding:8px 12px; font-size:0.74rem;' onclick='selecionarOSDaFila(" + idx + ")'>🚀 Atender Agora</button>";
-                cont.appendChild(div);
-            });
-        }
-        document.getElementById('cp-queue-drawer').style.display = 'flex';
-    };
-
-    window.selecionarOSDaFila = function(idx) {
-        document.getElementById('cp-queue-drawer').style.display = 'none';
-        var fila = obterFilaPendenteDoTecnico();
-        if (fila[idx]) {
-            exibirModalRadarOS(fila[idx], "📋 OS SELECIONADA DA SUA FILA");
-        }
-    };
-
-    // GATILHO DE PRODUTIVIDADE: QUANDO FINALIZA O PDF, PUXA A PRÓXIMA OS DA FILA SOZINHO!
-    var salvarEGerarPDFOriginal = window.salvarEGerarPDF;
-    window.salvarEGerarPDF = function() {
-        if (typeof salvarEGerarPDFOriginal === 'function') {
-            salvarEGerarPDFOriginal();
-        }
-        window.mudarStatusOperacionalTecnico('DISPONIVEL');
-        setTimeout(function() {
-            var filaRestante = obterFilaPendenteDoTecnico();
-            if (filaRestante.length > 0) {
-                tocarAlertaSonoro('BIP_DISCRETO');
-                exibirModalRadarOS(filaRestante[0], "✔ OS CONCLUÍDA! PRÓXIMA ENTREGA DA SUA FILA:");
-            }
-        }, 2200);
-    };
-
-    // Monitora a fila a cada 2,5 segundos
-    setInterval(window.verificarFilaERadarTempoReal, 2500);
-    window.mudarStatusOperacionalTecnico(statusAtualTecnico);
-</script>
-
 </body>
 </html>
