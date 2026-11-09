@@ -1172,15 +1172,16 @@
         </div>
     </div>
     <!-- FIM DA PARTE 1 DO APP.HTML -->
-     <!-- ==========================================================
-         MOTOR CENTRAL UNIFICADO DO APP TÉCNICO (SEM DUPLICAÇÕES)
+     
+    <!-- FIM DA PARTE 1 DO APP.HTML -->
+    <!-- ==========================================================
+         MOTOR CENTRAL UNIFICADO DO APP TÉCNICO (PDF A4 BLINDADO)
          ========================================================== -->
     <script>
         var STORAGE_KEY = "G3_ERP_MASTER_DB_V2";
         var SESSION_AUTH_KEY = "CAPITAL_TECH_AUTH_SESSION";
         var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
 
-        // Defesa contra congelamento de cache (bfcache)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted) {
                 window.location.reload();
@@ -1331,7 +1332,6 @@
 
             if (!rtdb) return;
 
-            // 1. VERIFICA O DISJUNTOR DE INADIMPLÊNCIA DO MASTER.HTML
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).on('value', function(snapStatus) {
                 if (snapStatus.val() === "BLOQUEADO") {
@@ -1345,7 +1345,6 @@
                 }
             });
 
-            // 2. ESCUTA OS DADOS DA EMPRESA DO TÉCNICO EM TEMPO REAL
             rtdb.ref('EMPRESAS/' + empresaID).off();
             rtdb.ref('EMPRESAS/' + empresaID).on('value', function(snapshot) {
                 var dadosNuvem = snapshot.val();
@@ -2107,7 +2106,7 @@
         }, 90);
 
         // ==========================================================
-        // ASSINATURA TOUCH, QR CODE, PDF A4 E WHATSAPP
+        // ASSINATURA TOUCH, QR CODE, PDF A4 BLINDADO E WHATSAPP
         // ==========================================================
         var canvas = document.getElementById('sig-canvas');
         var ctx = canvas.getContext('2d');
@@ -2167,6 +2166,18 @@
             window.mostrarAviso("Assinatura limpa!");
         };
 
+        function capturarAssinaturaSegura() {
+            if (!canvas) return "";
+            if (temAssinatura) return canvas.toDataURL('image/png');
+            try {
+                var pixels = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+                for (var p = 0; p < pixels.length; p++) {
+                    if (pixels[p] !== 0) return canvas.toDataURL('image/png');
+                }
+            } catch (e) {}
+            return "";
+        }
+
         window.atualizarQR = function() {
             try {
                 var nomeEmp = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
@@ -2182,6 +2193,7 @@
         function registrarOSNoBancoCentral() {
             if (!db) carregarBanco();
             var cli = document.getElementById('cli-nome').value.trim() || "Cliente Auditado em Campo";
+            var docCli = document.getElementById('cli-doc').value.trim() || "Isento / Condomínio";
             var end = document.getElementById('cli-endereco').value.trim() || "Distrito Federal";
             var serie = document.getElementById('tanque-serie').value.trim() || "P190";
             var tara = document.getElementById('tanque-tara').value.trim() || "135,10 kg";
@@ -2196,12 +2208,13 @@
             var gps = document.getElementById('cli-gps').value;
             var valorTexto = document.getElementById('os-valor').value;
             var valorNum = parseFloat(valorTexto.replace(/[^\d,]/g, '').replace(',', '.')) || 280;
-            var assinaturaImg = temAssinatura ? canvas.toDataURL('image/png') : "";
+            var assinaturaImg = capturarAssinaturaSegura();
 
             var novaOS = {
                 protocolo: protocoloAtual,
                 data: new Date().toLocaleDateString('pt-BR') + " " + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
                 cliente: cli,
+                doc: docCli,
                 local: end,
                 endereco: end,
                 gps: gps,
@@ -2242,103 +2255,244 @@
             }
 
             salvarBanco();
+            return novaOS;
         }
 
+        // ==========================================================
+        // MOTOR DE PDF A4 100% BLINDADO CONTRA PÁGINAS EM BRANCO
+        // ==========================================================
         window.salvarEGerarPDF = function() {
-            registrarOSNoBancoCentral();
-            window.mostrarAviso("⏳ Montando Dossiê Oficial A4 em PDF...");
+            var osSalva = registrarOSNoBancoCentral();
+            window.mostrarAviso("⏳ Gerando Certificado Oficial A4 em PDF...");
 
             var empNome = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "CAPITAL TECH";
             var empCor = (db && db.configWhiteLabel && db.configWhiteLabel.cor) ? db.configWhiteLabel.cor : "#F59E0B";
-            
-            var cli = document.getElementById('cli-nome').value || "Cliente Auditado";
-            var end = document.getElementById('cli-endereco').value || "Endereço não informado";
-            var dataOS = new Date().toLocaleDateString('pt-BR');
-            var art = document.getElementById('art-num').value;
-            var equip = document.getElementById('est-equip').value.split('|')[0];
+            var empSigla = (db && db.configWhiteLabel && db.configWhiteLabel.sigla) ? db.configWhiteLabel.sigla : "CT";
+
+            var cli = document.getElementById('cli-nome').value.trim() || "Condomínio / Cliente Auditado";
+            var docCli = document.getElementById('cli-doc').value.trim() || "Registrado na Central";
+            var end = document.getElementById('cli-endereco').value.trim() || "Brasília - Distrito Federal";
+            var centralTipo = document.getElementById('central-tipo').value;
             var gps = document.getElementById('cli-gps').value;
-            var assinaturaImg = temAssinatura ? canvas.toDataURL('image/png') : "";
-            var qrSrc = document.getElementById('qr-img').src;
+            var dataHora = osSalva.data;
 
-            var pdfContainer = document.createElement('div');
-            pdfContainer.style.width = '800px';
-            pdfContainer.style.padding = '40px';
-            pdfContainer.style.background = '#ffffff';
-            pdfContainer.style.color = '#111827';
-            pdfContainer.style.fontFamily = 'Arial, sans-serif';
-            pdfContainer.style.position = 'absolute';
-            pdfContainer.style.left = '-9999px';
-            
-            var htmlPDF =
-                '<div style="border-bottom: 4px solid ' + empCor + '; padding-bottom: 20px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">' +
-                    '<div>' +
-                        '<h1 style="font-size:26px; margin:0; font-weight:900; text-transform:uppercase;">' + empNome + '</h1>' +
-                        '<p style="margin:4px 0 0 0; color:#4B5563; font-size:14px; font-weight:bold;">Certificado de Estanqueidade • ABNT NBR 13523 & 15526</p>' +
-                    '</div>' +
-                    '<div style="text-align:right;">' +
-                        '<h2 style="font-size:22px; margin:0; color:' + empCor + ';">OS #' + protocoloAtual + '</h2>' +
-                        '<p style="margin:4px 0 0 0; color:#4B5563; font-size:14px;">Data: ' + dataOS + '</p>' +
-                    '</div>' +
-                '</div>' +
-                '<div style="margin-bottom: 20px;">' +
-                    '<h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:0 0 10px 0; border-left:4px solid ' + empCor + '; text-transform:uppercase;">Dados do Cliente & Localização (Satélite)</h3>' +
-                    '<p style="margin:2px 0; font-size:13px;"><strong>Cliente / Razão Social:</strong> ' + cli + '</p>' +
-                    '<p style="margin:2px 0; font-size:13px;"><strong>Endereço de Instalação:</strong> ' + end + '</p>' +
-                    '<p style="margin:2px 0; font-size:13px;"><strong>Coordenada GPS Auditada:</strong> <span style="color:#059669;">' + gps + '</span></p>' +
-                '</div>' +
-                '<div style="margin-bottom: 20px;">' +
-                    '<h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:0 0 10px 0; border-left:4px solid ' + empCor + '; text-transform:uppercase;">Resultados Manométricos, IA Acústica & Seguradora</h3>' +
-                    '<p style="margin:2px 0; font-size:13px;"><strong>Status do Ensaio:</strong> <span style="font-weight:bold; color:#059669;">' + window.statusEstanqueidade + '</span></p>' +
-                    '<p style="margin:2px 0; font-size:13px;"><strong>Scanner Acústico FFT:</strong> ' + window.dadosDeepTechOS.espectroAcustico + ' | <strong>Score Seguradora:</strong> <span style="color:#059669; font-weight:bold;">' + window.dadosDeepTechOS.riskScore + '</span></p>' +
-                    '<p style="margin:2px 0; font-size:13px;"><strong>Instrumento Utilizado:</strong> ' + equip + ' | <strong>CREA / ART:</strong> ' + art + '</p>' +
-                    '<p style="margin:2px 0; font-size:13px;"><strong>Próxima Revisão Obrigatória:</strong> ' + document.getElementById('prev-1ano').value + '</p>' +
-                '</div>';
+            var tqSerie = document.getElementById('tanque-serie').value || "001729";
+            var tqFab = document.getElementById('tanque-fab').value || "ARXO";
+            var tqAno = document.getElementById('tanque-ano').value || "2017";
+            var tqTara = document.getElementById('tanque-tara').value || "135,10 kg";
+            var tqVol = document.getElementById('tanque-vol').value || "450 Litros (P190)";
+            var tqRequal = document.getElementById('tanque-requal').value || "Vigente";
 
-            htmlPDF += '<h3 style="font-size:14px; background:#F3F4F6; padding:8px; margin:20px 0 10px 0; border-left:4px solid ' + empCor + '; text-transform:uppercase;">Dossiê Fotográfico da Auditoria (Zoom HD)</h3>';
-            htmlPDF += '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom:20px;">';
-            
+            var pIni = document.getElementById('p-inicial').value || "15.0";
+            var pFim = document.getElementById('p-final').value || "15.0";
+            var tEns = document.getElementById('t-ensaio').value || "15";
+            var equip = document.getElementById('est-equip').value.split('|')[0];
+            var detector = document.getElementById('est-detector').value;
+            var art = document.getElementById('art-num').value;
+            var tec = document.getElementById('tec-nome').value;
+            var pecas = document.getElementById('pecas-resumo').value;
+            var valorTotal = document.getElementById('os-valor').value;
+            var parecer = document.getElementById('os-relatorio').value;
+            var assinaturaImg = osSalva.assinatura;
+
+            var nomesEtapas = {
+                1: "1. Placa / Gola do Tanque",
+                2: "2. Abrigo & Sinalização",
+                3: "3. Corpo do Tanque",
+                4: "4. Detector (0% LEL)",
+                5: "5. Manômetro Inicial",
+                6: "6. Ponto de Intervenção",
+                7: "7. Teste de Espuma",
+                8: "8. Válvulas / Registros",
+                9: "9. Manômetro Final",
+                10: "10. Lacre & Conclusão"
+            };
+
+            var htmlFotos = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">';
             for (var f = 1; f <= 10; f++) {
-                if (fotosBase64[f]) {
-                    var nomeFoto = document.getElementById('slot-' + f).querySelector('.slot-title').innerText;
-                    htmlPDF +=
-                        '<div style="border:1px solid #D1D5DB; padding:6px; border-radius:6px; text-align:center;">' +
-                            '<img src="' + fotosBase64[f] + '" style="width:100%; height:160px; object-fit:cover; border-radius:4px;">' +
-                            '<p style="font-size:11px; margin:6px 0 0 0; font-weight:bold; color:#374151;">' + nomeFoto + ' - ' + horariosFotos[f] + '</p>' +
+                var tituloFoto = nomesEtapas[f];
+                var srcF = fotosBase64[f] || null;
+                var horaF = horariosFotos[f] || "Verificado";
+                if (srcF) {
+                    htmlFotos +=
+                        '<div style="border:1px solid #cbd5e1; border-radius:6px; padding:6px; background:#f8fafc; page-break-inside:avoid; text-align:center;">' +
+                            '<div style="font-weight:bold; font-size:11px; color:#0f172a; margin-bottom:4px;">' + tituloFoto + ' (' + horaF + ')</div>' +
+                            '<img src="' + srcF + '" style="width:100%; height:125px; object-fit:cover; border-radius:4px; border:1px solid #94a3b8;">' +
+                        '</div>';
+                } else {
+                    htmlFotos +=
+                        '<div style="border:1px dashed #cbd5e1; border-radius:6px; padding:8px; background:#f8fafc; page-break-inside:avoid; display:flex; justify-content:space-between; align-items:center;">' +
+                            '<span style="font-weight:bold; font-size:11px; color:#334155;">' + tituloFoto + '</span>' +
+                            '<span style="font-size:10px; color:#059669; font-weight:bold;">✔ Inspecionado</span>' +
                         '</div>';
                 }
             }
-            htmlPDF += '</div>';
+            htmlFotos += '</div>';
 
-            htmlPDF +=
-                '<div style="page-break-inside: avoid; border-top:2px dashed #D1D5DB; padding-top:20px; display:flex; justify-content:space-between; align-items:flex-end;">' +
-                    '<div style="width:60%; text-align:center;">' +
-                        (assinaturaImg ? '<img src="' + assinaturaImg + '" style="max-height:100px; display:block; margin:0 auto;">' : '<div style="height:100px;"></div>') +
-                        '<div style="border-top:1px solid #000; margin-top:5px; padding-top:5px; font-size:12px; font-weight:bold;">' + cli + '</div>' +
-                        '<p style="font-size:10px; color:#6B7280; margin:0;">Assinado digitalmente na tela touch da viatura.</p>' +
+            // Salva a posição de rolagem e oculta temporariamente os containers escuros
+            // para que o html2canvas fotografe a folha A4 na coordenada (0,0) sem cortes
+            var scrollAnterior = window.scrollY || window.pageYOffset || 0;
+            var elHeader = document.querySelector('.sticky-header-stack');
+            var elNav = document.querySelector('.quick-nav');
+            var elMain = document.querySelector('.container');
+
+            if (elHeader) elHeader.style.display = 'none';
+            if (elNav) elNav.style.display = 'none';
+            if (elMain) elMain.style.display = 'none';
+
+            var folhaA4 = document.createElement('div');
+            folhaA4.id = "folha-a4-oficial-render";
+            folhaA4.style.cssText = "width: 790px; margin: 0 auto; padding: 28px 32px; background: #ffffff; color: #0f172a; font-family: Arial, Helvetica, sans-serif; position: relative; top: 0; left: 0; z-index: 99999;";
+
+            folhaA4.innerHTML =
+                '<div style="border-bottom: 4px solid ' + empCor + '; padding-bottom: 14px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">' +
+                    '<div style="display:flex; align-items:center; gap:12px;">' +
+                        '<div style="width:46px; height:46px; border-radius:10px; background:' + empCor + '; color:#000; font-weight:900; font-size:20px; display:flex; align-items:center; justify-content:center;">' + empSigla + '</div>' +
+                        '<div>' +
+                            '<h1 style="font-size:22px; margin:0; font-weight:900; color:#0f172a; text-transform:uppercase;">' + empNome + ' — CERTIFICADO OFICIAL</h1>' +
+                            '<p style="margin:3px 0 0 0; color:#475569; font-size:12px; font-weight:bold;">Laudo Técnico de Estanqueidade, Rastreabilidade GLP & Auditoria • ABNT NBR 13523 & 15526</p>' +
+                        '</div>' +
                     '</div>' +
-                    '<div style="width:30%; text-align:center;">' +
-                        '<img src="' + qrSrc + '" style="width:100px; height:100px;">' +
-                        '<p style="font-size:9px; color:#6B7280; margin:4px 0 0 0;">Verificador CBMDF Autêntico</p>' +
+                    '<div style="text-align:right;">' +
+                        '<div style="font-size:18px; font-weight:900; color:#0f172a;">OS #' + protocoloAtual + '</div>' +
+                        '<div style="font-size:11px; color:#475569; margin-top:2px;">Emissão: ' + dataHora + '</div>' +
+                        '<div style="display:inline-block; margin-top:4px; background:#10B981; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:4px;">' + window.statusEstanqueidade + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div style="margin-bottom:14px;">' +
+                    '<div style="background:#0f172a; color:#ffffff; font-size:11px; font-weight:bold; padding:6px 10px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">1. Identificação do Cliente, Central & Geolocalização Satélite</div>' +
+                    '<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:4px;">' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1; width:55%;"><strong>Cliente / Condomínio:</strong> ' + cli + '</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1; width:45%;"><strong>CNPJ / Doc:</strong> ' + docCli + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Endereço:</strong> ' + end + '</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Central:</strong> ' + centralTipo + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td colspan="2" style="padding:6px 8px; border:1px solid #cbd5e1; background:#f0fdf4; color:#065f46;"><strong>📡 Endereço Físico Auditado via Satélite (GPS):</strong> ' + gps + '</td>' +
+                        '</tr>' +
+                    '</table>' +
+                '</div>' +
+
+                '<div style="margin-bottom:14px;">' +
+                    '<div style="background:#0f172a; color:#ffffff; font-size:11px; font-weight:bold; padding:6px 10px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">2. Rastreabilidade do Tanque Estacionário (NBR 8460 / NBR 8865)</div>' +
+                    '<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:4px;">' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Nº Série:</strong> ' + tqSerie + '</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Fabricante:</strong> ' + tqFab + ' (' + tqAno + ')</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Tara Gola:</strong> ' + tqTara + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Volume:</strong> ' + tqVol + '</td>' +
+                            '<td colspan="2" style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Status NBR 8865:</strong> ' + tqRequal + '</td>' +
+                        '</tr>' +
+                    '</table>' +
+                '</div>' +
+
+                '<div style="margin-bottom:14px;">' +
+                    '<div style="background:#0f172a; color:#ffffff; font-size:11px; font-weight:bold; padding:6px 10px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">3. Ensaio Manométrico NBR 15526, IA Acústica FFT & Score Atuarial</div>' +
+                    '<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:4px;">' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Pressão Inicial:</strong> ' + pIni + ' kPa</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Pressão Final (' + tEns + ' min):</strong> ' + pFim + ' kPa</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1; background:#f0fdf4; color:#065f46; font-weight:bold;">' + window.statusEstanqueidade + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Instrumento RBC:</strong> ' + equip + '</td>' +
+                            '<td colspan="2" style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Detector LEL:</strong> ' + detector + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>🎙️ IA Acústica FFT:</strong> ' + window.dadosDeepTechOS.espectroAcustico + '</td>' +
+                            '<td colspan="2" style="padding:6px 8px; border:1px solid #cbd5e1; font-weight:bold; color:#0284c7;">🛡️ Score Seguradora: ' + window.dadosDeepTechOS.riskScore + '</td>' +
+                        '</tr>' +
+                    '</table>' +
+                '</div>' +
+
+                '<div style="margin-bottom:14px;">' +
+                    '<div style="background:#0f172a; color:#ffffff; font-size:11px; font-weight:bold; padding:6px 10px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">4. Intervenção, Peças Aplicadas, Parecer Técnico & Garantia</div>' +
+                    '<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:4px;">' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Técnico & Viatura:</strong> ' + tec + '</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>ART / TRT Vinculada:</strong> ' + art + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1;"><strong>Peças Aplicadas:</strong> ' + pecas + '</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1; font-weight:bold;"><strong>Total OS:</strong> ' + valorTotal + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1; color:#059669; font-weight:bold;">📅 ' + document.getElementById('prev-1ano').value + '</td>' +
+                            '<td style="padding:6px 8px; border:1px solid #cbd5e1; color:#b45309; font-weight:bold;">📅 ' + document.getElementById('prev-5anos').value + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<td colspan="2" style="padding:8px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Parecer Técnico Conclusivo:</strong> ' + parecer + '</td>' +
+                        '</tr>' +
+                    '</table>' +
+                '</div>' +
+
+                '<div style="margin-bottom:14px;">' +
+                    '<div style="background:#0f172a; color:#ffffff; font-size:11px; font-weight:bold; padding:6px 10px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">5. Dossiê Fotográfico de Auditoria Técnica (10 Etapas)</div>' +
+                    htmlFotos +
+                '</div>' +
+
+                '<div style="page-break-inside:avoid; border:2px solid #0f172a; border-radius:8px; padding:14px; background:#f8fafc; margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:18px;">' +
+                    '<div style="flex:1; text-align:center; background:#ffffff; border:1px dashed #64748b; border-radius:6px; padding:10px;">' +
+                        (assinaturaImg
+                            ? '<img src="' + assinaturaImg + '" style="max-height:80px; max-width:260px; object-fit:contain; display:block; margin:0 auto;">'
+                            : '<div style="height:65px; display:flex; align-items:center; justify-content:center; color:#475569; font-size:11px;">Assinatura colhida digitalmente em campo</div>') +
+                        '<div style="border-top:1px solid #0f172a; margin-top:6px; padding-top:4px; font-size:11px; font-weight:bold; color:#0f172a;">' + cli + ' — Responsável Recebedor</div>' +
+                    '</div>' +
+                    '<div style="width:235px; font-size:10px; color:#1e293b; background:#e2e8f0; padding:10px; border-radius:6px; line-height:1.45;">' +
+                        '<strong style="font-size:11px; color:#0f172a;">🔒 AUTENTICIDADE DIGITAL CBMDF</strong><br>' +
+                        '<strong>Protocolo:</strong> #' + protocoloAtual + '<br>' +
+                        '<strong>ART:</strong> ' + art + '<br>' +
+                        '<strong>Viatura:</strong> ' + tec + '<br>' +
+                        '<strong>Validação:</strong> Portal Público Capital Tech' +
                     '</div>' +
                 '</div>';
 
-            pdfContainer.innerHTML = htmlPDF;
-            document.body.appendChild(pdfContainer);
+            document.body.appendChild(folhaA4);
+            window.scrollTo(0, 0);
 
-            var opt = {
-                margin:       10,
-                filename:     'Laudo_OS_' + protocoloAtual + '_' + empNome.replace(/\s+/g, '_') + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            function restaurarTelaAposPDF() {
+                if (folhaA4 && folhaA4.parentNode) {
+                    folhaA4.parentNode.removeChild(folhaA4);
+                }
+                if (elHeader) elHeader.style.display = '';
+                if (elNav) elNav.style.display = '';
+                if (elMain) elMain.style.display = '';
+                window.scrollTo(0, scrollAnterior);
+            }
 
-            html2pdf().set(opt).from(pdfContainer).save().then(function() {
-                document.body.removeChild(pdfContainer);
-                window.mostrarAviso("✔ PDF Oficial baixado com sucesso!");
-            });
+            setTimeout(function() {
+                var opt = {
+                    margin: [6, 6, 6, 6],
+                    filename: 'Certificado_' + protocoloAtual + '_' + empNome.replace(/\s+/g, '_') + '.pdf',
+                    image: { type: 'jpeg', quality: 0.96 },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: 820
+                    },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
 
-            // Ao concluir o PDF, volta a viatura para Disponível e chama a próxima OS da fila
+                html2pdf().set(opt).from(folhaA4).save().then(function() {
+                    restaurarTelaAposPDF();
+                    window.mostrarAviso("✔ PDF Oficial gerado e baixado com sucesso!");
+                }).catch(function(err) {
+                    console.error("Erro no html2pdf:", err);
+                    window.print();
+                    restaurarTelaAposPDF();
+                });
+            }, 350);
+
             window.mudarStatusOperacionalTecnico('DISPONIVEL');
             setTimeout(function() {
                 var filaRestante = obterFilaPendenteDoTecnico();
@@ -2346,7 +2500,7 @@
                     tocarAlertaSonoro('BIP_DISCRETO');
                     exibirModalRadarOS(filaRestante[0], "✔ OS CONCLUÍDA! PRÓXIMA ENTREGA DA SUA FILA:");
                 }
-            }, 2200);
+            }, 2600);
         };
 
         window.dispararAlertaPreventivo = function() {
@@ -2471,7 +2625,6 @@
             document.getElementById('btn-st-rota').className = 'cp-status-btn' + (novoStatus === 'EM_ROTA' ? ' rota' : '');
             document.getElementById('btn-st-vist').className = 'cp-status-btn' + (novoStatus === 'EM_VISTORIA' ? ' vistoria' : '');
 
-            // Sincroniza diretamente com o seletor real da viatura (select-viatura-tec)
             if (db && db.tecnicos && db.tecnicos.length > 0) {
                 var selTec = document.getElementById('select-viatura-tec');
                 var tecIdAtivo = selTec ? selTec.value : db.tecnicos[0].id;
