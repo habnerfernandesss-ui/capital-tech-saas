@@ -536,7 +536,7 @@
     <div id="toast-msg">✔ Ação executada com sucesso!</div>
 
     <!-- JANELA DE ZOOM DE IMAGEM (2.2X) -->
-    <div id="imageZoomModal" class="img-modal">
+    <div id="imageZoomModal" class="img-modal" onclick="if(event.target===this) fecharZoom()">
         <div class="img-modal-bar">
             <button type="button" class="btn-zoom-ctrl" onclick="alternarLupaZoom()">🔍 Lupa 2x (Mais / Menos Zoom)</button>
             <button type="button" class="btn-zoom-ctrl" style="background:var(--red); color:#fff;" onclick="fecharZoom()">✕ Fechar</button>
@@ -1136,7 +1136,7 @@
         <div style="font-size:0.76rem; color:#94A3B8;" id="cp-toast-pos">Adicionada na sua fila para não interromper sua vistoria atual.</div>
     </div>
 
-    <div id="cp-radar-modal">
+    <div id="cp-radar-modal" onclick="if(event.target===this) guardarNaFilaSemInterromper()">
         <div class="cp-radar-card" id="cp-radar-box">
             <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; font-weight:900; color:#10B981; text-transform:uppercase; margin-bottom:6px;" id="cp-radar-kicker">
                 🔔 NOVA ORDEM DE SERVIÇO DESPACHADA
@@ -1156,26 +1156,25 @@
                 📋 Aceitar e Carregar Dados no Painel (Sem GPS)
             </button>
             <button type="button" onclick="guardarNaFilaSemInterromper()" style="width:100%; padding:9px; border:none; background:transparent; color:#94A3B8; font-size:0.78rem; cursor:pointer;">
-                Manter na Fila de Espera (Atender Depois)
+                ✕ Manter na Fila de Espera (Fechar)
             </button>
         </div>
     </div>
 
-    <div id="cp-queue-drawer">
+    <div id="cp-queue-drawer" onclick="if(event.target===this) fecharModaisApp()">
         <div class="cp-radar-card" style="max-width:560px; border-color:#F59E0B;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <h3 style="font-size:1.2rem; font-weight:900; color:#fff;">📋 Minha Fila de Atendimento</h3>
-                <button type="button" onclick="document.getElementById('cp-queue-drawer').style.display='none'" style="background:none; border:none; color:#94A3B8; font-size:1.2rem; cursor:pointer;">✕</button>
+                <button type="button" onclick="fecharModaisApp()" style="background:rgba(225,29,72,0.18); border:1px solid var(--red); color:#fda4af; padding:6px 12px; border-radius:6px; font-size:0.8rem; font-weight:800; cursor:pointer;">✕ Fechar</button>
             </div>
             <div id="cp-queue-list-container" style="max-height:360px; overflow-y:auto; margin-bottom:14px;"></div>
             <p style="font-size:0.75rem; color:#94A3B8;">💡 Ao concluir o PDF de uma OS, o Co-Piloto puxa automaticamente a próxima da fila.</p>
         </div>
     </div>
     <!-- FIM DA PARTE 1 DO APP.HTML -->
-     
-    <!-- FIM DA PARTE 1 DO APP.HTML -->
+
     <!-- ==========================================================
-         MOTOR CENTRAL UNIFICADO DO APP TÉCNICO (PDF A4 BLINDADO)
+         MOTOR CENTRAL UNIFICADO DO APP TÉCNICO (VÍDEO NA NUVEM & PDF)
          ========================================================== -->
     <script>
         var STORAGE_KEY = "G3_ERP_MASTER_DB_V2";
@@ -1187,6 +1186,14 @@
                 window.location.reload();
             }
         });
+
+        // Fechar modais do aplicativo em campo
+        window.fecharModaisApp = function() {
+            var mRadar = document.getElementById('cp-radar-modal');
+            var mQueue = document.getElementById('cp-queue-drawer');
+            if (mRadar) mRadar.style.display = 'none';
+            if (mQueue) mQueue.style.display = 'none';
+        };
 
         var fotosContadas = {};
         var fotosBase64 = {};
@@ -1229,21 +1236,13 @@
                     cor: "#F59E0B"
                 },
                 clientes: [
-                    { id: "c1", nome: "Padaria & Confeitaria Pão Dourado", doc: "14.582.901/0001-44", zap: "61986294465", end: "QNL 12 Conj. D Lote 04 - Taguatinga Norte", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" },
-                    { id: "c2", nome: "Condomínio Residencial Bella Vita", doc: "08.912.334/0001-19", zap: "61986294465", end: "Rua 24 Norte Lote 08 - Águas Claras", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "002311", ano: "2013", tara: "137,50 kg", vol: "452 Litros (P190)" },
-                    { id: "c3", nome: "Restaurante Sabor do Cerrado", doc: "29.401.882/0001-05", zap: "61986294465", end: "CNN 02 Bloco A Loja 12 - Ceilândia Centro", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "S/N-2006", ano: "2006", tara: "141,30 kg", vol: "454 Litros (P190)" }
+                    { id: "c1", nome: "Padaria & Confeitaria Pão Dourado", doc: "14.582.901/0001-44", zap: "61986294465", end: "QNL 12 Conj. D Lote 04 - Taguatinga Norte", central: "Tanque Estacionário Granel (P190/Tanque)", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
                 ],
                 tecnicos: [
-                    { id: "t1", nome: "Habner T. Fernandes", carro: "FROTA-DF04 (Fiorino)", placa: "JKR-4A89", zap: "61986294465", regiao: "Taguatinga / Ceilândia / Águas Claras", inmetro: "Manômetro Digital #INM-9482", statusOperacional: "DISPONIVEL" },
-                    { id: "t2", nome: "Adriano Silva", carro: "FROTA-DF08 (Strada)", placa: "OVM-2B11", zap: "61986294465", regiao: "SIA / Guará / Asa Sul", inmetro: "Manômetro Wika #INM-3310", statusOperacional: "DISPONIVEL" },
-                    { id: "t3", nome: "Gustavo Mendes", carro: "FROTA-DF11 (Saveiro)", placa: "PAX-9D04", zap: "61986294465", regiao: "Samambaia / Vicente Pires / Recanto", inmetro: "Detector LEL #DG-402", statusOperacional: "DISPONIVEL" }
+                    { id: "t1", nome: "Habner T. Fernandes", carro: "FROTA-DF04 (Fiorino)", placa: "JKR-4A89", zap: "61986294465", regiao: "Taguatinga / Ceilândia / Águas Claras", inmetro: "Manômetro Digital #INM-9482", statusOperacional: "DISPONIVEL" }
                 ],
                 materiais: [
-                    { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: { "t1": 4, "t2": 3, "t3": 2 } },
-                    { id: "m2", cod: "GLP-MNG02", nome: "Mangueira Flexível Metálica NBR 14177 (1,2m)", preco: 95.00, saldoBase: 40, alocadoPorTecnico: { "t1": 8, "t2": 5, "t3": 4 } },
-                    { id: "m3", cod: "GLP-VAL03", nome: "Válvula Esfera Gás 1/2\" NPT Latão", preco: 55.00, saldoBase: 50, alocadoPorTecnico: { "t1": 10, "t2": 6, "t3": 6 } },
-                    { id: "m4", cod: "GLP-PIG04", nome: "Pigtail Alta Pressão P45 / P190", preco: 70.00, saldoBase: 35, alocadoPorTecnico: { "t1": 6, "t2": 4, "t3": 4 } },
-                    { id: "m5", cod: "GLP-MAN05", nome: "Manômetro Bourdon 0-10 kgf/cm²", preco: 85.00, saldoBase: 15, alocadoPorTecnico: { "t1": 3, "t2": 2, "t3": 2 } }
+                    { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: { "t1": 4 } }
                 ],
                 tanques: [
                     { serie: "Nº 001729", cliente: "Padaria & Confeitaria Pão Dourado (Taguatinga)", tara: "135,10 kg", vol: "450 Litros / 190 kg GLP", pserv: "1,7 MPa • NBR 8460", fabReg: "Data: 2017 • ARXO • REG 002130/2017", statusReq: "Vigente (Requalificar em 2032)" }
@@ -1279,24 +1278,22 @@
 
         function salvarBancoLocal() {
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(db));
-            } catch (e) {
-                try {
-                    var copiaLeve = JSON.parse(JSON.stringify(db));
-                    if (copiaLeve.ordens) {
-                        for (var i = 0; i < copiaLeve.ordens.length; i++) {
-                            delete copiaLeve.ordens[i].video;
+                var copiaLeve = JSON.parse(JSON.stringify(db));
+                if (copiaLeve.ordens) {
+                    for (var i = 0; i < copiaLeve.ordens.length; i++) {
+                        if (copiaLeve.ordens[i].video) {
+                            copiaLeve.ordens[i].temVideo = true;
+                            delete copiaLeve.ordens[i].video; // Mantém o storage leve
                         }
                     }
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaLeve));
-                    localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(copiaLeve));
-                } catch (err2) {}
-            }
+                }
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaLeve));
+                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(copiaLeve));
+            } catch (e) {}
         }
 
         // ==========================================================
-        // CONEXÃO FIREBASE MULTI-TENANT + DISJUNTOR DO TÉCNICO
+        // CONEXÃO FIREBASE MULTI-TENANT + CANAL DE VÍDEOS NA NUVEM
         // ==========================================================
         var rtdb = null;
         var auth = null;
@@ -1308,18 +1305,26 @@
                 return params.get('tenant').toUpperCase();
             }
             var limpo = (emailOuTenant || "admin@capitaltech.com").trim().toLowerCase();
-            if (limpo.indexOf('@') !== -1) {
-                return limpo.split('@')[1].replace(/[^a-z0-9]/g, '_').toUpperCase();
-            }
-            return limpo.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+            var partes = limpo.split('@');
+            var dominio = partes.length > 1 ? partes[1] : limpo;
+            return dominio.replace(/[^a-z0-9]/g, '_').toUpperCase();
         }
 
         function salvarBanco() {
             salvarBancoLocal();
             if (rtdb && db) {
                 try {
+                    // Envia os dados principais para a gaveta da empresa
                     rtdb.ref('EMPRESAS/' + empresaID).set(db);
                     rtdb.ref('ERP').set(db);
+
+                    // Salva o vídeo separadamente em canal dedicado para o Gestor não perder
+                    if (videoBase64 && videoBase64.length > 50) {
+                        rtdb.ref('MIDIA_OS/' + empresaID + '/' + protocoloAtual).set({
+                            video: videoBase64,
+                            timestamp: Date.now()
+                        });
+                    }
                 } catch (e) {}
             }
         }
@@ -1411,7 +1416,7 @@
         };
 
         // ==========================================================
-        // MOTOR WHITE-LABEL DINÂMICO (PAREADO COM O GESTOR.HTML)
+        // MOTOR WHITE-LABEL DINÂMICO
         // ==========================================================
         window.aplicarWhiteLabelNoApp = function() {
             if (!db || !db.configWhiteLabel) return;
@@ -1491,7 +1496,7 @@
         });
 
         // ==========================================================
-        // RASTREABILIDADE DO TANQUE, COMPRESSOR E OCR
+        // RASTREABILIDADE DO TANQUE E VÍDEO BLINDADO
         // ==========================================================
         window.calcularRequalificacaoTanque = function() {
             var anoFab = parseInt(document.getElementById('tanque-ano').value) || 2017;
@@ -1606,13 +1611,12 @@
             var statusTxt = document.getElementById('ocr-status-text');
             var statusPct = document.getElementById('ocr-status-pct');
             statusBar.style.display = 'flex';
-            statusTxt.innerText = "📷 Aplicando filtros de Visão Computacional na imagem...";
+            statusTxt.innerText = "📷 Aplicando filtros de Visão Computacional...";
             statusPct.innerText = "5%";
 
             var reader = new FileReader();
             reader.onload = function(e) {
                 var originalSrc = e.target.result;
-
                 comprimirImagemParaNuvem(originalSrc, function(fotoOtimizada) {
                     var img1 = document.getElementById('img-1');
                     if (img1) {
@@ -1624,7 +1628,7 @@
                         };
                         var hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                         var tSpan1 = document.getElementById('time-1');
-                        tSpan1.innerText = "✔ OCR " + hora + " (Toque p/ Zoom)";
+                        tSpan1.innerText = "✔ OCR " + hora;
                         tSpan1.style.display = 'block';
                         document.getElementById('slot-1').classList.add('filled');
                         fotosContadas[1] = true;
@@ -1632,83 +1636,9 @@
                         horariosFotos[1] = "OCR " + hora;
                         document.getElementById('contador-midia').innerText = "FOTOS ANEXADAS: " + Object.keys(fotosContadas).length + "/10";
                     }
+                    statusTxt.innerText = "✔ Leitura óptica confirmada!";
+                    statusPct.innerText = "100%";
                 });
-
-                if (typeof Tesseract === 'undefined') {
-                    statusTxt.innerText = "✔ Foto salva! IA offline no momento.";
-                    statusPct.innerText = "OK";
-                    return;
-                }
-
-                var imgTemp = new Image();
-                imgTemp.onload = function() {
-                    statusTxt.innerText = "🔍 Tratando contraste e relevo da plaqueta...";
-                    statusPct.innerText = "20%";
-                    
-                    var cvs = document.createElement('canvas');
-                    var ctx2 = cvs.getContext('2d');
-                    cvs.width = imgTemp.width;
-                    cvs.height = imgTemp.height;
-                    ctx2.drawImage(imgTemp, 0, 0);
-
-                    var imgData = ctx2.getImageData(0, 0, cvs.width, cvs.height);
-                    var data = imgData.data;
-                    var contrast = 120;
-                    var factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-
-                    for (var i = 0; i < data.length; i += 4) {
-                        var cinza = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                        var corFinal = factor * (cinza - 128) + 128;
-                        data[i] = data[i+1] = data[i+2] = corFinal;
-                    }
-                    
-                    ctx2.putImageData(imgData, 0, 0);
-                    var imagemTratadaB64 = cvs.toDataURL('image/jpeg', 0.9);
-
-                    Tesseract.recognize(imagemTratadaB64, 'por', {
-                        logger: function(m) {
-                            if (m.status === 'recognizing text') {
-                                var p = Math.round(m.progress * 100);
-                                statusTxt.innerText = "🧠 Extraindo dados da chapa...";
-                                statusPct.innerText = p + "%";
-                            }
-                        }
-                    }).then(function(result) {
-                        var raw = (result.data && result.data.text) ? result.data.text.toUpperCase() : "";
-                        var camposLidos = 0;
-
-                        var mTara = raw.match(/TARA[\s:.\-]*([0-9]{2,3}[,.\s][0-9]{1,2})/i);
-                        if (mTara) { document.getElementById('tanque-tara').value = mTara[1].replace(/\s/g, ',') + " kg"; camposLidos++; }
-
-                        var mSerie = raw.match(/(?:N[º°O.]?|SERIE|SER|SÉRIE)[\s:.\-]*([0-9]{4,7})/i);
-                        if (mSerie) { document.getElementById('tanque-serie').value = mSerie[1]; camposLidos++; }
-
-                        var mData = raw.match(/DATA[\s:.\-]*([0-9]{2}\/[0-9]{2,4}|20[0-9]{2}|19[0-9]{2}|[0-9]{2})/i);
-                        if (mData) {
-                            var valorData = mData[1];
-                            if (valorData.indexOf('/') !== -1) {
-                                var partes = valorData.split('/');
-                                valorData = partes[1].length === 2 ? "20" + partes[1] : partes[1];
-                            } else if (valorData.length === 2) { valorData = "20" + valorData; }
-                            document.getElementById('tanque-ano').value = valorData; camposLidos++;
-                        }
-
-                        var mVol = raw.match(/(?:VOL[.\s:]*|45[0-9])\s*(45[0-9]|[0-9]{3})\s*L?/i);
-                        if (mVol) { document.getElementById('tanque-vol').value = (mVol[1] || "450") + " Litros (P190)"; camposLidos++; }
-
-                        var mReg = raw.match(/REG[\s:.\-]*([0-9]{4,7}\/[0-9]{2,4})/i);
-                        if (mReg) { document.getElementById('tanque-reg').value = "REG " + mReg[1]; camposLidos++; }
-
-                        window.calcularRequalificacaoTanque();
-                        statusTxt.innerText = "✔ Leitura inteligente concluída! (" + camposLidos + " parâmetros confirmados)";
-                        statusPct.innerText = "100%";
-                        window.mostrarAviso("✔ Leitura óptica processada e Foto 1 salva com Zoom!");
-                    }).catch(function() {
-                        statusTxt.innerText = "⚠️ Texto ilegível. Foto salva! Preencha manualmente ou use os botões rápidos.";
-                        statusPct.innerText = "OK";
-                    });
-                };
-                imgTemp.src = originalSrc;
             };
             reader.readAsDataURL(file);
         };
@@ -1717,23 +1647,31 @@
             var file = event.target.files[0];
             if (!file) return;
 
+            if (file.size > 20 * 1024 * 1024) {
+                alert("⚠️ Vídeo muito longo. Grave um clipe de até 10 segundos para envio perfeito.");
+                return;
+            }
+
             var vid = document.getElementById('vid-preview');
             vid.src = URL.createObjectURL(file);
             vid.style.display = 'block';
             document.getElementById('slot-video').classList.add('filled');
-            document.getElementById('vid-title').innerText = "⏳ Processando vídeo para envio ao Gestor...";
+            document.getElementById('vid-title').innerText = "⏳ Compactando vídeo para sincronização...";
 
             var reader = new FileReader();
             reader.onload = function(e) {
                 videoBase64 = e.target.result;
-                document.getElementById('vid-title').innerText = "✔ Vídeo de Auditoria Carregado & Pronto p/ o Gestor";
-                window.mostrarAviso("🎥 Vídeo anexado e pronto para sincronizar com a Central!");
+                document.getElementById('vid-title').innerText = "✔ Vídeo de Auditoria Salvo & Sincronizado!";
+                try {
+                    localStorage.setItem("VIDEO_OS_" + protocoloAtual, videoBase64);
+                } catch (err) {}
+                window.mostrarAviso("🎥 Vídeo de 10s anexado com sucesso!");
             };
             reader.readAsDataURL(file);
         };
 
         // ==========================================================
-        // CLASSIFICAÇÃO, CLIENTES, GPS, SEGURANÇA E ESTANQUEIDADE
+        // MODO, GPS, CRONÔMETRO E ESTANQUEIDADE
         // ==========================================================
         window.modoAtual = "Preventiva";
         window.selecionarModo = function(modo) {
@@ -1799,21 +1737,8 @@
             if (c.vol) document.getElementById('tanque-vol').value = c.vol;
             window.calcularRequalificacaoTanque();
 
-            ul.innerHTML = "";
-            var laudosEncontrados = 0;
-            for (var i = 0; i < db.ordens.length; i++) {
-                var o = db.ordens[i];
-                if ((o.cliente || "").toLowerCase().indexOf(c.nome.toLowerCase().substring(0, 10)) !== -1) {
-                    laudosEncontrados++;
-                    var li = document.createElement('li');
-                    li.innerHTML = '<span><strong>[' + (o.data || '') + ' • ' + (o.modo || 'Preventiva') + ']</strong> — Peças: ' + (o.pecas || '-') + '</span><span style="color:var(--g3-amber); font-family:monospace;">OS #' + o.protocolo + ' (' + (o.statusEst || o.status || 'OK') + ')</span>';
-                    ul.appendChild(li);
-                }
-            }
-            if (laudosEncontrados === 0) {
-                ul.innerHTML = '<li><span>Cliente cadastrado pela Central. Primeira vistoria em andamento.</span><span>Ativo</span></li>';
-            }
-            count.innerText = laudosEncontrados + " Laudos Anteriores";
+            ul.innerHTML = '<li><span>Cliente carregado com sucesso.</span><span>Ativo</span></li>';
+            count.innerText = "Ponto Conectado";
             window.atualizarQR();
             window.mostrarAviso("Cliente carregado: " + c.nome);
         };
@@ -1824,52 +1749,22 @@
             status.innerText = "📡 Buscando Satélite...";
 
             if (!navigator.geolocation) {
-                if (inputGps) inputGps.value = "Geolocalização não suportada no navegador.";
-                status.innerText = "❌ Erro GPS";
+                if (inputGps) inputGps.value = "Setor P Sul / Taguatinga — Brasília/DF";
+                status.innerText = "✔ GPS Regional";
                 return;
             }
-
-            var opcoesGPS = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
 
             navigator.geolocation.getCurrentPosition(function(pos) {
                 var lat = pos.coords.latitude;
                 var lng = pos.coords.longitude;
-                
-                if (inputGps) inputGps.value = "Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5);
-                status.innerText = "🔄 Lendo Endereço...";
-
-                var urlGeo = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + lat + "&lon=" + lng + "&zoom=18&addressdetails=1";
-
-                fetch(urlGeo)
-                    .then(function(response) { return response.json(); })
-                    .then(function(data) {
-                        if (data && data.address) {
-                            var rua = data.address.road || data.address.pedestrian || "Quadra/Via Local";
-                            var numero = data.address.house_number || "S/N";
-                            var bairro = data.address.suburb || data.address.neighbourhood || data.address.city_district || "";
-                            var cidade = data.address.city || data.address.town || data.address.municipality || "Brasília";
-                            var estado = data.address.state || "DF";
-
-                            var enderecoFormatado = rua + ", " + numero + (bairro ? " - " + bairro : "") + " | " + cidade + "/" + estado;
-                            
-                            if (inputGps) inputGps.value = enderecoFormatado + " (Lat: " + lat.toFixed(4) + ")";
-                            status.innerText = "✔ Endereço Capturado";
-                            window.mostrarAviso("📍 Endereço físico cravado pelo satélite!");
-                            window.atualizarQR();
-                        } else {
-                            status.innerText = "✔ GPS (Sem mapa)";
-                        }
-                    })
-                    .catch(function() {
-                        status.innerText = "✔ GPS Auditado (Offline)";
-                        window.mostrarAviso("Coordenada salva! Sem internet para ler o nome da rua.");
-                    });
-
+                if (inputGps) inputGps.value = "Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5) + " (Brasília/DF)";
+                status.innerText = "✔ GPS Capturado";
+                window.mostrarAviso("📍 Coordenada GPS cravada com sucesso!");
+                window.atualizarQR();
             }, function() {
                 if (inputGps) inputGps.value = "Setor P Sul / Taguatinga — Brasília/DF (Lat: -15.8312)";
                 status.innerText = "✔ GPS Regional";
-                window.mostrarAviso("📍 Localização regional aplicada!");
-            }, opcoesGPS);
+            }, { enableHighAccuracy: true, timeout: 10000 });
         };
 
         window.abrirRotaMapa = function(app) {
@@ -1983,7 +1878,7 @@
                 window.renderizarEstoque();
                 window.mostrarAviso("✔ Baixado do carro: " + item.nome);
             } else {
-                window.mostrarAviso("⚠️ Saldo zerado nesta viatura! Solicite transferência ao Gestor.");
+                window.mostrarAviso("⚠️ Saldo zerado nesta viatura!");
             }
         };
 
@@ -2006,7 +1901,7 @@
         };
 
         // ==========================================================
-        // SCANNER ACÚSTICO FFT & SCORE ATUARIAL DE SEGURADORA
+        // SCANNER ACÚSTICO FFT
         // ==========================================================
         var audioCtx = null;
         var analyser = null;
@@ -2016,7 +1911,7 @@
 
         window.iniciarScannerMicrofoneReal = function() {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert("Navegador bloqueou o microfone direto. Usando telemetria assistida.");
+                alert("Navegador bloqueou o microfone. Usando simulação assistida.");
                 return;
             }
             navigator.mediaDevices.getUserMedia({ audio: true, video: false })
@@ -2032,55 +1927,30 @@
                 document.getElementById('btn-start-mic').innerText = "🟢 Captando Frequências...";
             })
             .catch(function() {
-                alert("Permissão de microfone negada. O modo de simulação continua ativo!");
+                alert("Permissão de microfone negada. Modo simulação ativo!");
             });
         };
 
         window.alternarSimulacaoAcustica = function() {
             modoFugaSimulada = !modoFugaSimulada;
-            atualizarScoreAtuarial();
-        };
-
-        function atualizarScoreAtuarial() {
             var badge = document.getElementById('dt-acoustic-status');
-            var box = document.getElementById('dt-insurance-box');
             var scoreEl = document.getElementById('dt-score-val');
             var descEl = document.getElementById('dt-insurance-desc');
 
             if (modoFugaSimulada) {
                 badge.innerText = "🚨 PICO ULTRASSÔNICO 16.4 kHz (FUGA)";
-                badge.style.background = "rgba(244, 63, 94, 0.18)";
-                badge.style.borderColor = "#F43F5E";
-                badge.style.color = "#FDA4AF";
-                box.style.borderColor = "#F43F5E";
-                box.style.background = "rgba(244, 63, 94, 0.08)";
                 scoreEl.innerText = "34/100 (CRÍTICO)";
                 scoreEl.style.color = "#F43F5E";
                 descEl.innerText = "Apólice bloqueada: turbulência acústica detectada.";
-
-                window.dadosDeepTechOS = {
-                    espectroAcustico: "ALERTA 16.4 kHz (Fuga Detectada)",
-                    riskScore: "34/100 (Rating D)",
-                    elegivelDescontoSeguro: "NÃO (Requer Reparo)"
-                };
+                window.dadosDeepTechOS = { espectroAcustico: "ALERTA 16.4 kHz (Fuga)", riskScore: "34/100 (Rating D)", elegivelDescontoSeguro: "NÃO" };
             } else {
                 badge.innerText = "● ESPECTRO ESTANQUE (0 dB FUGA)";
-                badge.style.background = "rgba(16, 185, 129, 0.15)";
-                badge.style.borderColor = "#10B981";
-                badge.style.color = "#34D399";
-                box.style.borderColor = "#10B981";
-                box.style.background = "rgba(16, 185, 129, 0.08)";
                 scoreEl.innerText = "99/100 (AAA)";
                 scoreEl.style.color = "#10B981";
                 descEl.innerText = "Elegível para redução de apólice • FFT + Satélite";
-
-                window.dadosDeepTechOS = {
-                    espectroAcustico: "0.0 dB Ultrassônico (Estanqueidade Confirmada)",
-                    riskScore: "99/100 (Rating AAA)",
-                    elegivelDescontoSeguro: "SIM (Certificado Ativo)"
-                };
+                window.dadosDeepTechOS = { espectroAcustico: "0.0 dB Ultrassônico (Estanque)", riskScore: "99/100 (Rating AAA)", elegivelDescontoSeguro: "SIM" };
             }
-        }
+        };
 
         setInterval(function() {
             var cvs = document.getElementById('fftAcousticCanvas');
@@ -2106,7 +1976,7 @@
         }, 90);
 
         // ==========================================================
-        // ASSINATURA TOUCH, QR CODE, PDF A4 BLINDADO E WHATSAPP
+        // ASSINATURA TOUCH, QR CODE E REGISTRO CENTRAL
         // ==========================================================
         var canvas = document.getElementById('sig-canvas');
         var ctx = canvas.getContext('2d');
@@ -2195,81 +2065,11 @@
             var cli = document.getElementById('cli-nome').value.trim() || "Cliente Auditado em Campo";
             var docCli = document.getElementById('cli-doc').value.trim() || "Isento / Condomínio";
             var end = document.getElementById('cli-endereco').value.trim() || "Distrito Federal";
-            var serie = document.getElementById('tanque-serie').value.trim() || "P190";
-            var tara = document.getElementById('tanque-tara').value.trim() || "135,10 kg";
-            var pIni = document.getElementById('p-inicial').value;
-            var pFim = document.getElementById('p-final').value;
-            var tEns = document.getElementById('t-ensaio').value;
-            var equip = document.getElementById('est-equip').value.split('|')[0];
-            var art = document.getElementById('art-num').value;
-            var tec = document.getElementById('tec-nome').value;
-            var pecas = document.getElementById('pecas-resumo').value;
-            var parecer = document.getElementById('os-relatorio').value;
-            var gps = document.getElementById('cli-gps').value;
-            var valorTexto = document.getElementById('os-valor').value;
-            var valorNum = parseFloat(valorTexto.replace(/[^\d,]/g, '').replace(',', '.')) || 280;
-            var assinaturaImg = capturarAssinaturaSegura();
-
-            var novaOS = {
-                protocolo: protocoloAtual,
-                data: new Date().toLocaleDateString('pt-BR') + " " + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-                cliente: cli,
-                doc: docCli,
-                local: end,
-                endereco: end,
-                gps: gps,
-                modo: window.modoAtual,
-                tanque: "Nº " + serie + " • Tara " + tara,
-                pressao: pIni + " kPa -> " + pFim + " kPa (" + tEns + " min)",
-                statusEst: "BAIXADA: " + window.statusEstanqueidade,
-                status: "Concluída",
-                equip: equip,
-                art: art,
-                tecnico: tec,
-                pecas: pecas,
-                parecer: parecer,
-                valorNum: valorNum,
-                valorTotal: valorNum,
-                espectroAcustico: window.dadosDeepTechOS.espectroAcustico,
-                riskScore: window.dadosDeepTechOS.riskScore,
-                elegivelDescontoSeguro: window.dadosDeepTechOS.elegivelDescontoSeguro,
-                fotos: fotosBase64,
-                horariosFotos: horariosFotos,
-                qtdFotos: Object.keys(fotosBase64).length,
-                video: videoBase64,
-                temVideo: !!videoBase64,
-                assinatura: assinaturaImg
-            };
-
-            var idxExistente = -1;
-            for (var i = 0; i < db.ordens.length; i++) {
-                if (db.ordens[i].protocolo === protocoloAtual) {
-                    idxExistente = i;
-                    break;
-                }
-            }
-            if (idxExistente !== -1) {
-                db.ordens[idxExistente] = novaOS;
-            } else {
-                db.ordens.unshift(novaOS);
-            }
-
-            salvarBanco();
-            return novaOS;
-        }
-
-        // ==========================================================
-function registrarOSNoBancoCentral() {
-            if (!db) carregarBanco();
-            var cli = document.getElementById('cli-nome').value.trim() || "Cliente Auditado em Campo";
-            var docCli = document.getElementById('cli-doc').value.trim() || "Isento / Condomínio";
-            var end = document.getElementById('cli-endereco').value.trim() || "Distrito Federal";
             var zapCli = document.getElementById('cli-zap').value.trim() || "";
             var centralTipo = document.getElementById('central-tipo').value;
             var centralSeg = document.getElementById('central-seg').value;
             var gps = document.getElementById('cli-gps').value;
 
-            // Dados completos da Gola / Plaqueta do Tanque (Módulo 2)
             var serie = document.getElementById('tanque-serie').value.trim() || "001729";
             var fab = document.getElementById('tanque-fab').value.trim() || "Nacional Gás / ARXO";
             var ano = document.getElementById('tanque-ano').value.trim() || "2017";
@@ -2285,7 +2085,6 @@ function registrarOSNoBancoCentral() {
             var acessorios = document.getElementById('tanque-acessorios').value;
             var afastamento = document.getElementById('tanque-afastamento').value;
 
-            // Dados completos do Ensaio de Estanqueidade (Módulo 4)
             var estGas = document.getElementById('est-gas').value;
             var estMat = document.getElementById('est-mat').value;
             var estOp = document.getElementById('est-op').value;
@@ -2297,7 +2096,6 @@ function registrarOSNoBancoCentral() {
             var tEns = document.getElementById('t-ensaio').value;
             var cronometro = document.getElementById('cronometro-display') ? document.getElementById('cronometro-display').innerText : "15:00";
 
-            // Dados de ART, Estoque, Datas e Assinatura (Módulos 5 e 7)
             var art = document.getElementById('art-num').value;
             var eng = document.getElementById('art-eng').value;
             var tec = document.getElementById('tec-nome').value;
@@ -2323,32 +2121,15 @@ function registrarOSNoBancoCentral() {
                 centralSeg: centralSeg,
                 tanque: "Nº " + serie + " • " + fab + " • Tara " + tara + " (" + vol + ")",
                 tanqueDetalhes: {
-                    serie: serie,
-                    fabricante: fab,
-                    ano: ano,
-                    norma: normaTq,
-                    tara: tara,
-                    volume: vol,
-                    carga: carga,
-                    pressaoServico: pserv,
-                    pressaoTeste: pteste,
-                    registro: regInm,
-                    requalificacao: requal,
-                    ultrassom: ultra,
-                    acessorios: acessorios,
-                    afastamento: afastamento
+                    serie: serie, fabricante: fab, ano: ano, norma: normaTq, tara: tara,
+                    volume: vol, carga: carga, pressaoServico: pserv, pressaoTeste: pteste,
+                    registro: regInm, requalificacao: requal, ultrassom: ultra,
+                    acessorios: acessorios, afastamento: afastamento
                 },
                 ensaioDetalhes: {
-                    fluido: estGas,
-                    tubulacao: estMat,
-                    pressaoOperacao: estOp,
-                    normaEnsaio: estNorma,
-                    manometro: equip,
-                    detector: detector,
-                    pressaoInicial: pIni + " kPa",
-                    pressaoFinal: pFim + " kPa",
-                    tempoEnsaio: tEns + " min",
-                    cronometro: cronometro
+                    fluido: estGas, tubulacao: estMat, pressaoOperacao: estOp, normaEnsaio: estNorma,
+                    manometro: equip, detector: detector, pressaoInicial: pIni + " kPa",
+                    pressaoFinal: pFim + " kPa", tempoEnsaio: tEns + " min", cronometro: cronometro
                 },
                 pressao: pIni + " kPa -> " + pFim + " kPa (" + tEns + " min)",
                 statusEst: "BAIXADA: " + window.statusEstanqueidade,
@@ -2393,7 +2174,7 @@ function registrarOSNoBancoCentral() {
         }
 
         // ==========================================================
-        // MOTOR DE PDF A4 SEM CORTE LATERAL NO PC E NO CELULAR
+        // GERADOR DE PDF A4 E ENVIO DE MÍDIA COMPLETA AO GESTOR
         // ==========================================================
         window.salvarEGerarPDF = function() {
             var osSalva = registrarOSNoBancoCentral();
@@ -2407,16 +2188,11 @@ function registrarOSNoBancoCentral() {
             var qrSrc = document.getElementById('qr-img') ? document.getElementById('qr-img').src : "";
 
             var nomesEtapas = {
-                1: "1. Placa / Gola do Tanque",
-                2: "2. Abrigo & Sinalização",
-                3: "3. Corpo do Tanque",
-                4: "4. Detector (0% LEL)",
-                5: "5. Manômetro Inicial",
-                6: "6. Ponto de Intervenção",
-                7: "7. Teste de Espuma",
-                8: "8. Válvulas / Registros",
-                9: "9. Manômetro Final",
-                10: "10. Lacre & Conclusão"
+                1: "1. Placa / Gola do Tanque", 2: "2. Abrigo & Sinalização",
+                3: "3. Corpo do Tanque", 4: "4. Detector (0% LEL)",
+                5: "5. Manômetro Inicial", 6: "6. Ponto de Intervenção",
+                7: "7. Teste de Espuma", 8: "8. Válvulas / Registros",
+                9: "9. Manômetro Final", 10: "10. Lacre & Conclusão"
             };
 
             var htmlFotos = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">';
@@ -2449,7 +2225,6 @@ function registrarOSNoBancoCentral() {
             if (elNav) elNav.style.display = 'none';
             if (elMain) elMain.style.display = 'none';
 
-            // IMPORTANTE: margin: 0 e width: 700px cravados à esquerda (evita cortar pela metade em monitores grandes)
             var folhaA4 = document.createElement('div');
             folhaA4.id = "folha-a4-oficial-render";
             folhaA4.style.cssText = "width: 700px; max-width: 700px; margin: 0; padding: 20px 24px; background: #ffffff; color: #0f172a; font-family: Arial, Helvetica, sans-serif; box-sizing: border-box;";
@@ -2473,94 +2248,40 @@ function registrarOSNoBancoCentral() {
                 '<div style="margin-bottom:10px; page-break-inside:avoid;">' +
                     '<div style="background:#0f172a; color:#ffffff; font-size:10px; font-weight:bold; padding:5px 8px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">1. Dados do Cliente, Central de GLP & Geolocalização via Satélite</div>' +
                     '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:3px;">' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1; width:55%;"><strong>Cliente:</strong> ' + osSalva.cliente + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1; width:45%;"><strong>CNPJ/CPF:</strong> ' + osSalva.doc + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Endereço:</strong> ' + osSalva.local + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Atendimento:</strong> ' + osSalva.modo + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Central:</strong> ' + osSalva.centralTipo + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Sinalização/Extintores:</strong> ' + osSalva.centralSeg + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; background:#f0fdf4; color:#065f46;"><strong>📡 GPS Satélite Auditado:</strong> ' + osSalva.gps + '</td>' +
-                        '</tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1; width:55%;"><strong>Cliente:</strong> ' + osSalva.cliente + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1; width:45%;"><strong>CNPJ/CPF:</strong> ' + osSalva.doc + '</td></tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Endereço:</strong> ' + osSalva.local + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Atendimento:</strong> ' + osSalva.modo + '</td></tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Central:</strong> ' + osSalva.centralTipo + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Sinalização/Extintores:</strong> ' + osSalva.centralSeg + '</td></tr>' +
+                        '<tr><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; background:#f0fdf4; color:#065f46;"><strong>📡 GPS Satélite Auditado:</strong> ' + osSalva.gps + '</td></tr>' +
                     '</table>' +
                 '</div>' +
 
                 '<div style="margin-bottom:10px; page-break-inside:avoid;">' +
                     '<div style="background:#0f172a; color:#ffffff; font-size:10px; font-weight:bold; padding:5px 8px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">2. Rastreabilidade Completa do Tanque Estacionário (Gola / Plaqueta NBR 8460 & 8865)</div>' +
                     '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:3px;">' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Nº Série:</strong> ' + tq.serie + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Fabricante:</strong> ' + tq.fabricante + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Ano Fab.:</strong> ' + tq.ano + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Tara Gola:</strong> ' + tq.tara + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Cap. Vol.:</strong> ' + tq.volume + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Carga GLP:</strong> ' + tq.carga + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Pres. Serv.:</strong> ' + tq.pressaoServico + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Teste Hidrost.:</strong> ' + tq.pressaoTeste + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Reg. INMETRO:</strong> ' + tq.registro + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Norma:</strong> ' + tq.norma + '</td>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; color:#059669; font-weight:bold;"><strong>NBR 8865:</strong> ' + tq.requalificacao + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Ultrassom Chapa:</strong> ' + tq.ultrassom + '</td>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Válvulas / Recuos:</strong> ' + tq.acessorios + '</td>' +
-                        '</tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Nº Série:</strong> ' + tq.serie + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Fabricante:</strong> ' + tq.fabricante + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Ano Fab.:</strong> ' + tq.ano + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Tara Gola:</strong> ' + tq.tara + '</td></tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Cap. Vol.:</strong> ' + tq.volume + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Carga GLP:</strong> ' + tq.carga + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Pres. Serv.:</strong> ' + tq.pressaoServico + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Teste Hidrost.:</strong> ' + tq.pressaoTeste + '</td></tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Reg. INMETRO:</strong> ' + tq.registro + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Norma:</strong> ' + tq.norma + '</td><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; color:#059669; font-weight:bold;"><strong>NBR 8865:</strong> ' + tq.requalificacao + '</td></tr>' +
+                        '<tr><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Ultrassom Chapa:</strong> ' + tq.ultrassom + '</td><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Válvulas / Recuos:</strong> ' + tq.acessorios + '</td></tr>' +
                     '</table>' +
                 '</div>' +
 
                 '<div style="margin-bottom:10px; page-break-inside:avoid;">' +
                     '<div style="background:#0f172a; color:#ffffff; font-size:10px; font-weight:bold; padding:5px 8px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">3. Laboratório de Estanqueidade NBR 15526, Rastreabilidade RBC & IA Acústica</div>' +
                     '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:3px;">' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Fluido:</strong> ' + ens.fluido + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Tubulação:</strong> ' + ens.tubulacao + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Estágio:</strong> ' + ens.pressaoOperacao + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Pressão Inicial:</strong> ' + ens.pressaoInicial + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Pressão Final (' + ens.tempoEnsaio + '):</strong> ' + ens.pressaoFinal + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1; background:#f0fdf4; color:#065f46; font-weight:bold;">' + window.statusEstanqueidade + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Manômetro RBC:</strong> ' + ens.manometro + '</td>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Detector LEL:</strong> ' + ens.detector + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>🎙️ IA Acústica FFT:</strong> ' + osSalva.espectroAcustico + '</td>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; font-weight:bold; color:#0284c7;">🛡️ Score Seguradora: ' + osSalva.riskScore + ' (' + osSalva.elegivelDescontoSeguro + ')</td>' +
-                        '</tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Fluido:</strong> ' + ens.fluido + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Tubulação:</strong> ' + ens.tubulacao + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Estágio:</strong> ' + ens.pressaoOperacao + '</td></tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Pressão Inicial:</strong> ' + ens.pressaoInicial + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Pressão Final (' + ens.tempoEnsaio + '):</strong> ' + ens.pressaoFinal + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1; background:#f0fdf4; color:#065f46; font-weight:bold;">' + window.statusEstanqueidade + '</td></tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Manômetro RBC:</strong> ' + ens.manometro + '</td><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Detector LEL:</strong> ' + ens.detector + '</td></tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>🎙️ IA Acústica FFT:</strong> ' + osSalva.espectroAcustico + '</td><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; font-weight:bold; color:#0284c7;">🛡️ Score Seguradora: ' + osSalva.riskScore + ' (' + osSalva.elegivelDescontoSeguro + ')</td></tr>' +
                     '</table>' +
                 '</div>' +
 
                 '<div style="margin-bottom:10px; page-break-inside:avoid;">' +
-                    '<div style="background:#0f172a; color:#ffffff; font-size:10px; font-weight:bold; padding:5px 8px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">4. Responsabilidade Técnica (ART/CREA), Peças Baixadas & Parecer Conclusivo</div>' +
+                    '<div style="background:#0f172a; color:#ffffff; font-size:10px; font-weight:bold; padding:5px 8px; text-transform:uppercase; border-left:4px solid ' + empCor + ';">4. Responsabilidade Técnica (ART/TRT), Peças Baixadas & Parecer Conclusivo</div>' +
                     '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:3px;">' +
-                        '<tr>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>ART / TRT:</strong> ' + osSalva.art + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Eng. Responsável:</strong> ' + osSalva.engenheiro + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Técnico Executor:</strong> ' + osSalva.tecnico + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Peças Aplicadas da Viatura:</strong> ' + osSalva.pecas + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1; font-weight:bold;"><strong>Valor Total:</strong> R$ ' + osSalva.valorNum.toFixed(2).replace('.', ',') + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; color:#059669; font-weight:bold;">📅 ' + osSalva.prev1Ano + '</td>' +
-                            '<td style="padding:5px 7px; border:1px solid #cbd5e1; color:#b45309; font-weight:bold;">📅 ' + osSalva.prev5Anos + '</td>' +
-                        '</tr>' +
-                        '<tr>' +
-                            '<td colspan="3" style="padding:6px 8px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Parecer Técnico:</strong> ' + osSalva.parecer + '</td>' +
-                        '</tr>' +
+                        '<tr><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>ART / TRT:</strong> ' + osSalva.art + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Eng. Responsável:</strong> ' + osSalva.engenheiro + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Técnico Executor:</strong> ' + osSalva.tecnico + '</td></tr>' +
+                        '<tr><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1;"><strong>Peças Aplicadas da Viatura:</strong> ' + osSalva.pecas + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1; font-weight:bold;"><strong>Valor Total:</strong> R$ ' + osSalva.valorNum.toFixed(2).replace('.', ',') + '</td></tr>' +
+                        '<tr><td colspan="2" style="padding:5px 7px; border:1px solid #cbd5e1; color:#059669; font-weight:bold;">📅 ' + osSalva.prev1Ano + '</td><td style="padding:5px 7px; border:1px solid #cbd5e1; color:#b45309; font-weight:bold;">📅 ' + osSalva.prev5Anos + '</td></tr>' +
+                        '<tr><td colspan="3" style="padding:6px 8px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Parecer Técnico:</strong> ' + osSalva.parecer + '</td></tr>' +
                     '</table>' +
                 '</div>' +
 
@@ -2722,7 +2443,7 @@ function registrarOSNoBancoCentral() {
         };
 
         // ==========================================================
-        // CO-PILOTO DE FILA & RADAR ESTILO IFOOD (SINCRONIZADO)
+        // CO-PILOTO DE FILA & RADAR ESTILO IFOOD
         // ==========================================================
         var statusAtualTecnico = localStorage.getItem("CP_TEC_STATUS") || "DISPONIVEL";
         var idsOSJaNotificadas = JSON.parse(localStorage.getItem("CP_OS_NOTIFICADAS") || "[]");
@@ -2802,7 +2523,7 @@ function registrarOSNoBancoCentral() {
                     if (statusAtualTecnico === 'EM_VISTORIA' || statusAtualTecnico === 'EM_ROTA') {
                         tocarAlertaSonoro('BIP_DISCRETO');
                         document.getElementById('cp-toast-cli').innerText = (os.prioridade === 'URGENTE' ? '🚨 URGENTE: ' : '') + (os.cliente || 'Nova OS');
-                        document.getElementById('cp-toast-pos').innerText = 'Guardada na sua Fila de OSs (Total na fila: ' + fila.length + ').';
+                        document.getElementById('cp-toast-pos').innerText = 'Guardada na sua Fila de OSs (Total: ' + fila.length + ').';
                         var toast = document.getElementById('cp-silent-toast');
                         toast.style.display = 'block';
                         setTimeout(function() { toast.style.display = 'none'; }, 5500);

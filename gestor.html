@@ -359,8 +359,9 @@
         }
         .btn-close {
             background: rgba(225, 29, 72, 0.15); border: 1px solid var(--red); color: #fda4af;
-            padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer;
+            padding: 8px 14px; border-radius: 6px; font-weight: 800; cursor: pointer;
         }
+        .btn-close:hover { background: var(--red); color: #fff; }
 
         /* GALERIA DE AUDITORIA COM FOTOS REAIS E BOTÃO DE ZOOM */
         .audit-grid-photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; margin: 14px 0; }
@@ -473,7 +474,7 @@
     <div id="toast-gestor">✔ Operação realizada com sucesso!</div>
 
     <!-- LIGHTBOX DE ZOOM PARA O GESTOR AMPLIAR AS FOTOS DO TÉCNICO -->
-    <div id="imageZoomModal" class="img-modal">
+    <div id="imageZoomModal" class="img-modal" onclick="if(event.target===this) fecharZoomGestor()">
         <div class="img-modal-bar">
             <span id="zoom-caption" style="font-size:0.82rem; font-weight:700; color:#fff;">Foto de Auditoria</span>
             <button type="button" class="btn-zoom-ctrl" onclick="alternarLupaGestor()">🔍 Lupa 2.4x (Ampliar / Reduzir)</button>
@@ -1034,8 +1035,8 @@
         </div>
     </div>
 
- <!-- MODAL 1: INSPEÇÃO COMPLETA DO DOSSIÊ DA OS -->
-    <div class="modal-backdrop" id="modal-dossie">
+    <!-- MODAL 1: INSPEÇÃO COMPLETA DO DOSSIÊ DA OS -->
+    <div class="modal-backdrop" id="modal-dossie" onclick="if(event.target===this) fecharModais()">
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="mdl-titulo" style="font-size:1.2rem; font-weight:900; color:var(--g3-amber);">DOSSIÊ DE AUDITORIA TÉCNICA</h3>
@@ -1044,13 +1045,13 @@
             <div id="mdl-corpo" style="font-size:0.9rem; line-height:1.6; color:#e2e8f0;"></div>
             <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;">
                 <button type="button" class="btn-top btn-amber" onclick="imprimirCertificadoGestorA4()">🖨️ Imprimir Certificado Completo / Salvar PDF A4</button>
-                <button type="button" class="btn-top btn-outline" onclick="fecharModais()">Fechar Janela</button>
+                <button type="button" class="btn-top btn-outline" onclick="fecharModais()">✕ Fechar Janela</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL 2: DESPACHAR NOVA OS PARA QUALQUER TÉCNICO E CLIENTE CADASTRADO -->
-    <div class="modal-backdrop" id="modal-despacho">
+    <div class="modal-backdrop" id="modal-despacho" onclick="if(event.target===this) fecharModais()">
         <div class="modal-box">
             <div class="modal-header">
                 <h3 style="font-size:1.15rem; font-weight:900; color:var(--cyan);">🚀 DESPACHAR ORDEM DE SERVIÇO PARA TÉCNICO NA RUA</h3>
@@ -1110,9 +1111,9 @@
             </div>
         </div>
     </div>
-    <!-- FIM DA PARTE 1 -->
-     <!-- MODAL EXECUTIVO DE FECHAMENTO DO DIA (DRE) -->
-    <div id="modal-fechamento-dia">
+
+    <!-- MODAL 3: EXECUTIVO DE FECHAMENTO DO DIA (DRE) -->
+    <div id="modal-fechamento-dia" onclick="if(event.target===this) fecharModais()">
         <div class="dre-modal-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:16px;">
                 <div>
@@ -1123,7 +1124,7 @@
                         Fechamento de Produtividade & Faturamento da Frota
                     </h2>
                 </div>
-                <button type="button" onclick="fecharModalDRE()" style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; font-weight:900;">✕</button>
+                <button type="button" onclick="fecharModais()" style="background:rgba(225,29,72,0.18); border:1px solid var(--red); color:#fda4af; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:900;">✕ Fechar</button>
             </div>
 
             <div class="dre-kpi-row">
@@ -1168,12 +1169,16 @@
                 <button type="button" onclick="dispararFechamentoWhatsAppDiretoria()" style="padding:12px 22px; border-radius:10px; border:none; background:linear-gradient(90deg,#10B981,#059669); color:#000; font-weight:900; font-size:0.86rem; cursor:pointer;">
                     📲 Enviar Fechamento no WhatsApp da Diretoria
                 </button>
+                <button type="button" onclick="fecharModais()" style="padding:12px 18px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:#fff; font-weight:800; font-size:0.84rem; cursor:pointer;">
+                    ✕ Fechar Janela
+                </button>
             </div>
         </div>
     </div>
+    <!-- FIM DA PARTE 1 DO GESTOR.HTML -->
 
     <!-- ==========================================================
-         MOTOR CENTRAL UNIFICADO DO GESTOR (SEM ERROS DE SINTAXE)
+         MOTOR CENTRAL UNIFICADO DO GESTOR (100% REVISADO E BLINDADO)
          ========================================================== -->
     <script>
         var STORAGE_KEY = "G3_ERP_MASTER_DB_V2";
@@ -1187,6 +1192,14 @@
             }
         });
 
+        // Permite fechar qualquer janela modal apertando a tecla ESC no computador
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (typeof window.fecharModais === 'function') window.fecharModais();
+                if (typeof window.fecharZoomGestor === 'function') window.fecharZoomGestor();
+            }
+        });
+
         function avisoGestor(msg) {
             var t = document.getElementById('toast-gestor');
             if (!t) return;
@@ -1194,6 +1207,28 @@
             t.style.display = 'block';
             setTimeout(function() { t.style.display = 'none'; }, 3200);
         }
+
+        // ==========================================================
+        // FECHAMENTO UNIVERSAL DE TODAS AS JANELAS MODAIS
+        // ==========================================================
+        window.fecharModais = function() {
+            var idsModais = ['modal-dossie', 'modal-despacho', 'modal-fechamento-dia'];
+            for (var i = 0; i < idsModais.length; i++) {
+                var el = document.getElementById(idsModais[i]);
+                if (el) {
+                    el.style.display = 'none';
+                }
+            }
+            // Pausa qualquer vídeo em reprodução ao fechar o dossiê
+            var vidPlayer = document.getElementById('gestor-video-player');
+            if (vidPlayer && typeof vidPlayer.pause === 'function') {
+                try { vidPlayer.pause(); } catch (e) {}
+            }
+        };
+
+        window.fecharModalDRE = function() {
+            window.fecharModais();
+        };
 
         // ==========================================================
         // FUNÇÕES DE ZOOM DO GESTOR (LIGHTBOX 2.4X)
@@ -1259,6 +1294,7 @@
         }
 
         var db = obterDadosPadrao();
+        var cacheVideosNuvem = {};
 
         function carregarBanco() {
             try {
@@ -1286,7 +1322,21 @@
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
                 localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(db));
-            } catch (e) {}
+            } catch (e) {
+                try {
+                    var copiaLeve = JSON.parse(JSON.stringify(db));
+                    if (copiaLeve.ordens) {
+                        for (var i = 0; i < copiaLeve.ordens.length; i++) {
+                            if (copiaLeve.ordens[i].video) {
+                                copiaLeve.ordens[i].temVideo = true;
+                                delete copiaLeve.ordens[i].video;
+                            }
+                        }
+                    }
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaLeve));
+                    localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(copiaLeve));
+                } catch (err2) {}
+            }
         }
 
         // ==========================================================
@@ -1297,6 +1347,10 @@
         var empresaID = "CAPITALTECH_COM";
 
         function extrairTenantDoEmail(emailStr) {
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('tenant')) {
+                return params.get('tenant').toUpperCase();
+            }
             var limpo = (emailStr || "admin@capitaltech.com").trim().toLowerCase();
             var partes = limpo.split('@');
             var dominio = partes.length > 1 ? partes[1] : limpo;
@@ -1343,7 +1397,26 @@
                 }
             });
 
-            // 2. SINCRONIZA OS DADOS DA GAVETA DESTA EMPRESA EM TEMPO REAL
+            // 2. ESCUTA O CANAL DEDICADO DE VÍDEOS DE AUDITORIA DA EMPRESA
+            rtdb.ref('MIDIA_OS/' + empresaID).off();
+            rtdb.ref('MIDIA_OS/' + empresaID).on('value', function(snapMidia) {
+                var mapaMidia = snapMidia.val() || {};
+                cacheVideosNuvem = mapaMidia;
+                if (db && db.ordens) {
+                    var alterouVideo = false;
+                    for (var i = 0; i < db.ordens.length; i++) {
+                        var prot = db.ordens[i].protocolo;
+                        if (prot && mapaMidia[prot] && mapaMidia[prot].video) {
+                            db.ordens[i].video = mapaMidia[prot].video;
+                            db.ordens[i].temVideo = true;
+                            alterouVideo = true;
+                        }
+                    }
+                    if (alterouVideo) window.renderizarTudo();
+                }
+            });
+
+            // 3. SINCRONIZA OS DADOS DA GAVETA DESTA EMPRESA EM TEMPO REAL
             rtdb.ref('EMPRESAS/' + empresaID).off();
             rtdb.ref('EMPRESAS/' + empresaID).on('value', function(snapshot) {
                 var dadosNuvem = snapshot.val();
@@ -1351,6 +1424,13 @@
                     var padrao = obterDadosPadrao();
                     var ordensLista = dadosNuvem.ordens || padrao.ordens;
                     if (!Array.isArray(ordensLista)) ordensLista = Object.values(ordensLista);
+                    for (var k = 0; k < ordensLista.length; k++) {
+                        var pr = ordensLista[k].protocolo;
+                        if (pr && cacheVideosNuvem[pr] && cacheVideosNuvem[pr].video && !ordensLista[k].video) {
+                            ordensLista[k].video = cacheVideosNuvem[pr].video;
+                            ordensLista[k].temVideo = true;
+                        }
+                    }
                     db = {
                         configWhiteLabel: dadosNuvem.configWhiteLabel || padrao.configWhiteLabel,
                         clientes: dadosNuvem.clientes || padrao.clientes,
@@ -1800,7 +1880,8 @@
                 }
 
                 var zapLimpo = (t.zap || "61986294465").replace(/\D/g, '');
-                var linkRadioZap = "https://wa.me/55" + zapLimpo + "?text=" + encodeURIComponent("📡 *CENTRAL DE OPERAÇÕES:* Olá " + t.nome + ", você possui " + filaEspera.length + " OS(s) na fila do aplicativo.");
+                if (zapLimpo.length <= 11 && zapLimpo.indexOf('55') !== 0) zapLimpo = "55" + zapLimpo;
+                var linkRadioZap = "https://wa.me/" + zapLimpo + "?text=" + encodeURIComponent("📡 *CENTRAL DE OPERAÇÕES:* Olá " + t.nome + ", você possui " + filaEspera.length + " OS(s) na fila do aplicativo.");
 
                 var card = document.createElement('div');
                 card.className = classeCard;
@@ -2021,8 +2102,9 @@
 
                 var valorFormatado = "R$ " + valorNumOS.toFixed(2).replace('.', ',');
                 var numFotosOS = os.fotos ? Object.keys(os.fotos).length : 0;
-                var badgeMidia = numFotosOS > 0 || os.video
-                    ? '<span class="pill pill-ok">📸 ' + numFotosOS + ' Foto(s)' + (os.video ? ' + 🎥 Vídeo' : '') + '</span>'
+                var possuiVideoOS = !!(os.video || os.temVideo || (cacheVideosNuvem[os.protocolo] && cacheVideosNuvem[os.protocolo].video));
+                var badgeMidia = numFotosOS > 0 || possuiVideoOS
+                    ? '<span class="pill pill-ok">📸 ' + numFotosOS + ' Foto(s)' + (possuiVideoOS ? ' + 🎥 Vídeo' : '') + '</span>'
                     : '<span class="pill pill-info">Aguardando Mídia</span>';
 
                 var textoStatus = os.statusEst || (os.status === "Pendente" ? "DESPACHADA P/ CAMPO" : "APROVADO");
@@ -2078,7 +2160,7 @@
         };
 
         // ==========================================================
-        // DESPACHO DE OS CO-PILOTO + DOSSIÊ + DRE
+        // DESPACHO DE OS CO-PILOTO + ABERTURA BLINDADA DO WHATSAPP
         // ==========================================================
         window.atalhoAbastecerTecnico = function(tecId) {
             window.trocarAba('estoque');
@@ -2115,9 +2197,13 @@
             var valNum = parseFloat(document.getElementById('dsp-valor').value) || 380;
 
             var tecIdx = parseInt(document.getElementById('dsp-select-tec').value) || 0;
-            var tecObj = db.tecnicos[tecIdx] || db.tecnicos[0];
-            var nomeTecViatura = tecObj.nome + " (" + tecObj.carro + ")";
+            var tecObj = (db.tecnicos && db.tecnicos[tecIdx]) ? db.tecnicos[tecIdx] : (db.tecnicos && db.tecnicos[0] ? db.tecnicos[0] : { id: "t1", nome: "Habner T. Fernandes", carro: "FROTA-DF04", placa: "JKR-4A89", zap: "61986294465", inmetro: "Manômetro Calibrado" });
+            var nomeTecViatura = (tecObj.nome || "Técnico") + " (" + (tecObj.carro || "Viatura") + ")";
+            
             var zapTec = (tecObj.zap || "61986294465").replace(/\D/g, '');
+            if (zapTec.length <= 11 && zapTec.indexOf('55') !== 0) {
+                zapTec = "55" + zapTec;
+            }
 
             var prefixoEmpresa = (db.configWhiteLabel && db.configWhiteLabel.prefixo) ? db.configWhiteLabel.prefixo : "CT";
             var artPadrao = (db.configWhiteLabel && db.configWhiteLabel.art) ? db.configWhiteLabel.art : "ART-DF #0720260098412";
@@ -2137,10 +2223,10 @@
                 statusEst: "DESPACHADA P/ CAMPO",
                 status: "Pendente",
                 prioridade: ehUrgente ? "URGENTE" : "NORMAL",
-                equip: tecObj.inmetro,
+                equip: tecObj.inmetro || "Manômetro Digital #INM-9482",
                 art: artPadrao,
                 tecnico: nomeTecViatura,
-                pecas: "Estoque Viatura " + tecObj.carro,
+                pecas: "Estoque Viatura " + (tecObj.carro || "Frota"),
                 valorNum: valNum,
                 valorTotal: valNum
             });
@@ -2155,7 +2241,7 @@
                                    "&cli=" + encodeURIComponent(cli) +
                                    "&end=" + encodeURIComponent(end) +
                                    "&tq=" + encodeURIComponent(tq) +
-                                   "&tecId=" + encodeURIComponent(tecObj.id);
+                                   "&tecId=" + encodeURIComponent(tecObj.id || "t1");
 
             if (destinoAcao === 'ABRIR_APP') {
                 window.location.href = urlAppPreenchido;
@@ -2164,27 +2250,47 @@
 
             var linkMapa = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(end);
             var msg = "🚨 *ORDEM DE SERVIÇO DESPACHADA — " + nomeEmpresa + "* 🚨\n" +
-                      "📋 *OS:* #" + novoProt + " | *Tipo:* " + modo + "\n" +
-                      "👷 *Técnico / Viatura:* " + nomeTecViatura + " [Placa: " + tecObj.placa + "]\n\n" +
+                      "📋 *OS:* #" + novoProt + " | *Tipo:* " + (ehUrgente ? "EMERGENCIAL 🚨" : modo) + "\n" +
+                      "👷 *Técnico / Viatura:* " + nomeTecViatura + " [Placa: " + (tecObj.placa || "BSB-0000") + "]\n\n" +
                       "🏢 *Cliente:* " + cli + "\n" +
                       "📍 *Endereço:* " + end + "\n" +
                       "🛢️ *Tanque / Ativo:* " + tq + "\n" +
                       "🗺️ *Abrir Rota no GPS:* " + linkMapa + "\n\n" +
                       "Ao chegar no local, abra o App de Campo, crave o GPS, escaneie a gola do tanque e anexe as 10 fotos + vídeo de estanqueidade.";
 
-            window.open("https://wa.me/55" + zapTec + "?text=" + encodeURIComponent(msg), '_blank');
+            var urlWhatsapp = "https://wa.me/" + zapTec + "?text=" + encodeURIComponent(msg);
+            avisoGestor("📲 OS #" + novoProt + " registrada! Abrindo WhatsApp do Técnico...");
+            var novaJanela = window.open(urlWhatsapp, '_blank');
+            if (!novaJanela) {
+                window.location.href = urlWhatsapp;
+            }
         };
 
+        // ==========================================================
+        // DOSSIÊ COMPLETO DA OS + LEITURA DE VÍDEO DA NUVEM E IMPRESSÃO A4
+        // ==========================================================
         var osDossieAtual = null;
         window.abrirZoomDaOS = function(numSlot, legenda) {
             if (!osDossieAtual || !osDossieAtual.fotos || !osDossieAtual.fotos[numSlot]) return;
             window.abrirZoomGestor(osDossieAtual.fotos[numSlot], legenda);
         };
 
-window.abrirDossieOS = function(idx) {
+        window.abrirDossieOS = function(idx) {
             var os = db.ordens[idx];
             if (!os) return;
             osDossieAtual = os;
+
+            // Verifica se o vídeo está no cache dedicado da nuvem
+            if (!os.video && cacheVideosNuvem[os.protocolo] && cacheVideosNuvem[os.protocolo].video) {
+                os.video = cacheVideosNuvem[os.protocolo].video;
+            }
+            // Verifica se está salvo no canal local dedicado de vídeo (mesmo navegador)
+            if (!os.video) {
+                try {
+                    var vidLocal = localStorage.getItem("VIDEO_OS_" + os.protocolo);
+                    if (vidLocal) os.video = vidLocal;
+                } catch (e) {}
+            }
 
             var valorFmt = "R$ " + extrairValorFinanceiroOS(os).toFixed(2).replace('.', ',');
             document.getElementById('mdl-titulo').innerText = "CERTIFICADO & AUDITORIA COMPLETA — OS #" + os.protocolo;
@@ -2256,9 +2362,20 @@ window.abrirDossieOS = function(idx) {
             }
             htmlGaleria += '</div>';
 
-            var htmlVideo = os.video
-                ? '<div style="background:var(--card); border:1.5px solid var(--cyan); border-radius:12px; padding:16px; margin-top:16px;"><strong style="color:var(--cyan); display:block; margin-bottom:8px;">🎥 VÍDEO DE AUDITORIA DE CAMPO:</strong><video src="' + os.video + '" controls playsinline style="width:100%; max-height:360px; border-radius:8px; background:#000;"></video></div>'
-                : '<div style="background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:12px; margin-top:14px; color:var(--muted);">🎥 <strong>Vídeo de Auditoria:</strong> Nenhum vídeo anexado nesta OS.</div>';
+            var htmlVideo = '<div id="box-video-dossie-dinamico" style="margin-top:16px;">';
+            if (os.video && os.video.length > 50) {
+                htmlVideo +=
+                    '<div style="background:var(--card); border:1.5px solid var(--cyan); border-radius:12px; padding:16px;">' +
+                        '<strong style="color:var(--cyan); display:block; margin-bottom:8px;">🎥 VÍDEO DE AUDITORIA DE CAMPO (SINCRONIZADO PELO TÉCNICO):</strong>' +
+                        '<video id="gestor-video-player" src="' + os.video + '" controls playsinline style="width:100%; max-height:360px; border-radius:8px; background:#000;"></video>' +
+                    '</div>';
+            } else {
+                htmlVideo +=
+                    '<div style="background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:12px; color:var(--muted);">' +
+                        '🎥 <strong>Vídeo de Auditoria:</strong> ' + (os.temVideo ? '⏳ Buscando vídeo gravado pelo técnico na nuvem...' : 'Nenhum vídeo anexado nesta OS.') +
+                    '</div>';
+            }
+            htmlVideo += '</div>';
 
             var htmlAssinatura = os.assinatura
                 ? '<div style="background:#ffffff; color:#0f172a; border:2px solid var(--g3-amber); border-radius:12px; padding:16px; margin-top:16px; text-align:center;">' +
@@ -2319,6 +2436,24 @@ window.abrirDossieOS = function(idx) {
                 htmlAssinatura;
 
             document.getElementById('modal-dossie').style.display = 'flex';
+
+            // Se ainda não tiver o vídeo em memória, busca no canal dedicado do Firebase na hora
+            if (!os.video && rtdb && os.protocolo) {
+                rtdb.ref('MIDIA_OS/' + empresaID + '/' + os.protocolo + '/video').once('value', function(snapV) {
+                    var vidRemoto = snapV.val();
+                    if (vidRemoto && vidRemoto.length > 50) {
+                        os.video = vidRemoto;
+                        var boxV = document.getElementById('box-video-dossie-dinamico');
+                        if (boxV) {
+                            boxV.innerHTML =
+                                '<div style="background:var(--card); border:1.5px solid var(--cyan); border-radius:12px; padding:16px;">' +
+                                    '<strong style="color:var(--cyan); display:block; margin-bottom:8px;">🎥 VÍDEO DE AUDITORIA DE CAMPO (SINCRONIZADO DA NUVEM):</strong>' +
+                                    '<video id="gestor-video-player" src="' + vidRemoto + '" controls playsinline style="width:100%; max-height:360px; border-radius:8px; background:#000;"></video>' +
+                                '</div>';
+                        }
+                    }
+                });
+            }
         };
 
         // IMPRESSÃO OFICIAL A4 DO GESTOR (FOLHA BRANCA COM TANQUE COMPLETO + FOTOS + ASSINATURA)
@@ -2386,7 +2521,7 @@ window.abrirDossieOS = function(idx) {
 
             var win = window.open('', '_blank');
             if (!win) {
-                alert("Permita pop-ups no navegador para abrir a página de impressão A4.");
+                window.print();
                 return;
             }
 
@@ -2407,7 +2542,10 @@ window.abrirDossieOS = function(idx) {
                 '<div class="sheet">' +
                     '<div class="no-print-bar">' +
                         '<span><strong>📄 Visualização Oficial de Impressão A4</strong> — OS #' + os.protocolo + '</span>' +
-                        '<button class="btn-p" onclick="window.print()">🖨️ Imprimir / Salvar como PDF Agora</button>' +
+                        '<div style="display:flex; gap:8px;">' +
+                            '<button class="btn-p" onclick="window.print()">🖨️ Imprimir / Salvar como PDF Agora</button>' +
+                            '<button class="btn-p" style="background:#e11d48; color:#fff;" onclick="window.close()">✕ Fechar</button>' +
+                        '</div>' +
                     '</div>' +
 
                     '<div style="border-bottom: 4px solid ' + empCor + '; padding-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">' +
@@ -2483,7 +2621,23 @@ window.abrirDossieOS = function(idx) {
             win.document.close();
         };
 
+        window.exportarCSV = function() {
+            var linhas = ["Protocolo;Data;Cliente;Local;Modo;Tanque;Estanqueidade;Tecnico;Valor"];
+            for (var i = 0; i < db.ordens.length; i++) {
+                var o = db.ordens[i];
+                linhas.push([o.protocolo, o.data, o.cliente, (o.local || o.endereco), (o.modo || "Preventiva"), o.tanque, (o.statusEst || o.status), o.tecnico, extrairValorFinanceiroOS(o)].join(";"));
+            }
+            var blob = new Blob(["\uFEFF" + linhas.join("\n")], { type: "text/csv;charset=utf-8;" });
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Relatorio_Geral_ERP_CapitalTech.csv";
+            link.click();
+            avisoGestor("📥 Planilha exportada com sucesso!");
+        };
+
+        // ==========================================================
         // MODAL DRE / FECHAMENTO DO DIA
+        // ==========================================================
         var ultimoResumoDRETexto = "";
 
         window.abrirFechamentoProdutividadeDia = function() {
@@ -2566,12 +2720,10 @@ window.abrirDossieOS = function(idx) {
             document.getElementById('modal-fechamento-dia').style.display = 'flex';
         };
 
-        window.fecharModalDRE = function() {
-            document.getElementById('modal-fechamento-dia').style.display = 'none';
-        };
-
         window.dispararFechamentoWhatsAppDiretoria = function() {
-            window.open("https://wa.me/5561986294465?text=" + encodeURIComponent(ultimoResumoDRETexto), '_blank');
+            var urlZap = "https://wa.me/5561986294465?text=" + encodeURIComponent(ultimoResumoDRETexto);
+            var w = window.open(urlZap, '_blank');
+            if (!w) window.location.href = urlZap;
         };
 
         window.imprimirRelatorioDREA4 = function() {
