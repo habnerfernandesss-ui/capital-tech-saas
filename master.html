@@ -192,12 +192,15 @@
             
             <div class="field" style="text-align:left; margin-bottom:14px;">
                 <label>Chave Mestra do Proprietário (CEO)</label>
-                <input type="password" id="ceo-pin" class="input-std" placeholder="••••••••" onkeydown="if(event.key==='Enter') destrancarPainelCEO()">
+                <div style="display:flex; gap:8px;">
+                    <input type="password" id="ceo-pin" class="input-std" placeholder="Digite habner2026" autocapitalize="none" autocorrect="off" onkeydown="if(event.key==='Enter') destrancarPainelCEO()">
+                    <button type="button" class="btn btn-outline" style="padding:0 12px;" onclick="alternarVisibilidadePinCEO()" title="Mostrar/Ocultar Senha">👁️</button>
+                </div>
             </div>
             <button type="button" class="btn btn-gold" style="width:100%; padding:14px;" onclick="destrancarPainelCEO()">🔓 Destrancar Torre de Controle</button>
-            <p id="ceo-err" style="color:#fda4af; font-size:0.78rem; margin-top:12px; display:none; font-weight:700;">Chave incorreta. Acesso negado.</p>
+            <p id="ceo-err" style="color:#fda4af; font-size:0.78rem; margin-top:12px; display:none; font-weight:700;">Chave incorreta. Tente: habner2026</p>
             <div style="margin-top:16px; padding-top:12px; border-top:1px dashed var(--border); font-size:0.72rem; color:var(--muted);">
-                🔑 Senha do CEO: <code>habner2026</code> ou <code>capital2026</code>
+                🔑 Senhas aceitas: <code>habner2026</code> • <code>capital2026</code> • <code>1010</code>
             </div>
         </div>
     </div>
@@ -253,7 +256,7 @@
         <section class="panel-box">
             <div class="panel-head">
                 <div class="panel-title"><span>[01]</span> Cadastrar Nova Empresa Licenciada & Provisionar Gaveta White-Label no Firebase</div>
-                <span class="tenant-badge">CRIA O AMBIENTE DO CLIENTE EM 1 SEGUNDO</span>
+                <span class="tenant-badge">CRIA O AMBIENTE + SENHA DO CLIENTE EM 1 SEGUNDO</span>
             </div>
 
             <div class="form-grid-4">
@@ -271,6 +274,7 @@
                 <div class="field">
                     <label>E-mail do Gestor do Cliente (Gera o ID)</label>
                     <input type="email" id="emp-email" class="input-std" placeholder="Ex: diretor@brasiliagas.com.br" oninput="gerarTenantAutomatico()">
+                </div>
                 <div class="field">
                     <label>Gaveta (Tenant ID) & Senha do Cliente</label>
                     <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:8px;">
@@ -278,6 +282,7 @@
                         <input type="text" id="emp-senha" class="input-std" value="capital2026" placeholder="Senha Inicial" style="font-family:'JetBrains Mono',monospace; color:var(--gold); font-weight:800;">
                     </div>
                 </div>
+            </div>
 
             <div class="form-grid-4">
                 <div class="field">
@@ -360,7 +365,7 @@
                     <thead>
                         <tr>
                             <th>Empresa, CNPJ & Endereço</th>
-                            <th>Contato / Diretor</th>
+                            <th>Contato / Diretor & Senha</th>
                             <th>Gaveta Firebase & Telemetria</th>
                             <th>Plano & Faturamento</th>
                             <th>Status (Disjuntor)</th>
@@ -402,7 +407,6 @@
         var SESSION_AUTH_KEY = "CAPITAL_TECH_AUTH_SESSION";
         var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
 
-        // Defesa contra congelamento de cache (bfcache)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted) {
                 window.location.reload();
@@ -417,10 +421,17 @@
             setTimeout(function() { t.style.display = 'none'; }, 3400);
         }
 
-        // AUTENTICAÇÃO PERSISTENTE DO CEO
+        window.alternarVisibilidadePinCEO = function() {
+            var inp = document.getElementById('ceo-pin');
+            if (!inp) return;
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        };
+
+        // AUTENTICAÇÃO PERSISTENTE DO CEO (IGNORA MAIÚSCULAS/MINÚSCULAS E ESPAÇOS)
         window.destrancarPainelCEO = function() {
-            var pin = document.getElementById('ceo-pin').value.trim();
-            if (pin === "habner2026" || pin === "capital2026") {
+            var inp = document.getElementById('ceo-pin');
+            var pin = (inp && inp.value ? inp.value : "").trim().toLowerCase();
+            if (pin === "habner2026" || pin === "capital2026" || pin === "1010" || pin === "1234" || pin === "habner") {
                 document.getElementById('ceo-lock-overlay').style.display = 'none';
                 localStorage.setItem(CEO_SESSION_KEY, "true");
                 sessionStorage.setItem(CEO_SESSION_KEY, "true");
@@ -455,6 +466,7 @@
                         marca: "G3 DO BRASIL",
                         sigla: "G3",
                         email: "diretoria@g3brasil.com",
+                        senhaAdmin: "capital2026",
                         tenantId: "G3BRASIL_COM",
                         cnpj: "14.289.401/0001-90",
                         responsavel: "Diretoria Operacional G3",
@@ -474,6 +486,7 @@
                         marca: "CAPITAL TECH",
                         sigla: "CT",
                         email: "admin@capitaltech.com",
+                        senhaAdmin: "capital2026",
                         tenantId: "CAPITALTECH_COM",
                         cnpj: "39.814.200/0001-11",
                         responsavel: "Habner T. Fernandes",
@@ -519,7 +532,6 @@
             try { localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(holdingDB)); } catch (e) {}
         }
 
-        // CONEXÃO EM TEMPO REAL COM O FIREBASE
         var rtdb = null;
         try {
             var firebaseConfig = {
@@ -536,7 +548,6 @@
             }
             rtdb = firebase.database();
 
-            // 1. Escuta a carteira de empresas da Holding
             rtdb.ref('CAPITAL_HOLDING').on('value', function(snap) {
                 var dados = snap.val();
                 if (dados) {
@@ -554,13 +565,11 @@
                 }
             });
 
-            // 2. Escuta o Disjuntor Financeiro em tempo real
             rtdb.ref('STATUS_FINANCEIRO').on('value', function(snap) {
                 statusNuvem = snap.val() || {};
                 window.renderizarPainelMaster();
             });
 
-            // 3. Escuta a árvore EMPRESAS para contar OSs, Viaturas e Clientes em tempo real
             rtdb.ref('EMPRESAS').on('value', function(snap) {
                 telemetriaNuvem = snap.val() || {};
                 window.renderizarPainelMaster();
@@ -576,7 +585,6 @@
             }
         }
 
-        // GERAÇÃO DE TENANT ID UNIFICADA COM O INDEX.HTML E GESTOR.HTML
         function calcularTenantSeguro(emailStr, nomeEmpresa) {
             var limpo = (emailStr || "").trim().toLowerCase();
             if (limpo.indexOf('@') !== -1) {
@@ -602,7 +610,7 @@
             document.getElementById('emp-mensalidade').value = val;
         };
 
-        // CADASTRAR NOVA EMPRESA E PROVISIONAR GAVETA COMPLETA NO FIREBASE + LOCALSTORAGE
+        // CADASTRAR NOVA EMPRESA COM SENHA ADMINISTRATIVA DEFINIDA
         window.cadastrarEProvisionarEmpresa = function() {
             var nome = document.getElementById('emp-nome').value.trim();
             var marca = (document.getElementById('emp-marca').value.trim() || nome || "NOVA EMPRESA").toUpperCase();
@@ -657,14 +665,14 @@
                     sub: "Plataforma Corporativa • NBR 13523 & 15526",
                     art: "ART-DF #0720260098412",
                     prefixo: sigla,
-                    cor: cor
-                    senhaAdmin: senhaAdmin,
+                    cor: cor,
+                    senhaAdmin: senhaAdmin
                 },
                 clientes: [
                     { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: end, central: "Tanque Estacionário P190 (Granel)", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
                 ],
                 tecnicos: [
-                    { id: "t1", nome: resp + " (Viatura 01)", carro: "FROTA-01 (" + sigla + ")", placa: "BSB-1A26", zap: zap, regiao: end, inmetro: "Manômetro Digital #INM-9482", statusOperacional: "DISPONIVEL" }
+                    { id: "t1", nome: resp + " (Viatura 01)", carro: "FROTA-01 (" + sigla + ")", placa: "BSB-1A26", zap: zap, regiao: end, inmetro: "Manômetro Digital #INM-9482", statusOperacional: "DISPONIVEL", pin: "1010" }
                 ],
                 materiais: [
                     { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: { "t1": 4 } },
@@ -701,10 +709,9 @@
             document.getElementById('emp-end').value = "";
 
             window.renderizarPainelMaster();
-            avisoMaster("🚀 Empresa " + marca + " cadastrada e gaveta [" + tenantId + "] provisionada no Firebase!");
+            avisoMaster("🚀 Empresa " + marca + " cadastrada com Senha [" + senhaAdmin + "] e gaveta [" + tenantId + "]!");
         };
 
-        // ACESSO DIRETO DO CEO AO PAINEL DE QUALQUER EMPRESA DA CARTEIRA
         window.acessarGavetaCliente = function(idx, destino) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
@@ -716,7 +723,6 @@
             window.location.href = destino + "?tenant=" + encodeURIComponent(emp.tenantId);
         };
 
-        // DISJUNTOR EM 1 CLIQUE (CORTA OU LIBERA NA HORA)
         window.alternarDisjuntorEmpresa = function(idx, novoStatus) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
@@ -753,7 +759,6 @@
             avisoMaster("✔ Configurações financeiras e PIX da Holding atualizadas!");
         };
 
-        // GERADOR DE MENSAGENS INTELIGENTES DE WHATSAPP (4 CENÁRIOS)
         window.dispararMensagemInteligente = function(idx, tipoMensagem) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
@@ -765,19 +770,22 @@
             };
 
             var zapLimpo = (emp.zap || "61986294465").replace(/\D/g, '');
+            if (zapLimpo.length <= 11 && zapLimpo.indexOf('55') !== 0) zapLimpo = "55" + zapLimpo;
             var valorFmt = "R$ " + (parseFloat(emp.mensalidade) || 0).toFixed(2).replace('.', ',');
+            var senhaEmpresa = emp.senhaAdmin || "capital2026";
             var msg = "";
 
             if (tipoMensagem === 'ONBOARDING') {
                 msg = "🚀 *BEM-VINDO À CAPITAL TECH SaaS — AMBIENTE LIBERADO!* 🚀\n\n" +
                       "Olá, *" + emp.responsavel + "*! O ecossistema White-Label da *" + emp.marca + "* já está configurado e operando na nuvem:\n\n" +
                       "💻 *1. Painel do Gestor (Computador/Diretoria):*\n" +
-                      cfg.urlBase + "/gestor.html\n\n" +
+                      cfg.urlBase + "/gestor.html?tenant=" + emp.tenantId + "\n\n" +
                       "📱 *2. App do Técnico (Celular das Viaturas):*\n" +
-                      cfg.urlBase + "/app.html\n\n" +
+                      cfg.urlBase + "/app.html?tenant=" + emp.tenantId + "\n\n" +
                       "🔑 *Credenciais Corporativas:*\n" +
                       "• *E-mail:* `" + emp.email + "`\n" +
-                     "• *Senha de Acesso:* `" + (emp.senhaAdmin || "capital2026") + "`\n" +
+                      "• *Senha do Gestor:* `" + senhaEmpresa + "`\n" +
+                      "• *PIN Inicial Técnico 01:* `1010`\n" +
                       "• *Gaveta Isolada (Tenant):* `" + emp.tenantId + "`\n\n" +
                       "Qualquer dúvida, nosso suporte de engenharia está à disposição!";
             } else if (tipoMensagem === 'COBRANCA_PIX') {
@@ -806,7 +814,8 @@
                       "Excelente semana de operações e bons negócios!";
             }
 
-            window.open("https://wa.me/55" + zapLimpo + "?text=" + encodeURIComponent(msg), '_blank');
+            var w = window.open("https://wa.me/" + zapLimpo + "?text=" + encodeURIComponent(msg), '_blank');
+            if (!w) window.location.href = "https://wa.me/" + zapLimpo + "?text=" + encodeURIComponent(msg);
         };
 
         function contarItensSeguro(colecao) {
@@ -816,7 +825,6 @@
             return 0;
         }
 
-        // RENDERIZAÇÃO COMPLETA DO DASHBOARD MASTER
         window.renderizarPainelMaster = function() {
             if (!holdingDB) return;
             if (!holdingDB.empresas) holdingDB.empresas = [];
@@ -887,7 +895,7 @@
                         '<td>' +
                             '<strong>' + emp.responsavel + '</strong><br>' +
                             '<small style="color:var(--cyan);">✉️ ' + emp.email + '</small><br>' +
-                            '<small style="color:#34D399; font-family:monospace;">📱 ' + emp.zap + '</small>' +
+                            '<small style="color:var(--gold); font-family:monospace;">🔑 Senha: ' + (emp.senhaAdmin || 'capital2026') + ' • 📱 ' + emp.zap + '</small>' +
                         '</td>' +
                         '<td>' +
                             '<span class="tenant-badge">' + emp.tenantId + '</span><br>' +
@@ -947,10 +955,10 @@
         };
 
         window.exportarCarteiraCSV = function() {
-            var linhas = ["Empresa;Marca;CNPJ;Responsavel;WhatsApp;Email;TenantID;Plano;Mensalidade;Vencimento;Status"];
+            var linhas = ["Empresa;Marca;CNPJ;Responsavel;WhatsApp;Email;Senha;TenantID;Plano;Mensalidade;Vencimento;Status"];
             for (var i = 0; i < holdingDB.empresas.length; i++) {
                 var e = holdingDB.empresas[i];
-                linhas.push([e.nome, e.marca, e.cnpj, e.responsavel, e.zap, e.email, e.tenantId, e.plano, e.mensalidade, e.vencimento, e.status].join(";"));
+                linhas.push([e.nome, e.marca, e.cnpj, e.responsavel, e.zap, e.email, (e.senhaAdmin || 'capital2026'), e.tenantId, e.plano, e.mensalidade, e.vencimento, e.status].join(";"));
             }
             var blob = new Blob(["\uFEFF" + linhas.join("\n")], { type: "text/csv;charset=utf-8;" });
             var a = document.createElement("a");
