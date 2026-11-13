@@ -1112,6 +1112,7 @@
         }
 
         var db = obterDadosPadrao();
+        var usadoNestaOS = {};
 
         function carregarBanco() {
             try {
@@ -1256,6 +1257,7 @@
             var email = document.getElementById('login-email').value.trim();
             var senha = document.getElementById('login-senha').value.trim();
             var msg = document.getElementById('login-msg');
+            var btn = document.getElementById('btn-login-tec');
             msg.style.display = 'none';
 
             if (!email || !senha) {
@@ -1264,42 +1266,62 @@
                 return;
             }
 
-            // MODO AUDITORIA (MASTER) - Deixa selecionar qualquer viatura
+            // 1. MODO AUDITORIA (MASTER) - Libera todas as viaturas
             if (senha === "capital2026" || senha === "habner2026") {
                 sessionStorage.removeItem(TEC_LOCKED_ID);
+                sessionStorage.setItem("TEC_PIN_AUTENTICADO", "MASTER");
                 liberarTerminalTecnico(email);
                 window.mostrarAviso("👑 Modo Master Ativo! Todas as viaturas liberadas.");
                 return;
             }
 
-            // MODO TÉCNICO (BLINDADO PELO PIN)
             var tenantFiltro = calcularTenantSeguro(email);
-            var bancoLocalStr = localStorage.getItem("ERP_SAAS_" + tenantFiltro);
-            if (bancoLocalStr) {
-                var dbTemp = JSON.parse(bancoLocalStr);
-                if (dbTemp.tecnicos) {
-                    for (var i = 0; i < dbTemp.tecnicos.length; i++) {
-                        if (dbTemp.tecnicos[i].pin === senha) {
-                            sessionStorage.setItem(TEC_LOCKED_ID, dbTemp.tecnicos[i].id);
-                            liberarTerminalTecnico(email);
-                            window.mostrarAviso("🔓 Acesso liberado: Viatura " + dbTemp.tecnicos[i].carro);
-                            return;
-                        }
+
+            function validarPinNaLista(listaTecnicos) {
+                if (!listaTecnicos) return null;
+                if (!Array.isArray(listaTecnicos)) listaTecnicos = Object.values(listaTecnicos);
+                for (var i = 0; i < listaTecnicos.length; i++) {
+                    if (String(listaTecnicos[i].pin || "1010").trim() === senha) {
+                        return listaTecnicos[i];
                     }
                 }
+                return null;
+            }
+
+            // 2. Tenta validar no banco já carregado ou no LocalStorage
+            var bancoLocalStr = localStorage.getItem("ERP_SAAS_" + tenantFiltro);
+            var dbTemp = bancoLocalStr ? JSON.parse(bancoLocalStr) : db;
+            var tecEncontrado = validarPinNaLista(dbTemp ? dbTemp.tecnicos : null);
+
+            if (tecEncontrado) {
+                sessionStorage.setItem(TEC_LOCKED_ID, tecEncontrado.id);
+                sessionStorage.setItem("TEC_PIN_AUTENTICADO", tecEncontrado.pin);
+                liberarTerminalTecnico(email);
+                window.mostrarAviso("🔓 Acesso liberado: Viatura " + tecEncontrado.carro);
+                return;
+            }
+
+            // 3. Se for um celular novo na rua (4G), busca os técnicos direto no Firebase
+            if (rtdb) {
+                if (btn) btn.innerText = "⏳ Validando PIN na Central Cloud...";
+                rtdb.ref('EMPRESAS/' + tenantFiltro + '/tecnicos').once('value', function(snap) {
+                    if (btn) btn.innerText = "🔓 Destrancar Minha Viatura";
+                    var tecNuvem = validarPinNaLista(snap.val());
+                    if (tecNuvem) {
+                        sessionStorage.setItem(TEC_LOCKED_ID, tecNuvem.id);
+                        sessionStorage.setItem("TEC_PIN_AUTENTICADO", tecNuvem.pin);
+                        liberarTerminalTecnico(email);
+                        window.mostrarAviso("🔓 Viatura " + tecNuvem.carro + " sincronizada via nuvem!");
+                    } else {
+                        msg.innerText = "❌ PIN incorreto ou não cadastrado pelo Gestor.";
+                        msg.style.display = 'block';
+                    }
+                });
+                return;
             }
 
             msg.innerText = "❌ PIN não encontrado para esta empresa.";
             msg.style.display = 'block';
-        };
-
-        window.fazerLogoutTecnico = function() {
-            localStorage.removeItem(SESSION_AUTH_KEY);
-            localStorage.removeItem(TEC_SESSION_KEY);
-            sessionStorage.removeItem(SESSION_AUTH_KEY);
-            sessionStorage.removeItem(TEC_SESSION_KEY);
-            sessionStorage.removeItem(TEC_LOCKED_ID);
-            window.location.href = "index.html";
         };
 
         // ==========================================================
@@ -1397,7 +1419,7 @@
         function comprimirFotoGolaBateria(srcB64, callback) {
             var img = new Image();
             img.onload = function() {
-                var maxDim = 800; // Compressão para bateria suportar 15+ tanques rápidos
+                var maxDim = 800; // Otimizado (~55KB por foto) para suportar 15+ tanques sem travar
                 var w = img.width; var h = img.height;
                 if (w > maxDim || h > maxDim) {
                     if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
@@ -1410,6 +1432,64 @@
             };
             img.src = srcB64;
         }
+
+        // GERA AUTOMATICAMENTE OS SLOTS DE FOTOS PARA 5, 10, 12 OU 15 TANQUES P190
+        window.gerarGradeSlotsBateria = function(qtdDesejada) {
+            var fabPadrao = document.getElementById('tanque-fab').value.trim() || "Nacional Gás / ARXO";
+            var anoPadrao = document.getElementById('tanque-ano').value.trim() || "2017";
+            var taraPadrao = document.getElementById('tanque-tara').value.trim() || "135,10 kg";
+            var volPadrao = document.getElementById('tanque-vol').value.trim() || "450 Litros (P190)";
+            var reqPadrao = document.getElementById('tanque-requal').value.trim() || "Vigente";
+
+            while (window.bateriaTanquesOS.length < qtdDesejada) {
+                var num = window.bateriaTanquesOS.length + 1;
+                var numFmt = num < 10 ? "0" + num : String(num);
+                window.bateriaTanquesOS.push({
+                    numero: num,
+                    serie: "P190-TQ" + numFmt,
+                    fabricante: fabPadrao,
+                    ano: anoPadrao,
+                    tara: taraPadrao,
+                    volume: volPadrao,
+                    pressaoServico: "1,7 MPa",
+                    registro: "NBR 8460",
+                    requalificacao: reqPadrao,
+                    foto: "",
+                    hora: "Aguardando foto"
+                });
+            }
+            window.renderizarListaBateriaTanques();
+            window.mostrarAviso("🛢️ Grade de " + window.bateriaTanquesOS.length + " Slots de Tanques aberta! Toque em cada tanque para fotografar.");
+        };
+
+        window.anexarFotoSlotTanqueIndividual = function(event, idx) {
+            var file = event.target.files[0];
+            if (!file || !window.bateriaTanquesOS[idx]) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                comprimirFotoGolaBateria(e.target.result, function(fotoCompacta) {
+                    var hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    window.bateriaTanquesOS[idx].foto = fotoCompacta;
+                    window.bateriaTanquesOS[idx].hora = "✔ Foto " + hora;
+                    if (!fotosBase64[1]) {
+                        fotosBase64[1] = fotoCompacta;
+                        fotosContadas[1] = true;
+                        horariosFotos[1] = hora;
+                        var img1 = document.getElementById('img-1');
+                        if (img1) { img1.src = fotoCompacta; img1.style.display = 'block'; document.getElementById('slot-1').classList.add('filled'); }
+                    }
+                    window.renderizarListaBateriaTanques();
+                    window.mostrarAviso("📸 Foto do Tanque #" + (idx + 1) + " salva com Zoom!");
+                });
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.atualizarCampoTanqueBateria = function(idx, campo, valor) {
+            if (window.bateriaTanquesOS[idx]) {
+                window.bateriaTanquesOS[idx][campo] = valor;
+            }
+        };
 
         window.adicionarTanqueAtualNaBateria = function(fotoCustomB64) {
             var serie = document.getElementById('tanque-serie').value.trim() || ("P190-" + (window.bateriaTanquesOS.length + 1));
@@ -1427,7 +1507,7 @@
             window.bateriaTanquesOS.push({
                 numero: window.bateriaTanquesOS.length + 1, serie: serie, fabricante: fab,
                 ano: ano, tara: tara, volume: vol, pressaoServico: pserv,
-                registro: reg, requalificacao: requal, foto: fotoGola, hora: horario
+                registro: reg, requalificacao: requal, foto: fotoGola, hora: fotoGola ? ("✔ Foto " + horario) : "S/ Foto"
             });
 
             ultimaFotoOcrBateria = "";
@@ -1471,6 +1551,55 @@
             var item = window.bateriaTanquesOS[idx];
             if (item && item.foto) window.abrirZoom(item.foto);
         };
+
+        window.renderizarListaBateriaTanques = function() {
+            var cont = document.getElementById('lista-bateria-tanques');
+            var badge = document.getElementById('badge-qtd-bateria');
+            if (!cont) return;
+
+            var fotosBatCount = window.bateriaTanquesOS.filter(function(x){ return !!x.foto; }).length;
+            if (badge) badge.innerText = window.bateriaTanquesOS.length + " TANQUES (" + fotosBatCount + " FOTOS)";
+
+            var barraAtalhos =
+                '<div style="grid-column: 1 / -1; display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px;">' +
+                    '<button type="button" class="btn-mini" onclick="gerarGradeSlotsBateria(5)">⚡ Abrir 5 Slots de Fotos</button>' +
+                    '<button type="button" class="btn-mini" onclick="gerarGradeSlotsBateria(10)">⚡ Abrir 10 Slots de Fotos</button>' +
+                    '<button type="button" class="btn-mini" style="border-color:var(--g3-amber); color:var(--g3-amber);" onclick="gerarGradeSlotsBateria(12)">⚡ Abrir 12 Slots (P190)</button>' +
+                    '<button type="button" class="btn-mini" style="border-color:var(--green); color:#34D399;" onclick="gerarGradeSlotsBateria(15)">⚡ Abrir 15 Slots (P190)</button>' +
+                '</div>';
+
+            if (window.bateriaTanquesOS.length === 0) {
+                cont.innerHTML = barraAtalhos + '<div style="grid-column: 1 / -1; color:var(--muted); font-size:0.8rem; padding:10px; text-align:center; border:1px dashed var(--border); border-radius:8px;">Toque em um dos botões acima (5, 10, 12 ou 15 Slots) para abrir os quadros de fotos de todos os tanques da central!</div>';
+                return;
+            }
+
+            cont.innerHTML = barraAtalhos;
+            for (var i = 0; i < window.bateriaTanquesOS.length; i++) {
+                var t = window.bateriaTanquesOS[i];
+                var temF = !!t.foto;
+                var card = document.createElement('div');
+                card.style.cssText = "background:var(--card); border:2px " + (temF ? "solid var(--green)" : "dashed rgba(245,158,11,0.45)") + "; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;";
+                card.innerHTML =
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<strong style="font-size:0.8rem; color:var(--g3-amber);">🛢️ TANQUE #' + (i + 1) + '</strong>' +
+                        '<button type="button" onclick="removerTanqueDaBateria(' + i + ')" style="background:rgba(225,29,72,0.15); border:1px solid var(--red); color:#fda4af; padding:2px 8px; border-radius:5px; font-weight:800; cursor:pointer; font-size:0.7rem;">✕</button>' +
+                    '</div>' +
+                    (temF
+                        ? '<img src="' + t.foto + '" onclick="abrirZoomBateria(' + i + ')" style="width:100%; height:95px; object-fit:cover; border-radius:6px; border:1px solid var(--cyan); cursor:zoom-in;" title="Toque para dar Zoom">'
+                        : '<div style="width:100%; height:75px; border-radius:6px; background:#06080D; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:0.72rem; color:var(--muted);">📷 Sem foto da plaqueta</div>') +
+                    '<label style="background:rgba(56,189,248,0.14); border:1px solid var(--cyan); color:var(--cyan); padding:6px; border-radius:6px; font-size:0.73rem; font-weight:800; text-align:center; cursor:pointer; position:relative;">' +
+                        (temF ? '🔄 Trocar Foto Tanque #' + (i + 1) : '📷 Fotografar Plaqueta #' + (i + 1)) +
+                        '<input type="file" accept="image/*" capture="environment" onchange="anexarFotoSlotTanqueIndividual(event, ' + i + ')" style="position:absolute; inset:0; opacity:0; cursor:pointer;">' +
+                    '</label>' +
+                    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">' +
+                        '<input type="text" value="' + t.serie + '" oninput="atualizarCampoTanqueBateria(' + i + ', \'serie\', this.value)" placeholder="Nº Série" style="background:#090D16; border:1px solid var(--border); color:#fff; padding:6px 8px; border-radius:6px; font-size:0.75rem;">' +
+                        '<input type="text" value="' + t.tara + '" oninput="atualizarCampoTanqueBateria(' + i + ', \'tara\', this.value)" placeholder="Tara (kg)" style="background:#090D16; border:1px solid var(--border); color:#fff; padding:6px 8px; border-radius:6px; font-size:0.75rem;">' +
+                    '</div>' +
+                    '<span style="font-size:0.68rem; color:#34D399; font-family:monospace; text-align:center;">' + (t.hora || "Pronto") + '</span>';
+                cont.appendChild(card);
+            }
+        };
+        setTimeout(function(){ if(typeof window.renderizarListaBateriaTanques === 'function') window.renderizarListaBateriaTanques(); }, 300);
 
         window.renderizarListaBateriaTanques = function() {
             var cont = document.getElementById('lista-bateria-tanques');
@@ -2603,21 +2732,30 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', function() {
             var emailLogado = localStorage.getItem(SESSION_AUTH_KEY) || sessionStorage.getItem(TEC_SESSION_KEY) || "admin@capitaltech.com";
-            liberarTerminalTecnico(emailLogado);
+            var inputEmail = document.getElementById('login-email');
+            if (inputEmail) inputEmail.value = emailLogado;
+
+            // Pré-carrega a gaveta da empresa em segundo plano para ter os PINs atualizados da nuvem
+            conectarGavetaNoApp(emailLogado);
             verificarDespachoViaURL();
             window.mudarStatusOperacionalTecnico(statusAtualTecnico);
+
+            var params = new URLSearchParams(window.location.search);
+            var jaAutenticouPin = sessionStorage.getItem("TEC_PIN_AUTENTICADO");
+
+            if (jaAutenticouPin || params.has('os')) {
+                // Já colocou o PIN nesta sessão ou abriu link direto de OS
+                liberarTerminalTecnico(emailLogado);
+            } else {
+                // Mostra a porta blindada exigindo o PIN de 4 dígitos do técnico
+                var boxLogin = document.getElementById('login-overlay');
+                if (boxLogin) boxLogin.style.display = 'flex';
+            }
+
             setTimeout(window.verificarFilaERadarTempoReal, 600);
         });
-
-        setInterval(window.verificarFilaERadarTempoReal, 2500);
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').catch(function() {});
-            });
-        }
     </script>
 </body>
 </html>

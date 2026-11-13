@@ -1891,8 +1891,12 @@
 
                 var valorFormatado = "R$ " + valorNumOS.toFixed(2).replace('.', ',');
                 var numFotosOS = os.fotos ? Object.keys(os.fotos).length : 0;
+                var numFotosOS = os.fotos ? Object.keys(os.fotos).length : 0;
+                var numFotosBat = (os.bateriaTanques && Array.isArray(os.bateriaTanques)) ? os.bateriaTanques.filter(function(x){ return !!x.foto; }).length : 0;
                 var possuiVideoOS = !!(os.video || os.temVideo || (cacheVideosNuvem[os.protocolo] && cacheVideosNuvem[os.protocolo].video));
-                var badgeMidia = numFotosOS > 0 || possuiVideoOS ? '<span class="pill pill-ok">📸 ' + numFotosOS + ' Foto(s)' + (possuiVideoOS ? ' + 🎥 Vídeo' : '') + '</span>' : '<span class="pill pill-info">Aguardando Mídia</span>';
+                var badgeMidia = (numFotosOS > 0 || numFotosBat > 0 || possuiVideoOS)
+                    ? '<span class="pill pill-ok">📸 ' + numFotosOS + ' Central' + (numFotosBat > 0 ? ' + 🛢️ ' + numFotosBat + ' Tanques' : '') + (possuiVideoOS ? ' + 🎥 Vídeo' : '') + '</span>'
+                    : '<span class="pill pill-info">Aguardando Mídia</span>';
 
                 var textoStatus = os.statusEst || (os.status === "Pendente" ? "DESPACHADA P/ CAMPO" : "APROVADO");
                 var badgeStatusOS = "";
