@@ -9,6 +9,7 @@
     <!-- MOTORES FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
     <style>
         :root {
@@ -775,7 +776,7 @@
             return (nomeEmpresa || "CAPITALTECH_COM").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
         }
 
-        // 4. SELF-ONBOARDING DE 7 DIAS (CORRIGIDO COM LOCALSTORAGE GLOBAL)
+        // 4. SELF-ONBOARDING DE 7 DIAS COM CONEXÃO BLINDADA
         window.criarAmbienteTrialAutomatico = function() {
             var nome = document.getElementById('trial-empresa').value.trim();
             var email = document.getElementById('trial-email').value.trim();
@@ -806,7 +807,8 @@
                     zap: zap,
                     regiao: "Distrito Federal",
                     inmetro: "Manômetro Digital RBC #0" + t,
-                    statusOperacional: "DISPONIVEL"
+                    statusOperacional: "DISPONIVEL",
+                    pin: "1234"
                 });
                 mapaEstoqueInicial[tid] = 4;
             }
@@ -963,7 +965,7 @@
             document.getElementById('van-os-total').innerText = "R$ " + totalOSDemo.toFixed(2).replace('.', ',');
         };
 
-        // 6. VALIDADOR PÚBLICO + MARKETPLACE INTEGRADO COM FIREBASE E GAVETA ATIVA
+        // 6. VALIDADOR PÚBLICO + MARKETPLACE
         window.validarProtocoloPublico = function() {
             var p = (document.getElementById('input-prot-publico').value || "CT-2026-8412").trim().toUpperCase();
             var box = document.getElementById('res-validador-publico');
@@ -1049,7 +1051,6 @@
             window.open("https://wa.me/" + WHATSAPP_COMERCIAL + "?text=" + encodeURIComponent(msg), '_blank');
         };
 
-        // Defesa contra congelamento de cache (bfcache)
         window.addEventListener('pageshow', function(event) {
             if (event.persisted) window.location.reload();
         });
