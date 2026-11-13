@@ -271,12 +271,13 @@
                 <div class="field">
                     <label>E-mail do Gestor do Cliente (Gera o ID)</label>
                     <input type="email" id="emp-email" class="input-std" placeholder="Ex: diretor@brasiliagas.com.br" oninput="gerarTenantAutomatico()">
-                </div>
                 <div class="field">
-                    <label>Código da Gaveta (Tenant ID no Firebase)</label>
-                    <input type="text" id="emp-tenant" class="input-std" placeholder="Ex: BRASILIAGAS_COM_BR" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:800;">
+                    <label>Gaveta (Tenant ID) & Senha do Cliente</label>
+                    <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:8px;">
+                        <input type="text" id="emp-tenant" class="input-std" placeholder="Ex: BRASILIAGAS_COM" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:800;">
+                        <input type="text" id="emp-senha" class="input-std" value="capital2026" placeholder="Senha Inicial" style="font-family:'JetBrains Mono',monospace; color:var(--gold); font-weight:800;">
+                    </div>
                 </div>
-            </div>
 
             <div class="form-grid-4">
                 <div class="field">
@@ -608,6 +609,7 @@
             var sigla = (document.getElementById('emp-sigla').value.trim() || marca.substring(0, 2)).toUpperCase();
             var email = document.getElementById('emp-email').value.trim() || "admin@" + marca.toLowerCase().replace(/[^a-z0-9]/g, '') + ".com.br";
             var tenantId = (document.getElementById('emp-tenant').value.trim() || calcularTenantSeguro(email, marca)).toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+            var senhaAdmin = (document.getElementById('emp-senha') && document.getElementById('emp-senha').value.trim()) ? document.getElementById('emp-senha').value.trim() : "capital2026";
             var cnpj = document.getElementById('emp-cnpj').value.trim() || "Isento / Em Cadastro";
             var resp = document.getElementById('emp-resp').value.trim() || "Diretoria";
             var zap = document.getElementById('emp-zap').value.trim() || "61986294465";
@@ -629,6 +631,7 @@
                 marca: marca,
                 sigla: sigla,
                 email: email,
+                senhaAdmin: senhaAdmin,
                 tenantId: tenantId,
                 cnpj: cnpj,
                 responsavel: resp,
@@ -655,6 +658,7 @@
                     art: "ART-DF #0720260098412",
                     prefixo: sigla,
                     cor: cor
+                    senhaAdmin: senhaAdmin,
                 },
                 clientes: [
                     { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: end, central: "Tanque Estacionário P190 (Granel)", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
@@ -773,7 +777,7 @@
                       cfg.urlBase + "/app.html\n\n" +
                       "🔑 *Credenciais Corporativas:*\n" +
                       "• *E-mail:* `" + emp.email + "`\n" +
-                      "• *Senha Mestra Inicial:* `capital2026`\n" +
+                     "• *Senha de Acesso:* `" + (emp.senhaAdmin || "capital2026") + "`\n" +
                       "• *Gaveta Isolada (Tenant):* `" + emp.tenantId + "`\n\n" +
                       "Qualquer dúvida, nosso suporte de engenharia está à disposição!";
             } else if (tipoMensagem === 'COBRANCA_PIX') {

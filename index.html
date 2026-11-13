@@ -341,9 +341,13 @@
                 <label>Seu E-mail Corporativo (Login do Diretor)</label>
                 <input type="email" id="trial-email" class="input-std" placeholder="Ex: diretoria@brasiliagas.com.br">
             </div>
-            <div class="form-row" style="margin-bottom:22px;">
+            <div class="form-row">
                 <label>WhatsApp Executivo com DDD</label>
                 <input type="tel" id="trial-zap" class="input-std" placeholder="Ex: 61999999999">
+            </div>
+            <div class="form-row" style="margin-bottom:22px;">
+                <label>Crie Sua Senha de Acesso (Painel do Gestor)</label>
+                <input type="password" id="trial-senha" class="input-std" placeholder="Mínimo 4 caracteres (Ex: gas2026)">
             </div>
             <button type="button" class="btn-main" id="btn-confirmar-trial" style="width:100%; justify-content:center; padding:16px; font-size:0.96rem;" onclick="criarAmbienteTrialAutomatico()">
                 🚀 Criar Meu Painel White-Label & Entrar Agora
@@ -1019,13 +1023,56 @@
             document.getElementById('modal-marketplace-sindico').style.display = 'none';
         };
 
-        window.acessarModuloDireto = function(destino) {
+window.acessarModuloDireto = function(destino) {
             var email = document.getElementById('login-quick-email').value.trim() || "admin@capitaltech.com";
-            localStorage.setItem(SESSION_AUTH_KEY, email);
-            localStorage.setItem(TEC_SESSION_KEY, email);
-            sessionStorage.setItem(SESSION_AUTH_KEY, email);
-            sessionStorage.setItem(TEC_SESSION_KEY, email);
-            window.location.href = destino;
+            var pass = document.getElementById('login-quick-pass').value.trim();
+
+            if (!pass) {
+                alert("⚠️ Digite sua Senha de Acesso ou PIN para entrar.");
+                return;
+            }
+
+            var tenantId = gerarTenantIdSeguro(email, "CAPITALTECH_COM");
+
+            function autorizarEntrada() {
+                localStorage.setItem(SESSION_AUTH_KEY, email);
+                localStorage.setItem(TEC_SESSION_KEY, email);
+                sessionStorage.setItem(SESSION_AUTH_KEY, email);
+                sessionStorage.setItem(TEC_SESSION_KEY, email);
+                window.location.href = destino + "?tenant=" + encodeURIComponent(tenantId);
+            }
+
+            // Senhas mestras do CEO entram direto
+            if (pass === "capital2026" || pass === "habner2026") {
+                autorizarEntrada();
+                return;
+            }
+
+            // Verifica a senha criada pela empresa no LocalStorage ou no Firebase
+            try {
+                var salvoLocal = localStorage.getItem("ERP_SAAS_" + tenantId);
+                if (salvoLocal) {
+                    var dbGaveta = JSON.parse(salvoLocal);
+                    var senhaCorreta = (dbGaveta.configWhiteLabel && dbGaveta.configWhiteLabel.senhaAdmin) ? dbGaveta.configWhiteLabel.senhaAdmin : "capital2026";
+                    if (pass === senhaCorreta || destino === 'app.html') {
+                        autorizarEntrada();
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            if (rtdb) {
+                rtdb.ref('EMPRESAS/' + tenantId + '/configWhiteLabel/senhaAdmin').once('value', function(snap) {
+                    var senhaNuvem = snap.val() || "capital2026";
+                    if (pass === senhaNuvem || destino === 'app.html') {
+                        autorizarEntrada();
+                    } else {
+                        alert("❌ Senha incorreta para a empresa [" + email + "]. Verifique suas credenciais.");
+                    }
+                });
+            } else {
+                autorizarEntrada();
+            }
         };
 
         function gerarTenantIdSeguro(emailStr, nomeEmpresa) {
@@ -1039,6 +1086,122 @@
             }
             return (nomeEmpresa || "CAPITALTECH_COM").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
         }
+
+        // 4. SELF-ONBOARDING DE 7 DIAS COM SENHA PRÓPRIA DO CLIENTE
+        window.criarAmbienteTrialAutomatico = function() {
+            var nome = document.getElementById('trial-empresa').value.trim();
+            var email = document.getElementById('trial-email').value.trim();
+            var zap = document.getElementById('trial-zap').value.trim() || "61999999999";
+            var senhaInput = document.getElementById('trial-senha');
+            var senhaCriada = (senhaInput && senhaInput.value.trim()) ? senhaInput.value.trim() : "capital2026";
+
+            if (!nome || !email || senhaCriada.length < 4) {
+                alert("⚠️ Preencha o Nome da Empresa, seu E-mail e crie uma Senha de pelo menos 4 dígitos.");
+                return;
+            }
+
+            var btn = document.getElementById('btn-confirmar-trial');
+            btn.innerText = "⏳ Provisionando sua gaveta White-Label na nuvem...";
+
+            var marcaUpper = nome.toUpperCase();
+            var partes = marcaUpper.split(' ');
+            var sigla = partes.length > 1 ? (partes[0][0] + partes[1][0]) : marcaUpper.substring(0, 2);
+            var tenantId = gerarTenantIdSeguro(email, marcaUpper);
+
+            var listaTecnicosIniciais = [];
+            var mapaEstoqueInicial = {};
+            for (var t = 1; t <= Math.min(estadoPlano.tecnicos, 10); t++) {
+                var tid = "t" + t;
+                listaTecnicosIniciais.push({
+                    id: tid,
+                    nome: "Técnico 0" + t + " (" + marcaUpper + ")",
+                    carro: "FROTA-0" + t,
+                    placa: "BSB-" + t + "A26",
+                    zap: zap,
+                    regiao: "Distrito Federal",
+                    inmetro: "Manômetro Digital RBC #0" + t,
+                    statusOperacional: "DISPONIVEL",
+                    pin: String(1000 + t * 111)
+                });
+                mapaEstoqueInicial[tid] = 4;
+            }
+
+            var dadosGavetaNova = {
+                configWhiteLabel: {
+                    nome: marcaUpper,
+                    sigla: sigla,
+                    sub: "Frota Licenciada (" + estadoPlano.tecnicos + " Viaturas) • NBR 13523 & 15526",
+                    art: "ART-DF #0720260098412",
+                    prefixo: sigla,
+                    cor: estadoPlano.corEscolhida,
+                    senhaAdmin: senhaCriada
+                },
+                clientes: [
+                    { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: "Águas Claras - Brasília/DF", central: "Tanque Estacionário P190", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
+                ],
+                tecnicos: listaTecnicosIniciais,
+                materiais: [
+                    { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: mapaEstoqueInicial }
+                ],
+                tanques: [
+                    { serie: "Nº 001729", cliente: "Condomínio Residencial Bella Vita", tara: "135,10 kg", vol: "450 Litros / 190 kg GLP", pserv: "1,7 MPa • NBR 8460", fabReg: "Data: 2017 • ARXO", statusReq: "Vigente (Requalificar em 2032)" }
+                ],
+                ordens: []
+            };
+
+            var expiraEm = new Date(Date.now() + 7 * 86400000).toLocaleDateString('pt-BR');
+            var registroParaMaster = {
+                id: "emp_" + Date.now(),
+                nome: nome,
+                marca: marcaUpper,
+                sigla: sigla,
+                email: email,
+                senhaAdmin: senhaCriada,
+                tenantId: tenantId,
+                cnpj: "Trial 7 Dias (" + estadoPlano.tecnicos + " Viaturas)",
+                responsavel: email.split('@')[0],
+                zap: zap,
+                endereco: "Autocadastro via Portal SaaS",
+                plano: "Frota " + estadoPlano.tecnicos + " Técnico(s) — Trial até " + expiraEm,
+                mensalidade: estadoPlano.mensalidade,
+                setup: 0,
+                vencimento: expiraEm,
+                cor: estadoPlano.corEscolhida,
+                status: "ATIVO",
+                dataCadastro: new Date().toLocaleDateString('pt-BR')
+            };
+
+            try {
+                localStorage.setItem("ERP_SAAS_" + tenantId, JSON.stringify(dadosGavetaNova));
+                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dadosGavetaNova));
+                localStorage.setItem(SESSION_AUTH_KEY, email);
+                localStorage.setItem(TEC_SESSION_KEY, email);
+                sessionStorage.setItem(SESSION_AUTH_KEY, email);
+                sessionStorage.setItem(TEC_SESSION_KEY, email);
+
+                var hSalva = localStorage.getItem(MASTER_STORAGE_KEY);
+                var hObj = hSalva ? JSON.parse(hSalva) : { empresas: [] };
+                if (!hObj.empresas) hObj.empresas = [];
+                hObj.empresas.unshift(registroParaMaster);
+                localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(hObj));
+            } catch (e) {}
+
+            if (rtdb) {
+                rtdb.ref('STATUS_FINANCEIRO/' + tenantId).set("ATIVO");
+                rtdb.ref('EMPRESAS/' + tenantId).set(dadosGavetaNova);
+                rtdb.ref('CAPITAL_HOLDING/empresas').once('value', function(snap) {
+                    var lista = snap.val() || [];
+                    if (!Array.isArray(lista)) lista = Object.values(lista);
+                    lista.unshift(registroParaMaster);
+                    rtdb.ref('CAPITAL_HOLDING/empresas').set(lista).finally(function() {
+                        window.location.href = "gestor.html?tenant=" + encodeURIComponent(tenantId);
+                    });
+                });
+                setTimeout(function() { window.location.href = "gestor.html?tenant=" + encodeURIComponent(tenantId); }, 1200);
+            } else {
+                window.location.href = "gestor.html?tenant=" + encodeURIComponent(tenantId);
+            }
+        };
 
         // 4. SELF-ONBOARDING DE 7 DIAS COM CONEXÃO BLINDADA
         window.criarAmbienteTrialAutomatico = function() {

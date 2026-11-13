@@ -897,6 +897,8 @@
                                         <th>Distribuição nas Viaturas (Quem está com a peça)</th>
                                         <th>Total Geral (Unid.)</th>
                                         <th>Patrimônio (R$)</th>
+                                        <th>Patrimônio (R$)</th>
+                                        <th>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbody-matriz-estoque"></tbody>
@@ -1777,6 +1779,42 @@
         };
 
         window.renderizarTudo = function() {
+            window.removerMaterialEstoque = function(idx) {
+            var item = db.materiais[idx];
+            if (!item) return;
+            if (!confirm("🗑️ Deseja realmente excluir a peça '" + item.nome + "' (" + item.cod + ") do Almoxarifado?")) return;
+            db.materiais.splice(idx, 1);
+            salvarBanco();
+            window.renderizarTudo();
+            avisoGestor("🗑️ Peça removida do almoxarifado com sucesso!");
+        };
+
+        window.removerTanque = function(idx) {
+            var tq = db.tanques[idx];
+            if (!tq) return;
+            if (!confirm("🗑️ Deseja excluir o Tanque '" + tq.serie + "' da lista de ativos?")) return;
+            db.tanques.splice(idx, 1);
+            salvarBanco();
+            window.renderizarTudo();
+            avisoGestor("🗑️ Tanque removido da base!");
+        };
+
+        window.removerOS = function(idx) {
+            var os = db.ordens[idx];
+            if (!os) return;
+            if (!confirm("🚨 EXCLUIR ORDEM DE SERVIÇO:\n\nTem certeza que deseja excluir permanentemente a OS #" + os.protocolo + " (" + os.cliente + ")?")) return;
+            var protApagado = os.protocolo;
+            db.ordens.splice(idx, 1);
+            if (protApagado && cacheVideosNuvem[protApagado]) {
+                delete cacheVideosNuvem[protApagado];
+            }
+            if (rtdb && protApagado) {
+                try { rtdb.ref('MIDIA_OS/' + empresaID + '/' + protApagado).remove(); } catch (e) {}
+            }
+            salvarBanco();
+            window.renderizarTudo();
+            avisoGestor("🗑️ OS #" + protApagado + " excluída permanentemente!");
+        };
             if (!db) return;
             if (!db.clientes) db.clientes = [];
             if (!db.tecnicos) db.tecnicos = [];
@@ -1860,7 +1898,14 @@
                 if (item.saldoBase <= 5) itensEstoqueBaixo++;
                 var pillBase = item.saldoBase <= 5 ? '<span class="pill pill-err">⚠️ ' + item.saldoBase + ' un. (Baixo)</span>' : '<span class="pill pill-ok">' + item.saldoBase + ' un.</span>';
                 var trMat = document.createElement('tr');
-                trMat.innerHTML = '<td><strong style="color:var(--g3-amber); font-family:monospace;">' + item.cod + '</strong> — <strong>' + item.nome + '</strong></td><td>R$ ' + item.preco.toFixed(2).replace('.', ',') + '</td><td>' + pillBase + '</td><td>' + (badgesCarros.length ? badgesCarros.join(" ") : '<span style="color:var(--muted);">0 nas viaturas</span>') + '</td><td style="font-family:monospace; font-weight:800;">' + qtdGlobalItem + ' un.</td><td style="font-family:monospace; font-weight:800; color:#34D399;">R$ ' + valorGlobalItem.toFixed(2).replace('.', ',') + '</td>';
+                trMat.innerHTML =
+                    '<td><strong style="color:var(--g3-amber); font-family:monospace;">' + item.cod + '</strong> — <strong>' + item.nome + '</strong></td>' +
+                    '<td>R$ ' + item.preco.toFixed(2).replace('.', ',') + '</td>' +
+                    '<td>' + pillBase + '</td>' +
+                    '<td>' + (badgesCarros.length ? badgesCarros.join(" ") : '<span style="color:var(--muted);">0 nas viaturas</span>') + '</td>' +
+                    '<td style="font-family:monospace; font-weight:800;">' + qtdGlobalItem + ' un.</td>' +
+                    '<td style="font-family:monospace; font-weight:800; color:#34D399;">R$ ' + valorGlobalItem.toFixed(2).replace('.', ',') + '</td>' +
+                    '<td><button type="button" class="btn-table red" onclick="removerMaterialEstoque(' + i + ')">🗑️ Excluir</button></td>';
                 tbEst.appendChild(trMat);
             }
 
@@ -1868,7 +1913,15 @@
             for (var qIdx = 0; qIdx < db.tanques.length; qIdx++) {
                 var tq = db.tanques[qIdx];
                 var trTq = document.createElement('tr');
-                trTq.innerHTML = '<td style="font-family:monospace; color:var(--g3-amber); font-weight:700;">🛢️ ' + tq.serie + '</td><td><strong>' + tq.cliente + '</strong></td><td style="font-family:monospace;">' + tq.tara + '</td><td>' + tq.vol + '</td><td>' + tq.pserv + '</td><td>' + tq.fabReg + '</td><td><span class="pill pill-ok">✔ ' + tq.statusReq + '</span></td>';
+                trTq.innerHTML =
+                    '<td style="font-family:monospace; color:var(--g3-amber); font-weight:700;">🛢️ ' + tq.serie + '</td>' +
+                    '<td><strong>' + tq.cliente + '</strong></td>' +
+                    '<td style="font-family:monospace;">' + tq.tara + '</td>' +
+                    '<td>' + tq.vol + '</td>' +
+                    '<td>' + tq.pserv + '</td>' +
+                    '<td>' + tq.fabReg + '</td>' +
+                    '<td><span class="pill pill-ok">✔ ' + tq.statusReq + '</span></td>' +
+                    '<td><button type="button" class="btn-table red" onclick="removerTanque(' + qIdx + ')">🗑️ Excluir</button></td>';
                 tbTq.appendChild(trTq);
             }
 
@@ -1891,7 +1944,6 @@
 
                 var valorFormatado = "R$ " + valorNumOS.toFixed(2).replace('.', ',');
                 var numFotosOS = os.fotos ? Object.keys(os.fotos).length : 0;
-                var numFotosOS = os.fotos ? Object.keys(os.fotos).length : 0;
                 var numFotosBat = (os.bateriaTanques && Array.isArray(os.bateriaTanques)) ? os.bateriaTanques.filter(function(x){ return !!x.foto; }).length : 0;
                 var possuiVideoOS = !!(os.video || os.temVideo || (cacheVideosNuvem[os.protocolo] && cacheVideosNuvem[os.protocolo].video));
                 var badgeMidia = (numFotosOS > 0 || numFotosBat > 0 || possuiVideoOS)
@@ -1908,12 +1960,35 @@
                 if (bateBusca && bateModo) {
                     var corModo = modoOS === "Emergencial" ? "pill-err" : (modoOS === "Corretiva" ? "pill-warn" : "pill-info");
                     var trO1 = document.createElement('tr');
-                    trO1.innerHTML = '<td style="font-family:monospace; color:var(--g3-amber); font-weight:700;">#' + os.protocolo + '<br><small style="color:var(--muted);">' + (os.data || "") + '</small></td><td><strong>' + os.cliente + '</strong><br><small style="color:var(--muted);">' + localOS + '</small></td><td><span class="pill ' + corModo + '">' + modoOS + '</span></td><td>' + (os.tanque || "P190") + '</td><td>' + badgeStatusOS + '</td><td>' + (os.tecnico || "Frota") + '</td><td>' + badgeMidia + '</td><td style="font-weight:800; color:var(--g3-amber);">' + valorFormatado + '</td><td><button type="button" class="btn-table amber" onclick="abrirDossieOS(' + oIdx + ')">🔍 Ver Fotos & Vídeo</button></td>';
+                    trO1.innerHTML =
+                        '<td style="font-family:monospace; color:var(--g3-amber); font-weight:700;">#' + os.protocolo + '<br><small style="color:var(--muted);">' + (os.data || "") + '</small></td>' +
+                        '<td><strong>' + os.cliente + '</strong><br><small style="color:var(--muted);">' + localOS + '</small></td>' +
+                        '<td><span class="pill ' + corModo + '">' + modoOS + '</span></td>' +
+                        '<td>' + (os.tanque || "P190") + '</td>' +
+                        '<td>' + badgeStatusOS + '</td>' +
+                        '<td>' + (os.tecnico || "Frota") + '</td>' +
+                        '<td>' + badgeMidia + '</td>' +
+                        '<td style="font-weight:800; color:var(--g3-amber);">' + valorFormatado + '</td>' +
+                        '<td style="display:flex; gap:6px; align-items:center;">' +
+                            '<button type="button" class="btn-table amber" onclick="abrirDossieOS(' + oIdx + ')">🔍 Ver Fotos & Vídeo</button>' +
+                            '<button type="button" class="btn-table red" onclick="removerOS(' + oIdx + ')" title="Excluir OS">🗑️ Excluir</button>' +
+                        '</td>';
                     tbOsDash.appendChild(trO1);
                 }
 
                 var trO2 = document.createElement('tr');
-                trO2.innerHTML = '<td style="font-family:monospace; color:var(--g3-amber); font-weight:700;">#' + os.protocolo + '</td><td><strong>' + os.cliente + '</strong><br><small style="color:var(--muted);">' + localOS + '</small></td><td style="font-family:monospace;">' + (os.art || "ART Ativa") + '</td><td>' + (os.pressao || "15.0 kPa") + '</td><td>' + badgeStatusOS + '</td><td>' + (os.tecnico || "Frota") + '</td><td>' + badgeMidia + '</td><td><button type="button" class="btn-table amber" onclick="abrirDossieOS(' + oIdx + ')">📄 Inspecionar Fotos & Vídeo</button></td>';
+                trO2.innerHTML =
+                    '<td style="font-family:monospace; color:var(--g3-amber); font-weight:700;">#' + os.protocolo + '</td>' +
+                    '<td><strong>' + os.cliente + '</strong><br><small style="color:var(--muted);">' + localOS + '</small></td>' +
+                    '<td style="font-family:monospace;">' + (os.art || "ART Ativa") + '</td>' +
+                    '<td>' + (os.pressao || "15.0 kPa") + '</td>' +
+                    '<td>' + badgeStatusOS + '</td>' +
+                    '<td>' + (os.tecnico || "Frota") + '</td>' +
+                    '<td>' + badgeMidia + '</td>' +
+                    '<td style="display:flex; gap:6px; align-items:center;">' +
+                        '<button type="button" class="btn-table amber" onclick="abrirDossieOS(' + oIdx + ')">📄 Inspecionar</button>' +
+                        '<button type="button" class="btn-table red" onclick="removerOS(' + oIdx + ')" title="Excluir OS">🗑️ Excluir</button>' +
+                    '</td>';
                 tbOsAud.appendChild(trO2);
             }
 
