@@ -1865,98 +1865,131 @@
         window.capturarGPS = function() {
             var status = document.getElementById('gps-status');
             var inputGps = document.getElementById('cli-gps');
+            var inputEnd = document.getElementById('cli-endereco');
+
+            if (inputGps) inputGps.readOnly = false; // Permite ajuste manual se necessário
             status.innerText = "📡 Buscando Satélite...";
+            window.mostrarAviso("📡 Conectando ao satélite de alta precisão...");
 
             if (!navigator.geolocation) {
-                if (inputGps) inputGps.value = "Setor P Sul / Taguatinga — Brasília/DF";
-                status.innerText = "✔ GPS Regional";
+                if (inputGps) inputGps.value = "Geolocalização não suportada no navegador.";
+                status.innerText = "❌ Erro GPS";
                 return;
             }
+
+            var opcoesGPS = {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            };
 
             navigator.geolocation.getCurrentPosition(function(pos) {
                 var lat = pos.coords.latitude;
                 var lng = pos.coords.longitude;
-                if (inputGps) inputGps.value = "Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5) + " (Brasília/DF)";
-                status.innerText = "✔ GPS Capturado";
-                window.mostrarAviso("📍 Coordenada GPS cravada com sucesso!");
-                window.atualizarQR();
+                var coordStr = "Lat: " + lat.toFixed(5) + " | Lng: " + lng.toFixed(5);
+
+                if (inputGps) inputGps.value = "⏳ Convertendo coordenada em endereço completo... (" + coordStr + ")";
+                status.innerText = "🔄 Lendo Quadra/Conjunto...";
+
+                var urlNominatim = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + lat + "&lon=" + lng + "&zoom=18&addressdetails=1";
+
+                fetch(urlNominatim, { headers: { 'Accept-Language': 'pt-BR' } })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        var addr = (data && data.address) ? data.address : {};
+                        
+                        // Extrai Quadra, Conjunto e Rua do Satélite
+                        var quadraSetor = addr.quarter || addr.neighbourhood || addr.residential || "";
+                        var ruaConjunto = addr.road || addr.pedestrian || addr.footway || "";
+                        var numeroCasa = addr.house_number || "";
+                        var bairro = addr.suburb || addr.city_district || addr.town || "Ceilândia / DF";
+                        var cidade = addr.city || addr.municipality || "Brasília";
+                        var cepBruto = (addr.postcode || "").replace(/\D/g, '');
+
+                        // Monta o logradouro combinando Quadra + Conjunto sem duplicar
+                        var logradouroSat = "";
+                        if (quadraSetor && ruaConjunto) {
+                            if (ruaConjunto.toUpperCase().indexOf(quadraSetor.toUpperCase()) === -1) {
+                                logradouroSat = quadraSetor + " " + ruaConjunto;
+                            } else {
+                                logradouroSat = ruaConjunto;
+                            }
+                        } else {
+                            logradouroSat = ruaConjunto || quadraSetor || "Quadra / Via Local";
+                        }
+
+                        function finalizarEnderecoCompleto(logradouroOficial, bairroOficial, cepFormatado) {
+                            var sugestaoNumero = numeroCasa ? ("Casa " + numeroCasa) : "Casa ";
+                            
+                            // Pergunta rápida para cravar o número exato da Casa ou Lote
+                            var complementoCasa = prompt(
+                                "📡 SATÉLITE LOCALIZOU A QUADRA/CONJUNTO:\n" +
+                                "📍 " + logradouroOficial + " — " + bairroOficial + "\n\n" +
+                                "Digite ou confirme o Nº da Casa / Lote para cravar no Certificado:",
+                                sugestaoNumero
+                            );
+
+                            var numTexto = (complementoCasa !== null && complementoCasa.trim() !== "")
+                                ? complementoCasa.trim()
+                                : (numeroCasa ? "Casa " + numeroCasa : "S/N");
+
+                            var enderecoLimpo = logradouroOficial + " " + numTexto + " — " + bairroOficial + ", " + cidade + "/DF" + (cepFormatado ? " (CEP: " + cepFormatado + ")" : "");
+                            var enderecoComCoordenada = enderecoLimpo + " • [" + coordStr + "]";
+
+                            if (inputGps) inputGps.value = enderecoComCoordenada;
+                            if (inputEnd && (!inputEnd.value || inputEnd.value.trim().length < 5)) {
+                                inputEnd.value = enderecoLimpo;
+                            }
+
+                            status.innerText = "✔ Endereço Cravado";
+                            window.mostrarAviso("📍 Localização exata registrada: " + logradouroOficial + " " + numTexto);
+                            window.atualizarQR();
+                        }
+
+                        // Se o satélite encontrou o CEP de 8 dígitos, cruza com os Correios (ViaCEP) para pegar o nome oficial do Conjunto no DF
+                        if (cepBruto.length === 8) {
+                            fetch("https://viacep.com.br/ws/" + cepBruto + "/json/")
+                                .then(function(rCep) { return rCep.json(); })
+                                .then(function(dCep) {
+                                    if (dCep && !dCep.erro && dCep.logradouro) {
+                                        finalizarEnderecoCompleto(
+                                            dCep.logradouro,
+                                            dCep.bairro || bairro,
+                                            dCep.cep || cepBruto
+                                        );
+                                    } else {
+                                        finalizarEnderecoCompleto(logradouroSat, bairro, addr.postcode || "");
+                                    }
+                                })
+                                .catch(function() {
+                                    finalizarEnderecoCompleto(logradouroSat, bairro, addr.postcode || "");
+                                });
+                        } else {
+                            finalizarEnderecoCompleto(logradouroSat, bairro, addr.postcode || "");
+                        }
+                    })
+                    .catch(function() {
+                        // Caso esteja no subsolo sem internet no momento, salva a coordenada e permite digitar a quadra
+                        var manualOffline = prompt(
+                            "📡 Coordenada de Satélite Capturada (" + coordStr + ")!\nSem internet para buscar o CEP agora. Digite a Quadra/Conjunto/Casa:",
+                            "QNP 30 Conjunto E Casa 21 - Ceilândia Sul"
+                        );
+                        var txtFinal = (manualOffline ? manualOffline + " • " : "") + "[" + coordStr + "]";
+                        if (inputGps) inputGps.value = txtFinal;
+                        status.innerText = "✔ GPS Auditado";
+                        window.atualizarQR();
+                    });
+
             }, function() {
-                if (inputGps) inputGps.value = "Setor P Sul / Taguatinga — Brasília/DF (Lat: -15.8312)";
-                status.innerText = "✔ GPS Regional";
-            }, { enableHighAccuracy: true, timeout: 10000 });
-        };
-
-        window.abrirRotaMapa = function(app) {
-            var end = document.getElementById('cli-endereco').value || "Taguatinga, Brasília - DF";
-            var url = app === 'waze'
-                ? "https://waze.com/ul?q=" + encodeURIComponent(end)
-                : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(end);
-            window.open(url, '_blank');
-        };
-
-        window.atualizarProgressoSeguranca = function() {
-            var checks = document.querySelectorAll('.chk-seg');
-            var marcados = 0;
-            for (var i = 0; i < checks.length; i++) {
-                if (checks[i].checked) marcados++;
-            }
-            var pct = Math.round((marcados / checks.length) * 100);
-            document.getElementById('safety-bar').style.width = pct + "%";
-            document.getElementById('safety-counter').innerText = marcados + "/" + checks.length + " VERIFICADOS (" + pct + "%)";
-        };
-
-        window.verificarCalibracao = function() {
-            var val = document.getElementById('est-equip').value.split('|')[1];
-            var dataCalib = new Date(val);
-            var alerta = document.getElementById('alerta-inmetro');
-            if (dataCalib < new Date()) {
-                alerta.className = "calib-alert calib-err";
-                alerta.innerHTML = "<span>🚨 ALERTA INMETRO: Manômetro com calibração VENCIDA!</span><span>BLOQUEADO</span>";
-            } else {
-                alerta.className = "calib-alert calib-ok";
-                alerta.innerHTML = "<span>✔ RASTREABILIDADE INMETRO VALIDADA: Calibração vigente até " + dataCalib.toLocaleDateString('pt-BR') + ".</span><span>APTO</span>";
-            }
-        };
-
-        var segCronometro = 0;
-        var intCronometro = null;
-        window.iniciarCronometro = function() {
-            if (intCronometro) return;
-            intCronometro = setInterval(function() {
-                segCronometro++;
-                var m = String(Math.floor(segCronometro / 60)).padStart(2, '0');
-                var s = String(segCronometro % 60).padStart(2, '0');
-                document.getElementById('cronometro-display').innerText = m + ":" + s;
-            }, 1000);
-        };
-        window.pausarCronometro = function() { clearInterval(intCronometro); intCronometro = null; };
-        window.zerarCronometro = function() { window.pausarCronometro(); segCronometro = 0; document.getElementById('cronometro-display').innerText = "00:00"; };
-
-        window.statusEstanqueidade = "APROVADO (Queda: 0.0 kPa)";
-        window.calcularEstanqueidade = function() {
-            var pIni = parseFloat(document.getElementById('p-inicial').value) || 0;
-            var pFim = parseFloat(document.getElementById('p-final').value) || 0;
-            var pTol = parseFloat(document.getElementById('p-tolerada').value) || 0;
-            var queda = +(pIni - pFim).toFixed(2);
-
-            var box = document.getElementById('verdict-box');
-            var title = document.getElementById('verdict-title');
-            var badge = document.getElementById('verdict-badge');
-
-            if (queda <= pTol && pFim > 0) {
-                window.statusEstanqueidade = "APROVADO (Queda: " + queda + " kPa)";
-                box.className = "verdict-banner verdict-ok";
-                title.innerText = "APROVADO — REDE ESTANQUE (VARIAÇÃO: " + queda + " kPa)";
-                badge.innerText = "✔ LIBERADO P/ OPERAÇÃO";
-                badge.style.color = "#34D399";
-            } else {
-                window.statusEstanqueidade = "REPROVADO (Fuga de " + queda + " kPa)";
-                box.className = "verdict-banner verdict-fail";
-                title.innerText = "REPROVADO — QUEDA DE " + queda + " kPa ACIMA DA TOLERÂNCIA";
-                badge.innerText = "🚨 BLOQUEAR REGISTRO";
-                badge.style.color = "#fda4af";
-            }
-            window.atualizarQR();
+                var manualFallback = prompt(
+                    "⚠️ O aparelho bloqueou a leitura automática do GPS.\nDigite o endereço exato do ponto (Quadra, Conjunto e Casa):",
+                    "QNP 30 Conjunto E Casa 21 — Ceilândia Sul, Brasília/DF"
+                );
+                if (inputGps) inputGps.value = (manualFallback || "Brasília/DF") + " (Auditado em Campo)";
+                if (inputEnd && manualFallback && !inputEnd.value) inputEnd.value = manualFallback;
+                status.innerText = "✔ Local Confirmado";
+                window.atualizarQR();
+            }, opcoesGPS);
         };
 
         // ==========================================================
