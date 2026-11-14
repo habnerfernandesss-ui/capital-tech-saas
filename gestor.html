@@ -736,7 +736,7 @@
                     <div class="panel-box">
                         <div class="panel-head">
                             <div class="panel-title"><span>[03]</span> Cadastrar Novo Técnico e Viatura na Frota</div>
-                            <span class="pill pill-ok">ACESSO BLINDADO POR PIN DE 4 DÍGITOS</span>
+                            <span class="pill pill-ok" id="badge-limite-frota">VAGAS DA LICENÇA: 3 / 4 VIATURAS</span>
                         </div>
 
                         <div class="form-grid-3">
@@ -1503,6 +1503,9 @@
                 art: document.getElementById('wl-art').value.trim() || "ART-DF #0720260098412",
                 prefixo: (document.getElementById('wl-prefixo').value.trim() || "CT").toUpperCase(),
                 cor: document.getElementById('wl-cor').value
+                cor: document.getElementById('wl-cor').value,
+                limiteTecnicos: (db.configWhiteLabel && db.configWhiteLabel.limiteTecnicos) ? db.configWhiteLabel.limiteTecnicos : 4,
+                senhaAdmin: (db.configWhiteLabel && db.configWhiteLabel.senhaAdmin) ? db.configWhiteLabel.senhaAdmin : "capital2026"
             };
             salvarBanco();
             window.aplicarWhiteLabelNaTela();
@@ -1567,7 +1570,30 @@
             avisoGestor("Cliente removido.");
         };
 
-        window.salvarNovoTecnico = function() {
+window.salvarNovoTecnico = function() {
+            var limiteContratado = (db && db.configWhiteLabel && db.configWhiteLabel.limiteTecnicos)
+                ? parseInt(db.configWhiteLabel.limiteTecnicos)
+                : 4;
+            var qtdAtual = (db && db.tecnicos) ? db.tecnicos.length : 0;
+
+            // TRAVA ENTERPRISE DE LICENÇA POR QUANTIDADE DE TÉCNICOS
+            if (qtdAtual >= limiteContratado) {
+                var nomeEmp = (db && db.configWhiteLabel && db.configWhiteLabel.nome) ? db.configWhiteLabel.nome : "Minha Empresa";
+                var desejaUpgrade = confirm(
+                    "🔒 LIMITE DE VIATURAS DO PLANO ATINGIDO (" + qtdAtual + "/" + limiteContratado + " Técnicos)!\n\n" +
+                    "Sua licença atual contempla até " + limiteContratado + " técnico(s)/viatura(s) simultâneos.\n\n" +
+                    "Clique em [OK] para solicitar a liberação imediata de novas vagas no WhatsApp da Capital Tech."
+                );
+                if (desejaUpgrade) {
+                    var msgUp = "🚀 *SOLICITAÇÃO DE EXPANSÃO DE FROTA — CAPITAL TECH SaaS*\n\n" +
+                                "Olá! A operação da *" + nomeEmp + "* [" + empresaID + "] atingiu o limite de *" + limiteContratado + " técnico(s)* cadastrados.\n\n" +
+                                "Gostaria de adicionar mais viaturas ao meu plano e liberar novas vagas no painel!";
+                    var urlUp = "https://wa.me/5561986294465?text=" + encodeURIComponent(msgUp);
+                    window.open(urlUp, '_blank') || (window.location.href = urlUp);
+                }
+                return;
+            }
+
             var nome = document.getElementById('tec-novo-nome').value.trim();
             var carro = document.getElementById('tec-novo-carro').value.trim() || "FROTA-" + Math.floor(12 + Math.random() * 80);
             var placa = document.getElementById('tec-novo-placa').value.trim().toUpperCase() || "BSB-1A23";
@@ -1575,7 +1601,6 @@
             var regiao = document.getElementById('tec-novo-regiao').value.trim() || "Distrito Federal";
             var inmetro = document.getElementById('tec-novo-inmetro').value.trim() || "Manômetro Calibrado INMETRO";
             
-            // Lógica do PIN Individual Blindado
             var pinInput = document.getElementById('tec-novo-pin');
             var pinVal = pinInput ? pinInput.value.trim() : "";
             if (pinVal.length < 4) {
@@ -1612,8 +1637,8 @@
 
             salvarBanco();
             window.renderizarTudo();
-            avisoGestor("👷 Técnico " + nome + " cadastrado com o PIN: " + pinVal);
-        };
+            avisoGestor("👷 Técnico " + nome + " cadastrado (" + db.tecnicos.length + "/" + limiteContratado + " vagas) • PIN: " + pinVal);
+        };;
 
         window.removerTecnico = function(idx) {
             if (db.tecnicos.length <= 1) { avisoGestor("⚠️ Mantenha 1 técnico ativo."); return; }
@@ -1830,6 +1855,12 @@
             document.getElementById('menu-count-tq').innerText = db.tanques.length;
             document.getElementById('menu-count-os').innerText = db.ordens.length;
 
+            var limFrota = (db.configWhiteLabel && db.configWhiteLabel.limiteTecnicos) ? parseInt(db.configWhiteLabel.limiteTecnicos) : 4;
+            var badgeLim = document.getElementById('badge-limite-frota');
+            if (badgeLim) {
+                badgeLim.innerText = "VAGAS DA LICENÇA: " + db.tecnicos.length + " / " + limFrota + " VIATURAS (PIN 4 DÍGITOS)";
+                badgeLim.className = db.tecnicos.length >= limFrota ? "pill pill-warn" : "pill pill-ok";
+            }
             var tbCli = document.getElementById('tbody-clientes');
             var selCliDsp = document.getElementById('dsp-select-cli');
             tbCli.innerHTML = "";

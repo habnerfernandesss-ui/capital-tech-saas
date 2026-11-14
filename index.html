@@ -1247,7 +1247,9 @@ window.acessarModuloDireto = function(destino) {
                     sub: "Frota Licenciada (" + estadoPlano.tecnicos + " Viaturas) • NBR 13523 & 15526",
                     art: "ART-DF #0720260098412",
                     prefixo: sigla,
-                    cor: estadoPlano.corEscolhida
+                    cor: estadoPlano.corEscolhida,
+                    senhaAdmin: typeof senhaCriada !== 'undefined' ? senhaCriada : "capital2026",
+                    limiteTecnicos: estadoPlano.tecnicos
                 },
                 clientes: [
                     { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: "Águas Claras - Brasília/DF", central: "Tanque Estacionário P190", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
@@ -1276,6 +1278,7 @@ window.acessarModuloDireto = function(destino) {
                 endereco: "Autocadastro via Portal SaaS",
                 plano: "Frota " + estadoPlano.tecnicos + " Técnico(s) — Trial até " + expiraEm,
                 mensalidade: estadoPlano.mensalidade,
+                limiteTecnicos: estadoPlano.tecnicos,
                 setup: 0,
                 vencimento: expiraEm,
                 cor: estadoPlano.corEscolhida,

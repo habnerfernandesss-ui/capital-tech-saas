@@ -305,14 +305,17 @@
 
             <div class="form-grid-4">
                 <div class="field">
-                    <label>Plano Contratado</label>
-                    <select id="emp-plano" class="select-std" onchange="ajustarValorPlano()">
-                        <option value="Corporate White-Label|697">💎 Corporate White-Label (R$ 697/mês)</option>
-                        <option value="Operacional Start|397">🚀 Operacional Start (R$ 397/mês)</option>
-                        <option value="Enterprise Ilimitado|1497">🏛️ Enterprise / Distribuidora (R$ 1.497/mês)</option>
-                        <option value="Parceiro Estratégico|0">🤝 Parceiro / Cortesia (R$ 0/mês)</option>
-                    </select>
-                </div>
+                    <label>Plano & Limite de Viaturas (Vagas)</label>
+                    <div style="display:grid; grid-template-columns: 1.3fr 0.7fr; gap:8px;">
+                        <select id="emp-plano" class="select-std" onchange="ajustarValorPlano()">
+                            <option value="Plano Único Por Frota|547">💎 All-In-One Por Frota</option>
+                            <option value="Autônomo (1 Viatura)|297">🚀 Autônomo (1 Carro)</option>
+                            <option value="Enterprise Ilimitado|1497">🏛️ Enterprise (30 Carros)</option>
+                            <option value="Parceiro Estratégico|0">🤝 Cortesia (R$ 0)</option>
+                        </select>
+                        <input type="number" id="emp-limite-tec" class="input-std" value="4" min="1" max="100" title="Quantidade máxima de técnicos que esta empresa pode cadastrar" oninput="calcularMensalidadePorVagasMaster()" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:900; text-align:center;">
+                    </div>
+                </div>>
                 <div class="field">
                     <label>Valor Mensalidade (R$) & Setup (R$)</label>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
@@ -605,8 +608,21 @@
             }
         };
 
+        window.calcularMensalidadePorVagasMaster = function() {
+            var nTec = parseInt(document.getElementById('emp-limite-tec').value) || 1;
+            var valorMensal = 297;
+            if (nTec === 1) valorMensal = 297;
+            else if (nTec <= 5) valorMensal = 227 + (nTec * 80);
+            else if (nTec <= 15) valorMensal = 627 + ((nTec - 5) * 65);
+            else valorMensal = 1277 + ((nTec - 15) * 50);
+            document.getElementById('emp-mensalidade').value = valorMensal;
+        };
+
         window.ajustarValorPlano = function() {
             var val = document.getElementById('emp-plano').value.split('|')[1];
+            var nomeP = document.getElementById('emp-plano').value.split('|')[0];
+            if (nomeP.indexOf('Autônomo') !== -1) document.getElementById('emp-limite-tec').value = 1;
+            else if (nomeP.indexOf('Enterprise') !== -1) document.getElementById('emp-limite-tec').value = 30;
             document.getElementById('emp-mensalidade').value = val;
         };
 
@@ -625,6 +641,7 @@
             var planoNome = document.getElementById('emp-plano').value.split('|')[0];
             var mensalidade = parseFloat(document.getElementById('emp-mensalidade').value) || 0;
             var setup = parseFloat(document.getElementById('emp-setup').value) || 0;
+            var limiteTecnicos = parseInt(document.getElementById('emp-limite-tec') ? document.getElementById('emp-limite-tec').value : 4) || 4;
             var venc = document.getElementById('emp-venc').value;
             var cor = document.getElementById('emp-cor').value;
 
@@ -652,6 +669,7 @@
                 cor: cor,
                 status: "ATIVO",
                 dataCadastro: new Date().toLocaleDateString('pt-BR')
+                limiteTecnicos: limiteTecnicos,
             };
 
             if (!holdingDB.empresas) holdingDB.empresas = [];
@@ -667,6 +685,7 @@
                     prefixo: sigla,
                     cor: cor,
                     senhaAdmin: senhaAdmin
+                    limiteTecnicos: limiteTecnicos,
                 },
                 clientes: [
                     { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: end, central: "Tanque Estacionário P190 (Granel)", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
@@ -741,6 +760,46 @@
             }
         };
 
+        window.alterarLimiteFrotaCliente = function(idx) {
+       var emp = holdingDB.empresas[idx];
+       if (!emp) return;
+       var limAtual = emp.limiteTecnicos || 4;
+       var novoLim = prompt(
+           "🚐 CONTROLE DE VAGAS DA FROTA — " + emp.marca + "\n\n" +
+           "Atualmente esta empresa pode cadastrar até " + limAtual + " técnico(s)/viatura(s).\n" +
+           "Digite o novo limite de técnicos liberados para este cliente:",
+           limAtual
+       );
+       if (novoLim === null) return;
+       var qtdNum = parseInt(novoLim);
+       if (isNaN(qtdNum) || qtdNum < 1) return;
+
+       emp.limiteTecnicos = qtdNum;
+       // Recalcula a sugestão de mensalidade pela tabela oficial se o CEO desejar
+       var novaMensalidadeSugerida = qtdNum === 1 ? 297 : (qtdNum <= 5 ? 227 + (qtdNum * 80) : (qtdNum <= 15 ? 627 + ((qtdNum - 5) * 65) : 1277 + ((qtdNum - 15) * 50)));
+       if (confirm("Deseja atualizar também a mensalidade de " + emp.marca + " para R$ " + novaMensalidadeSugerida + ",00/mês (referente a " + qtdNum + " viaturas)?")) {
+           emp.mensalidade = novaMensalidadeSugerida;
+           emp.plano = "Frota " + qtdNum + " Viaturas";
+       }
+
+       salvarHoldingCompleta();
+       if (rtdb) {
+           rtdb.ref('EMPRESAS/' + emp.tenantId + '/configWhiteLabel/limiteTecnicos').set(qtdNum);
+       }
+       try {
+           var gavLocal = localStorage.getItem("ERP_SAAS_" + emp.tenantId);
+           if (gavLocal) {
+               var parsedG = JSON.parse(gavLocal);
+               if (!parsedG.configWhiteLabel) parsedG.configWhiteLabel = {};
+               parsedG.configWhiteLabel.limiteTecnicos = qtdNum;
+               localStorage.setItem("ERP_SAAS_" + emp.tenantId, JSON.stringify(parsedG));
+           }
+       } catch (e) {}
+
+       window.renderizarPainelMaster();
+       avisoMaster("🚐 Limite da empresa " + emp.marca + " atualizado para " + qtdNum + " viaturas na nuvem!");
+   };
+   
         window.removerEmpresaCarteira = function(idx) {
             var emp = holdingDB.empresas[idx];
             if (!confirm("Deseja remover " + emp.nome + " da listagem da carteira?")) return;
@@ -914,6 +973,7 @@
                                     '<button type="button" class="btn-sm warn" style="flex:1; justify-content:center;" onclick="acessarGavetaCliente(' + i + ', \'app.html\')">📱 App</button>' +
                                 '</div>' +
                                 btnDisjuntor +
+                                '<button type="button" class="btn-sm warn" onclick="alterarLimiteFrotaCliente(' + i + ')">🚐 Alterar Limite (' + (emp.limiteTecnicos || (dadosGaveta && dadosGaveta.configWhiteLabel && dadosGaveta.configWhiteLabel.limiteTecnicos) || 4) + ' Vagas)</button>' +
                                 '<button type="button" class="btn-sm" onclick="removerEmpresaCarteira(' + i + ')">🗑️ Excluir da Carteira</button>' +
                             '</div>' +
                         '</td>' +
