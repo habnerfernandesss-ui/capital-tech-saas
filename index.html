@@ -352,22 +352,25 @@
         </div>
     </div>
 
-<!-- MODAL 2: PORTAL ÚNICO DE ACESSO (GESTOR, TÉCNICO E CEO MASTER) -->
+    <!-- MODAL 2: PORTAL ÚNICO DE ACESSO (GESTOR, TÉCNICO E CEO MASTER SEM DUPLO LOGIN) -->
     <div class="modal-backdrop" id="modal-login" onclick="if(event.target===this) fecharModais()">
         <div class="modal-window" style="border-top: 4px solid var(--cyan);">
             <button type="button" class="btn-close-modal" onclick="fecharModais()">✕</button>
             <div style="text-align:center; margin-bottom:20px;">
                 <div class="brand-logo-box" style="margin:0 auto 10px auto; background:linear-gradient(135deg, var(--cyan), #0284C7);">🔐</div>
                 <h3 style="font-size:1.45rem; font-weight:900;">Acesso ao Sistema</h3>
-                <p style="font-size:0.84rem; color:var(--muted); margin-top:4px;">Digite o E-mail da empresa e sua credencial (Senha do Gestor, PIN de 4 dígitos do Técnico ou Chave CEO).</p>
+                <p style="font-size:0.84rem; color:var(--muted); margin-top:4px;">Entre na sua área: Gestor da Empresa, Técnico de Campo ou CEO Master.</p>
             </div>
             <div class="form-row">
-                <label>E-mail Corporativo da Empresa</label>
-                <input type="email" id="login-quick-email" class="input-std" placeholder="Ex: diretoria@empresa.com.br" value="admin@capitaltech.com">
+                <label>E-mail da Empresa ou Nome da Marca (Opcional p/ Master)</label>
+                <input type="text" id="login-quick-email" class="input-std" placeholder="Ex: diretoria@empresa.com.br ou nome da empresa">
             </div>
             <div class="form-row">
                 <label>Senha do Gestor, PIN do Técnico (4 dígitos) ou Senha Master</label>
-                <input type="password" id="login-quick-pass" class="input-std" placeholder="Digite sua senha ou PIN...">
+                <div style="display:flex; gap:8px;">
+                    <input type="password" id="login-quick-pass" class="input-std" placeholder="Digite sua senha ou PIN..." onkeydown="if(event.key==='Enter') autenticarPortalUnificado('AUTO')">
+                    <button type="button" class="btn-ghost" style="padding:0 14px;" onclick="alternarOlhoSenhaPortal()" title="Mostrar/Ocultar Senha">👁️</button>
+                </div>
             </div>
             <div id="login-portal-erro" style="display:none; background:rgba(244,63,94,0.15); border:1px solid var(--red); color:#FDA4AF; padding:10px; border-radius:8px; font-size:0.8rem; font-weight:700; margin-bottom:12px; text-align:center;"></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px;">
@@ -417,7 +420,7 @@
         <span class="mono">CONFORMIDADE: ABNT NBR 13523 • NBR 15526 • NBR 8460 • CBMDF • INMETRO</span>
     </div>
 
-    <!-- NAVBAR EXECUTIVA COM BOTÃO DIRETO PARA O MASTER -->
+    <!-- NAVBAR EXECUTIVA COM BOTÃO ÚNICO DE ENTRAR -->
     <div class="nav-container">
         <nav>
             <a href="#" class="brand-id">
@@ -431,10 +434,12 @@
                 <a href="#validador">Validador CBMDF</a>
                 <a href="#cases">Cases DF</a>
             </div>
-<div class="nav-btns">
+            <div class="nav-btns">
                 <button type="button" class="btn-ghost" onclick="abrirModal('modal-login')">🔐 Entrar no Sistema</button>
                 <button type="button" class="btn-main" onclick="abrirModal('modal-trial')">Testar 7 Dias Grátis</button>
             </div>
+        </nav>
+    </div>
 
     <!-- HERO SECTION -->
     <header class="hero">
@@ -857,9 +862,7 @@
         <p><strong style="color:#fff;">CAPITAL TECH SaaS</strong> — Ecossistema Corporativo de Engenharia GLP, Estanqueidade e Gestão de Frota em Tempo Real.</p>
         <p style="margin-top:8px; font-size:0.78rem;">
             Brasília - Distrito Federal • 
-            <a href="gestor.html" style="color:var(--cyan); text-decoration:none;">Painel do Gestor</a> • 
-            <a href="app.html" style="color:var(--brand); text-decoration:none;">App do Técnico</a> • 
-            <a href="master.html?ceo=1" onclick="localStorage.setItem('CAPITAL_TECH_CEO_UNLOCKED','true'); sessionStorage.setItem('CAPITAL_TECH_CEO_UNLOCKED','true');" style="color:#34D399; font-weight:800; text-decoration:none;">👑 CEO Command Center (Master)</a>
+            <a href="#" onclick="abrirModal('modal-login'); return false;" style="color:var(--cyan); text-decoration:none; font-weight:700;">🔐 Acessar Portal do Sistema</a>
         </p>
     </footer>
 
@@ -896,6 +899,26 @@
             }
             rtdb = firebase.database();
         } catch (e) {}
+
+        function gerarTenantIdSeguro(emailStr, nomeEmpresa) {
+            var limpo = (emailStr || "").trim().toLowerCase();
+            if (limpo.indexOf('@') !== -1) {
+                var dom = limpo.split('@')[1];
+                if (dom.indexOf('gmail') !== -1 || dom.indexOf('hotmail') !== -1 || dom.indexOf('outlook') !== -1 || dom.indexOf('yahoo') !== -1) {
+                    return (nomeEmpresa || limpo.split('@')[0] || "EMPRESA").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+                }
+                return dom.replace(/[^a-z0-9]/g, '_').toUpperCase();
+            }
+            if (limpo.length > 0) {
+                return limpo.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+            }
+            return (nomeEmpresa || "CAPITALTECH_COM").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+        }
+
+        window.alternarOlhoSenhaPortal = function() {
+            var inp = document.getElementById('login-quick-pass');
+            if (inp) inp.type = (inp.type === 'password') ? 'text' : 'password';
+        };
 
         // 0. PLAYER INTERATIVO DE CENAS (TOUR EM VÍDEO SIMULADO)
         var cenaAtualTour = 1;
@@ -1001,11 +1024,13 @@
             document.documentElement.style.setProperty('--brand', corHex);
         };
 
-        // 3. CONTROLE DE MODAIS E AUTENTICAÇÃO GLOBAL
+        // 3. CONTROLE DE MODAIS E AUTENTICAÇÃO INTELIGENTE (ZERO DUPLO LOGIN)
         window.abrirModal = function(id) {
             if (id === 'modal-trial' && estadoPlano.marcaDigitada !== "CAPITAL TECH") {
                 document.getElementById('trial-empresa').value = estadoPlano.marcaDigitada;
             }
+            var boxErro = document.getElementById('login-portal-erro');
+            if (boxErro) boxErro.style.display = 'none';
             document.getElementById(id).style.display = 'flex';
         };
 
@@ -1015,8 +1040,9 @@
             document.getElementById('modal-marketplace-sindico').style.display = 'none';
         };
 
-window.autenticarPortalUnificado = function(perfilAlvo) {
-            var email = (document.getElementById('login-quick-email').value || "").trim().toLowerCase();
+        window.autenticarPortalUnificado = function(perfilAlvo) {
+            var identInput = (document.getElementById('login-quick-email').value || "").trim();
+            var emailLower = identInput.toLowerCase();
             var pass = (document.getElementById('login-quick-pass').value || "").trim();
             var boxErro = document.getElementById('login-portal-erro');
             if (boxErro) boxErro.style.display = 'none';
@@ -1030,127 +1056,217 @@ window.autenticarPortalUnificado = function(perfilAlvo) {
                 }
             }
 
-            // 1. ENTRADA NO PAINEL MASTER (EXCLUSIVO CEO)
+            if (perfilAlvo === 'AUTO') {
+                if (pass.toLowerCase() === "habner2026" && !identInput) {
+                    perfilAlvo = 'MASTER';
+                } else if (/^\d{4}$/.test(pass) && pass !== "1010") {
+                    perfilAlvo = 'TECNICO';
+                } else {
+                    perfilAlvo = 'GESTOR';
+                }
+            }
+
+            // 1. ENTRADA NO PAINEL MASTER (SEM DUPLO LOGIN!)
             if (perfilAlvo === 'MASTER') {
-                if (pass.toLowerCase() === "habner2026" || pass.toLowerCase() === "capital2026") {
-                    localStorage.setItem(CEO_SESSION_KEY, "true");
-                    sessionStorage.setItem(CEO_SESSION_KEY, "true");
+                if (!pass) {
+                    // Se clicou em abrir Master sem digitar senha aqui, vai para a tela de senha do Master (1 único login)
+                    window.location.href = "master.html";
+                    return;
+                }
+                if (pass.toLowerCase() === "habner2026" || pass.toLowerCase() === "capital2026" || pass === "1010") {
+                    try {
+                        localStorage.setItem(CEO_SESSION_KEY, "true");
+                        sessionStorage.setItem(CEO_SESSION_KEY, "true");
+                    } catch (e) {}
                     window.location.href = "master.html";
                 } else {
-                    mostrarErroLogin("🔒 Digite a Chave Mestra do CEO para entrar no Painel Master.");
+                    mostrarErroLogin("❌ Chave Mestra incorreta para o Painel CEO.");
                 }
                 return;
             }
 
-            if (!email || !pass) {
-                mostrarErroLogin("⚠️ Preencha o E-mail da empresa e a sua Senha ou PIN.");
+            if (!pass) {
+                mostrarErroLogin("⚠️ Digite sua Senha do Gestor ou o PIN de 4 dígitos do Técnico.");
                 return;
             }
 
-            // Descobre o Tenant ID exato cadastrado no Master para este e-mail
-            function resolverEmpresaEValidar(listaHolding) {
-                var tenantEncontrado = null;
-                var senhaMasterCadastro = null;
+            function processarAutenticacaoCompleta(listaHolding, mapaEmpresasNuvem) {
+                var listaEmp = Array.isArray(listaHolding) ? listaHolding : [];
+                var mapaEmp = mapaEmpresasNuvem || {};
 
-                if (Array.isArray(listaHolding)) {
-                    for (var i = 0; i < listaHolding.length; i++) {
-                        if (listaHolding[i] && (listaHolding[i].email || "").trim().toLowerCase() === email) {
-                            tenantEncontrado = listaHolding[i].tenantId;
-                            senhaMasterCadastro = listaHolding[i].senhaAdmin;
-                            break;
+                // Mescla também empresas salvas localmente no navegador
+                try {
+                    var hLocal = localStorage.getItem(MASTER_STORAGE_KEY);
+                    if (hLocal) {
+                        var parsedH = JSON.parse(hLocal);
+                        var empLocais = parsedH.empresas || [];
+                        if (!Array.isArray(empLocais)) empLocais = Object.values(empLocais);
+                        for (var l = 0; l < empLocais.length; l++) {
+                            var jaTem = listaEmp.some(function(x) { return x && empLocais[l] && x.tenantId === empLocais[l].tenantId; });
+                            if (!jaTem && empLocais[l]) listaEmp.unshift(empLocais[l]);
+                        }
+                    }
+                } catch (e) {}
+
+                var tenantEscolhido = null;
+                var emailEscolhido = emailLower || "admin@capitaltech.com";
+                var senhaCadastradaMaster = null;
+
+                // Passo A: Procura correspondência exata por E-mail, Marca, Nome ou TenantID
+                if (emailLower) {
+                    for (var i = 0; i < listaEmp.length; i++) {
+                        var item = listaEmp[i];
+                        if (!item) continue;
+                        var emItem = (item.email || "").trim().toLowerCase();
+                        var maItem = (item.marca || "").trim().toLowerCase();
+                        var noItem = (item.nome || "").trim().toLowerCase();
+                        var teItem = (item.tenantId || "").trim().toLowerCase();
+
+                        if (emItem === emailLower || maItem === emailLower || noItem === emailLower || teItem === emailLower) {
+                            tenantEscolhido = item.tenantId;
+                            emailEscolhido = item.email || emailLower;
+                            senhaCadastradaMaster = item.senhaAdmin;
+                            // Se a senha também bater com este item, para imediatamente (prioriza a empresa cuja senha bate!)
+                            if (String(item.senhaAdmin || "").trim() === pass) break;
                         }
                     }
                 }
 
-                if (!tenantEncontrado) {
-                    tenantEncontrado = gerarTenantIdSeguro(email, "CAPITALTECH_COM");
-                }
+                // Passo B: Se o usuário gerou uma senha no Master e digitou a senha diretamente (ou esqueceu de trocar o e-mail), acha a empresa pela Senha gerada!
+                if (perfilAlvo === 'GESTOR') {
+                    for (var j = 0; j < listaEmp.length; j++) {
+                        var empJ = listaEmp[j];
+                        if (!empJ) continue;
+                        var sMaster = String(empJ.senhaAdmin || "").trim();
+                        var gavNuvem = mapaEmp[empJ.tenantId];
+                        var sGaveta = (gavNuvem && gavNuvem.configWhiteLabel && gavNuvem.configWhiteLabel.senhaAdmin) ? String(gavNuvem.configWhiteLabel.senhaAdmin).trim() : "";
 
-                function validarNaGaveta(dadosGaveta) {
-                    var wl = (dadosGaveta && dadosGaveta.configWhiteLabel) ? dadosGaveta.configWhiteLabel : {};
-                    var senhaGestorCorreta = wl.senhaAdmin || senhaMasterCadastro || "capital2026";
-                    var listaTecnicos = (dadosGaveta && dadosGaveta.tecnicos) ? dadosGaveta.tecnicos : [];
-                    if (!Array.isArray(listaTecnicos)) listaTecnicos = Object.values(listaTecnicos);
-
-                    // LOGIN DO GESTOR DA EMPRESA
-                    if (perfilAlvo === 'GESTOR') {
-                        if (pass === senhaGestorCorreta || pass.toLowerCase() === "habner2026" || pass.toLowerCase() === "capital2026") {
-                            localStorage.setItem(SESSION_AUTH_KEY, email);
-                            localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEncontrado);
-                            sessionStorage.setItem(SESSION_AUTH_KEY, email);
-                            sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEncontrado);
-                            window.location.href = "gestor.html?tenant=" + encodeURIComponent(tenantEncontrado);
-                        } else {
-                            mostrarErroLogin("❌ Senha do Gestor incorreta para a empresa " + email);
-                        }
-                        return;
-                    }
-
-                    // LOGIN DO TÉCNICO (VALIDA O PIN DE 4 DÍGITOS CRIADO PELO GESTOR)
-                    if (perfilAlvo === 'TECNICO') {
-                        var tecAchado = null;
-                        for (var t = 0; t < listaTecnicos.length; t++) {
-                            if (listaTecnicos[t] && String(listaTecnicos[t].pin || "").trim() === pass) {
-                                tecAchado = listaTecnicos[t];
+                        if ((sMaster && sMaster === pass) || (sGaveta && sGaveta === pass)) {
+                            if (!emailLower || (empJ.email || "").toLowerCase() === emailLower || (empJ.marca || "").toLowerCase() === emailLower || !tenantEscolhido || senhaCadastradaMaster !== pass) {
+                                tenantEscolhido = empJ.tenantId;
+                                emailEscolhido = empJ.email || emailEscolhido;
+                                senhaCadastradaMaster = pass;
                                 break;
                             }
                         }
+                    }
 
-                        if (tecAchado) {
-                            localStorage.setItem(SESSION_AUTH_KEY, email);
-                            localStorage.setItem(TEC_SESSION_KEY, email);
-                            localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEncontrado);
-                            sessionStorage.setItem(SESSION_AUTH_KEY, email);
-                            sessionStorage.setItem(TEC_SESSION_KEY, email);
-                            sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEncontrado);
-                            sessionStorage.setItem("CAPITAL_TECH_TEC_LOCKED_ID", tecAchado.id);
-                            sessionStorage.setItem("TEC_PIN_AUTENTICADO", tecAchado.pin);
-                            window.location.href = "app.html?tenant=" + encodeURIComponent(tenantEncontrado);
-                        } else if (pass.toLowerCase() === "habner2026" || pass.toLowerCase() === "capital2026") {
-                            localStorage.setItem(SESSION_AUTH_KEY, email);
-                            localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEncontrado);
-                            sessionStorage.removeItem("CAPITAL_TECH_TEC_LOCKED_ID");
-                            sessionStorage.setItem("TEC_PIN_AUTENTICADO", "MASTER");
-                            window.location.href = "app.html?tenant=" + encodeURIComponent(tenantEncontrado);
-                        } else {
-                            mostrarErroLogin("❌ PIN de 4 dígitos não encontrado nesta empresa. Verifique com seu Gestor.");
+                    // Também verifica todas as gavetas de EMPRESAS na nuvem caso tenha mudado a senha no WhiteLabel
+                    var chavesGavetas = Object.keys(mapaEmp);
+                    for (var k = 0; k < chavesGavetas.length; k++) {
+                        var ch = chavesGavetas[k];
+                        var gObj = mapaEmp[ch];
+                        if (gObj && gObj.configWhiteLabel) {
+                            var sWl = String(gObj.configWhiteLabel.senhaAdmin || "").trim();
+                            var nomeWl = String(gObj.configWhiteLabel.nome || "").trim().toLowerCase();
+                            if (sWl === pass && (!emailLower || nomeWl === emailLower || ch.toLowerCase() === emailLower || !tenantEscolhido)) {
+                                tenantEscolhido = ch;
+                                senhaCadastradaMaster = sWl;
+                                break;
+                            }
                         }
                     }
                 }
 
-                if (rtdb) {
-                    rtdb.ref('EMPRESAS/' + tenantEncontrado).once('value', function(snapGav) {
-                        var dNuvem = snapGav.val();
-                        if (dNuvem) {
-                            validarNaGaveta(dNuvem);
-                        } else {
-                            var salvoLocal = localStorage.getItem("ERP_SAAS_" + tenantEncontrado);
-                            validarNaGaveta(salvoLocal ? JSON.parse(salvoLocal) : {});
+                if (!tenantEscolhido) {
+                    tenantEscolhido = gerarTenantIdSeguro(emailEscolhido, identInput || "CAPITALTECH_COM");
+                }
+
+                // Obtém os dados da gaveta (Nuvem ou LocalStorage)
+                var dadosGaveta = mapaEmp[tenantEscolhido] || null;
+                if (!dadosGaveta) {
+                    try {
+                        var localGav = localStorage.getItem("ERP_SAAS_" + tenantEscolhido);
+                        if (localGav) dadosGaveta = JSON.parse(localGav);
+                    } catch (e) {}
+                }
+
+                var wl = (dadosGaveta && dadosGaveta.configWhiteLabel) ? dadosGaveta.configWhiteLabel : {};
+                var senhaValidaGestor = String(wl.senhaAdmin || senhaCadastradaMaster || "capital2026").trim();
+
+                // 2. VALIDAÇÃO E ENTRADA DIRETA NO PAINEL DO GESTOR
+                if (perfilAlvo === 'GESTOR') {
+                    if (pass === senhaValidaGestor || pass === String(senhaCadastradaMaster || "").trim() || pass.toLowerCase() === "habner2026" || pass.toLowerCase() === "capital2026") {
+                        localStorage.setItem(SESSION_AUTH_KEY, emailEscolhido);
+                        localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEscolhido);
+                        sessionStorage.setItem(SESSION_AUTH_KEY, emailEscolhido);
+                        sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEscolhido);
+                        window.location.href = "gestor.html?tenant=" + encodeURIComponent(tenantEscolhido);
+                    } else {
+                        mostrarErroLogin("❌ Senha do Gestor incorreta. Confira a senha cadastrada no Painel Master.");
+                    }
+                    return;
+                }
+
+                // 3. VALIDAÇÃO E ENTRADA DIRETA NO APP DO TÉCNICO (COM PIN DE 4 DÍGITOS)
+                if (perfilAlvo === 'TECNICO') {
+                    var listaTecnicos = (dadosGaveta && dadosGaveta.tecnicos) ? dadosGaveta.tecnicos : [];
+                    if (!Array.isArray(listaTecnicos)) listaTecnicos = Object.values(listaTecnicos);
+
+                    var tecAchado = null;
+                    for (var t = 0; t < listaTecnicos.length; t++) {
+                        if (listaTecnicos[t] && String(listaTecnicos[t].pin || "").trim() === pass) {
+                            tecAchado = listaTecnicos[t];
+                            break;
                         }
-                    });
-                } else {
-                    var salvoLocal = localStorage.getItem("ERP_SAAS_" + tenantEncontrado);
-                    validarNaGaveta(salvoLocal ? JSON.parse(salvoLocal) : {});
+                    }
+
+                    // Se o técnico não digitou o e-mail da empresa, procura o PIN em todas as gavetas ativas
+                    if (!tecAchado) {
+                        var todasChaves = Object.keys(mapaEmp);
+                        for (var x = 0; x < todasChaves.length; x++) {
+                            var gavX = mapaEmp[todasChaves[x]];
+                            var tecsX = (gavX && gavX.tecnicos) ? (Array.isArray(gavX.tecnicos) ? gavX.tecnicos : Object.values(gavX.tecnicos)) : [];
+                            for (var y = 0; y < tecsX.length; y++) {
+                                if (tecsX[y] && String(tecsX[y].pin || "").trim() === pass) {
+                                    tecAchado = tecsX[y];
+                                    tenantEscolhido = todasChaves[x];
+                                    break;
+                                }
+                            }
+                            if (tecAchado) break;
+                        }
+                    }
+
+                    if (tecAchado) {
+                        localStorage.setItem(SESSION_AUTH_KEY, emailEscolhido);
+                        localStorage.setItem(TEC_SESSION_KEY, emailEscolhido);
+                        localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEscolhido);
+                        sessionStorage.setItem(SESSION_AUTH_KEY, emailEscolhido);
+                        sessionStorage.setItem(TEC_SESSION_KEY, emailEscolhido);
+                        sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEscolhido);
+                        sessionStorage.setItem("CAPITAL_TECH_TEC_LOCKED_ID", tecAchado.id);
+                        sessionStorage.setItem("TEC_PIN_AUTENTICADO", tecAchado.pin);
+                        window.location.href = "app.html?tenant=" + encodeURIComponent(tenantEscolhido);
+                    } else if (pass.toLowerCase() === "habner2026" || pass.toLowerCase() === "capital2026" || pass === "1010") {
+                        localStorage.setItem(SESSION_AUTH_KEY, emailEscolhido);
+                        localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantEscolhido);
+                        sessionStorage.removeItem("CAPITAL_TECH_TEC_LOCKED_ID");
+                        sessionStorage.setItem("TEC_PIN_AUTENTICADO", "MASTER");
+                        window.location.href = "app.html?tenant=" + encodeURIComponent(tenantEscolhido);
+                    } else {
+                        mostrarErroLogin("❌ PIN de 4 dígitos não encontrado. Crie o PIN na aba Técnicos do Painel Gestor.");
+                    }
                 }
             }
 
             if (rtdb) {
                 rtdb.ref('CAPITAL_HOLDING/empresas').once('value', function(snapHold) {
-                    var lNuvem = snapHold.val();
-                    if (lNuvem && !Array.isArray(lNuvem)) lNuvem = Object.values(lNuvem);
-                    resolverEmpresaEValidar(lNuvem || []);
+                    var lNuvem = snapHold.val() || [];
+                    if (!Array.isArray(lNuvem)) lNuvem = Object.values(lNuvem);
+                    rtdb.ref('EMPRESAS').once('value', function(snapEmp) {
+                        processarAutenticacaoCompleta(lNuvem, snapEmp.val() || {});
+                    });
                 });
             } else {
-                var hLocal = localStorage.getItem(MASTER_STORAGE_KEY);
-                var hParsed = hLocal ? JSON.parse(hLocal) : { empresas: [] };
-                resolverEmpresaEValidar(hParsed.empresas || []);
+                processarAutenticacaoCompleta([], {});
             }
         };
 
         // 4. SELF-ONBOARDING DE 7 DIAS COM SENHA PRÓPRIA DO CLIENTE E LIMITE DE FROTA
         window.criarAmbienteTrialAutomatico = function() {
             var nome = document.getElementById('trial-empresa').value.trim();
-            var email = document.getElementById('trial-email').value.trim();
+            var email = document.getElementById('trial-email').value.trim().toLowerCase();
             var zap = document.getElementById('trial-zap').value.trim() || "61999999999";
             var senhaInput = document.getElementById('trial-senha');
             var senhaCriada = (senhaInput && senhaInput.value.trim()) ? senhaInput.value.trim() : "capital2026";
@@ -1235,11 +1351,12 @@ window.autenticarPortalUnificado = function(perfilAlvo) {
 
             try {
                 localStorage.setItem("ERP_SAAS_" + tenantId, JSON.stringify(dadosGavetaNova));
-                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dadosGavetaNova));
                 localStorage.setItem(SESSION_AUTH_KEY, email);
                 localStorage.setItem(TEC_SESSION_KEY, email);
+                localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantId);
                 sessionStorage.setItem(SESSION_AUTH_KEY, email);
                 sessionStorage.setItem(TEC_SESSION_KEY, email);
+                sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tenantId);
 
                 var hSalva = localStorage.getItem(MASTER_STORAGE_KEY);
                 var hObj = hSalva ? JSON.parse(hSalva) : { empresas: [] };
@@ -1373,12 +1490,12 @@ window.autenticarPortalUnificado = function(perfilAlvo) {
             }
 
             var emailAtivo = localStorage.getItem(SESSION_AUTH_KEY) || "admin@capitaltech.com";
-            var tenantAtivo = gerarTenantIdSeguro(emailAtivo, "CAPITALTECH_COM");
+            var tenantAtivo = localStorage.getItem("CAPITAL_TECH_ACTIVE_TENANT") || gerarTenantIdSeguro(emailAtivo, "CAPITALTECH_COM");
             var chaveGaveta = "ERP_SAAS_" + tenantAtivo;
 
             var dbLocal = {};
             try {
-                dbLocal = JSON.parse(localStorage.getItem(chaveGaveta) || localStorage.getItem("G3_ERP_MASTER_DB_V2") || "{}");
+                dbLocal = JSON.parse(localStorage.getItem(chaveGaveta) || "{}");
             } catch (e) {}
 
             var nomePrimeiroTecnico = (dbLocal.tecnicos && dbLocal.tecnicos.length > 0) ? dbLocal.tecnicos[0].nome : "Habner T. Fernandes";
@@ -1402,7 +1519,6 @@ window.autenticarPortalUnificado = function(perfilAlvo) {
                 if (!dbLocal.ordens) dbLocal.ordens = [];
                 dbLocal.ordens.unshift(novaOSMarketplace);
                 localStorage.setItem(chaveGaveta, JSON.stringify(dbLocal));
-                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dbLocal));
             } catch (e) {}
 
             if (rtdb) {

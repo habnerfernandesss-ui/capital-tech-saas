@@ -31,7 +31,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
         html, body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-        /* TELA DE BLOQUEIO DO CEO (PIN MASTER SEMPRE ATIVO AO ABRIR) */
+        /* TELA DE BLOQUEIO DO CEO (APARECE APENAS SE NÃO TIVER LOGADO NO INDEX) */
         #ceo-lock-overlay {
             position: fixed; inset: 0; z-index: 99999;
             background: radial-gradient(circle at top, #0F172A 0%, #020408 100%);
@@ -179,7 +179,7 @@
         }
     </style>
 
-    <!-- MOTOR INDEPENDENTE DE AUTENTICAÇÃO DO CEO (EXIGE SENHA SEMPRE) -->
+    <!-- MOTOR INDEPENDENTE DE AUTENTICAÇÃO DO CEO (SEM DUPLO LOGIN) -->
     <script>
         var CEO_SESSION_KEY = "CAPITAL_TECH_CEO_UNLOCKED";
 
@@ -202,6 +202,10 @@
             if (err) err.style.display = 'none';
 
             if (pin === "habner2026" || pin === "capital2026" || pin === "1010") {
+                try {
+                    localStorage.setItem(CEO_SESSION_KEY, "true");
+                    sessionStorage.setItem(CEO_SESSION_KEY, "true");
+                } catch (e) {}
                 var lock = document.getElementById('ceo-lock-overlay');
                 if (lock) lock.style.setProperty('display', 'none', 'important');
                 var t = document.getElementById('toast-master');
@@ -225,11 +229,19 @@
             var lock = document.getElementById('ceo-lock-overlay');
             if (lock) lock.style.setProperty('display', 'flex', 'important');
         };
+
+        // Se já autenticou pelo modal do index.html, não exibe segunda tela de login!
+        window.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem(CEO_SESSION_KEY) === "true" || localStorage.getItem(CEO_SESSION_KEY) === "true") {
+                var lock = document.getElementById('ceo-lock-overlay');
+                if (lock) lock.style.setProperty('display', 'none', 'important');
+            }
+        });
     </script>
 </head>
 <body>
 
-    <!-- PORTA DE AÇO EXCLUSIVA DO CEO (SEMPRE PEDE SENHA AO ENTRAR) -->
+    <!-- PORTA DE AÇO EXCLUSIVA DO CEO (SÓ APARECE SE ENTRAR SEM LOGAR NO INDEX) -->
     <div id="ceo-lock-overlay">
         <div class="lock-box">
             <div class="lock-badge">👑</div>
@@ -300,7 +312,7 @@
         <section class="panel-box">
             <div class="panel-head">
                 <div class="panel-title"><span>[01]</span> Cadastrar Nova Empresa Licenciada & Provisionar Gaveta White-Label no Firebase</div>
-                <span class="tenant-badge">CRIA O AMBIENTE + SENHA DO CLIENTE EM 1 SEGUNDO</span>
+                <span class="tenant-badge">CRIA O AMBIENTE + SENHA DO GESTOR EM 1 SEGUNDO</span>
             </div>
 
             <div class="form-grid-4">
@@ -316,14 +328,14 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label>E-mail do Gestor do Cliente (Gera o ID)</label>
+                    <label>E-mail do Gestor do Cliente (Login)</label>
                     <input type="email" id="emp-email" class="input-std" placeholder="Ex: diretor@brasiliagas.com.br" oninput="gerarTenantAutomatico()">
                 </div>
                 <div class="field">
-                    <label>Gaveta (Tenant ID) & Senha do Cliente</label>
+                    <label>Gaveta (Tenant ID) & Senha do Gestor</label>
                     <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:8px;">
                         <input type="text" id="emp-tenant" class="input-std" placeholder="Ex: BRASILIAGAS_COM" style="font-family:'JetBrains Mono',monospace; color:var(--cyan); font-weight:800;">
-                        <input type="text" id="emp-senha" class="input-std" value="capital2026" placeholder="Senha Inicial" style="font-family:'JetBrains Mono',monospace; color:var(--gold); font-weight:800;">
+                        <input type="text" id="emp-senha" class="input-std" value="capital2026" placeholder="Senha Gestor" style="font-family:'JetBrains Mono',monospace; color:var(--gold); font-weight:800;">
                     </div>
                 </div>
             </div>
@@ -412,7 +424,7 @@
                     <thead>
                         <tr>
                             <th>Empresa, CNPJ & Endereço</th>
-                            <th>Contato / Diretor & Senha</th>
+                            <th>Contato / Diretor & Senha do Gestor</th>
                             <th>Gaveta Firebase & Telemetria</th>
                             <th>Plano & Faturamento</th>
                             <th>Status (Disjuntor)</th>
@@ -605,7 +617,7 @@
             if (limpo.indexOf('@') !== -1) {
                 var dom = limpo.split('@')[1];
                 if (dom.indexOf('gmail') !== -1 || dom.indexOf('hotmail') !== -1 || dom.indexOf('outlook') !== -1 || dom.indexOf('yahoo') !== -1) {
-                    return (nomeEmpresa || "EMPRESA").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+                    return (nomeEmpresa || limpo.split('@')[0] || "EMPRESA").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
                 }
                 return dom.replace(/[^a-z0-9]/g, '_').toUpperCase();
             }
@@ -642,7 +654,7 @@
             var nome = document.getElementById('emp-nome').value.trim();
             var marca = (document.getElementById('emp-marca').value.trim() || nome || "NOVA EMPRESA").toUpperCase();
             var sigla = (document.getElementById('emp-sigla').value.trim() || marca.substring(0, 2)).toUpperCase();
-            var email = document.getElementById('emp-email').value.trim() || "admin@" + marca.toLowerCase().replace(/[^a-z0-9]/g, '') + ".com.br";
+            var email = (document.getElementById('emp-email').value.trim() || ("admin@" + marca.toLowerCase().replace(/[^a-z0-9]/g, '') + ".com.br")).toLowerCase();
             var tenantId = (document.getElementById('emp-tenant').value.trim() || calcularTenantSeguro(email, marca)).toUpperCase().replace(/[^A-Z0-9_]/g, '_');
             var senhaAdmin = (document.getElementById('emp-senha') && document.getElementById('emp-senha').value.trim()) ? document.getElementById('emp-senha').value.trim() : "capital2026";
             var cnpj = document.getElementById('emp-cnpj').value.trim() || "Isento / Em Cadastro";
@@ -684,7 +696,12 @@
             };
 
             if (!holdingDB.empresas) holdingDB.empresas = [];
+            // Evita duplicidade de e-mail ou tenantId substituindo caso já exista
+            holdingDB.empresas = holdingDB.empresas.filter(function(item) {
+                return item && item.tenantId !== tenantId && (item.email || "").toLowerCase() !== email;
+            });
             holdingDB.empresas.unshift(novaEmp);
+
             if (!statusNuvem) statusNuvem = {};
             statusNuvem[tenantId] = "ATIVO";
             salvarHoldingCompleta();
@@ -741,10 +758,48 @@
             document.getElementById('emp-end').value = "";
 
             window.renderizarPainelMaster();
-            avisoMaster("🚀 Empresa " + marca + " cadastrada com Senha [" + senhaAdmin + "] e gaveta [" + tenantId + "]!");
+            avisoMaster("🚀 Empresa " + marca + " provisionada! Login: " + email + " | Senha: " + senhaAdmin);
         };
 
-window.acessarGavetaCliente = function(idx, destino) {
+        // PERMITE ALTERAR OU GERAR NOVA SENHA DO GESTOR DE QUALQUER EMPRESA EM 1 CLIQUE
+        window.alterarSenhaEmpresaCliente = function(idx) {
+            var emp = holdingDB.empresas[idx];
+            if (!emp) return;
+            var senhaAtual = emp.senhaAdmin || "capital2026";
+            var novaSenha = prompt(
+                "🔑 ALTERAR SENHA DO GESTOR — " + emp.marca + "\n\n" +
+                "E-mail de Login: " + emp.email + "\n" +
+                "Digite a nova senha de acesso para o Painel Gestor desta empresa:",
+                senhaAtual
+            );
+            if (novaSenha === null) return;
+            novaSenha = novaSenha.trim();
+            if (novaSenha.length < 3) {
+                alert("⚠️ A senha deve ter pelo menos 3 caracteres.");
+                return;
+            }
+
+            emp.senhaAdmin = novaSenha;
+            salvarHoldingCompleta();
+
+            if (rtdb) {
+                rtdb.ref('EMPRESAS/' + emp.tenantId + '/configWhiteLabel/senhaAdmin').set(novaSenha);
+            }
+            try {
+                var gavLocal = localStorage.getItem("ERP_SAAS_" + emp.tenantId);
+                if (gavLocal) {
+                    var parsedG = JSON.parse(gavLocal);
+                    if (!parsedG.configWhiteLabel) parsedG.configWhiteLabel = {};
+                    parsedG.configWhiteLabel.senhaAdmin = novaSenha;
+                    localStorage.setItem("ERP_SAAS_" + emp.tenantId, JSON.stringify(parsedG));
+                }
+            } catch (e) {}
+
+            window.renderizarPainelMaster();
+            avisoMaster("🔑 Senha da empresa " + emp.marca + " atualizada para: " + novaSenha);
+        };
+
+        window.acessarGavetaCliente = function(idx, destino) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
             var emailAlvo = emp.email || "admin@capitaltech.com";
@@ -757,7 +812,6 @@ window.acessarGavetaCliente = function(idx, destino) {
             window.location.href = destino + "?tenant=" + encodeURIComponent(emp.tenantId);
         };
 
-        // DISJUNTOR CORRIGIDO: ATUALIZA MEMÓRIA LOCAL + FIREBASE SIMULTANEAMENTE
         window.alternarDisjuntorEmpresa = function(idx, novoStatus) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
@@ -980,7 +1034,10 @@ window.acessarGavetaCliente = function(idx, destino) {
                         '<td>' +
                             '<strong>' + emp.responsavel + '</strong><br>' +
                             '<small style="color:var(--cyan);">✉️ ' + emp.email + '</small><br>' +
-                            '<small style="color:var(--gold); font-family:monospace;">🔑 Senha: ' + (emp.senhaAdmin || 'capital2026') + ' • 📱 ' + emp.zap + '</small>' +
+                            '<div style="display:flex; align-items:center; gap:6px; margin-top:4px;">' +
+                                '<span style="color:var(--gold); font-family:monospace; font-weight:800; font-size:0.8rem;">🔑 Senha: ' + (emp.senhaAdmin || 'capital2026') + '</span>' +
+                                '<button type="button" class="btn-sm warn" style="padding:2px 7px; font-size:0.68rem;" onclick="alterarSenhaEmpresaCliente(' + i + ')">✏️ Alterar Senha</button>' +
+                            '</div>' +
                         '</td>' +
                         '<td>' +
                             '<span class="tenant-badge">' + emp.tenantId + '</span><br>' +

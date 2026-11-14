@@ -1286,28 +1286,6 @@
         var db = obterDadosPadrao();
         var cacheVideosNuvem = {};
 
-        function carregarBanco() {
-            try {
-                var salvo = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("G3_ERP_MASTER_DB_V2");
-                if (salvo) {
-                    var parsed = JSON.parse(salvo);
-                    var padrao = obterDadosPadrao();
-                    db = {
-                        configWhiteLabel: parsed.configWhiteLabel || padrao.configWhiteLabel,
-                        clientes: parsed.clientes || padrao.clientes,
-                        tecnicos: parsed.tecnicos || padrao.tecnicos,
-                        materiais: parsed.materiais || padrao.materiais,
-                        tanques: parsed.tanques || padrao.tanques,
-                        ordens: parsed.ordens || padrao.ordens
-                    };
-                } else {
-                    db = obterDadosPadrao();
-                }
-            } catch (e) {
-                db = obterDadosPadrao();
-            }
-        }
-
         function salvarBancoLocal() {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
