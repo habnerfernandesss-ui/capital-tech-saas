@@ -749,4 +749,311 @@
             if (!emp) return;
             var emailAlvo = emp.email || "admin@capitaltech.com";
             localStorage.setItem(SESSION_AUTH_KEY, emailAlvo);
-            localStorage.setItem(TEC_SESSION_KEY, emailAl
+            localStorage.setItem(TEC_SESSION_KEY, emailAlvo);
+            sessionStorage.setItem(SESSION_AUTH_KEY, emailAlvo);
+            sessionStorage.setItem(TEC_SESSION_KEY, emailAlvo);
+            window.location.href = destino + "?tenant=" + encodeURIComponent(emp.tenantId);
+        };
+
+        // DISJUNTOR CORRIGIDO: ATUALIZA MEMÓRIA LOCAL + FIREBASE SIMULTANEAMENTE
+        window.alternarDisjuntorEmpresa = function(idx, novoStatus) {
+            var emp = holdingDB.empresas[idx];
+            if (!emp) return;
+
+            emp.status = novoStatus;
+            if (!statusNuvem) statusNuvem = {};
+            statusNuvem[emp.tenantId] = novoStatus;
+
+            var dominioEmail = calcularTenantSeguro(emp.email, emp.marca);
+            statusNuvem[dominioEmail] = novoStatus;
+
+            salvarHoldingCompleta();
+
+            if (rtdb) {
+                try {
+                    rtdb.ref('STATUS_FINANCEIRO/' + emp.tenantId).set(novoStatus);
+                    rtdb.ref('STATUS_FINANCEIRO/' + dominioEmail).set(novoStatus);
+                } catch (e) {}
+            }
+
+            window.renderizarPainelMaster();
+
+            if (novoStatus === "BLOQUEADO") {
+                avisoMaster("🔴 CORTE EXECUTADO: O sistema da empresa " + emp.marca + " foi bloqueado imediatamente!");
+            } else {
+                avisoMaster("🟢 ACESSO LIBERADO: O sistema da empresa " + emp.marca + " foi religado em tempo real!");
+            }
+        };
+
+        window.alterarLimiteFrotaCliente = function(idx) {
+            var emp = holdingDB.empresas[idx];
+            if (!emp) return;
+            var limAtual = emp.limiteTecnicos || 4;
+            var novoLim = prompt(
+                "🚐 CONTROLE DE VAGAS DA FROTA — " + emp.marca + "\n\n" +
+                "Atualmente esta empresa pode cadastrar até " + limAtual + " técnico(s)/viatura(s).\n" +
+                "Digite o novo limite de técnicos liberados para este cliente:",
+                limAtual
+            );
+            if (novoLim === null) return;
+            var qtdNum = parseInt(novoLim);
+            if (isNaN(qtdNum) || qtdNum < 1) return;
+
+            emp.limiteTecnicos = qtdNum;
+            var novaMensalidadeSugerida = qtdNum === 1 ? 297 : (qtdNum <= 5 ? 227 + (qtdNum * 80) : (qtdNum <= 15 ? 627 + ((qtdNum - 5) * 65) : 1277 + ((qtdNum - 15) * 50)));
+            if (confirm("Deseja atualizar também a mensalidade de " + emp.marca + " para R$ " + novaMensalidadeSugerida + ",00/mês (referente a " + qtdNum + " viaturas)?")) {
+                emp.mensalidade = novaMensalidadeSugerida;
+                emp.plano = "Frota " + qtdNum + " Viaturas";
+            }
+
+            salvarHoldingCompleta();
+            if (rtdb) {
+                rtdb.ref('EMPRESAS/' + emp.tenantId + '/configWhiteLabel/limiteTecnicos').set(qtdNum);
+            }
+            try {
+                var gavLocal = localStorage.getItem("ERP_SAAS_" + emp.tenantId);
+                if (gavLocal) {
+                    var parsedG = JSON.parse(gavLocal);
+                    if (!parsedG.configWhiteLabel) parsedG.configWhiteLabel = {};
+                    parsedG.configWhiteLabel.limiteTecnicos = qtdNum;
+                    localStorage.setItem("ERP_SAAS_" + emp.tenantId, JSON.stringify(parsedG));
+                }
+            } catch (e) {}
+
+            window.renderizarPainelMaster();
+            avisoMaster("🚐 Limite da empresa " + emp.marca + " atualizado para " + qtdNum + " viaturas na nuvem!");
+        };
+
+        window.removerEmpresaCarteira = function(idx) {
+            var emp = holdingDB.empresas[idx];
+            if (!confirm("Deseja remover " + emp.nome + " da listagem da carteira?")) return;
+            holdingDB.empresas.splice(idx, 1);
+            salvarHoldingCompleta();
+            window.renderizarPainelMaster();
+            avisoMaster("Empresa removida da listagem.");
+        };
+
+        window.salvarConfigHolding = function() {
+            if (!holdingDB.config) holdingDB.config = {};
+            holdingDB.config.pixChave = document.getElementById('cfg-pix-chave').value.trim();
+            holdingDB.config.pixNome = document.getElementById('cfg-pix-nome').value.trim();
+            holdingDB.config.urlBase = document.getElementById('cfg-url-base').value.trim().replace(/\/$/, '');
+            salvarHoldingCompleta();
+            avisoMaster("✔ Configurações financeiras e PIX da Holding atualizadas!");
+        };
+
+        window.dispararMensagemInteligente = function(idx, tipoMensagem) {
+            var emp = holdingDB.empresas[idx];
+            if (!emp) return;
+
+            var cfg = holdingDB.config || {
+                pixChave: "61986294465",
+                pixNome: "Habner Teixeira Fernandes — Capital Tech SaaS",
+                urlBase: "https://capital-tech-saas.onrender.com"
+            };
+
+            var zapLimpo = (emp.zap || "61986294465").replace(/\D/g, '');
+            if (zapLimpo.length <= 11 && zapLimpo.indexOf('55') !== 0) zapLimpo = "55" + zapLimpo;
+            var valorFmt = "R$ " + (parseFloat(emp.mensalidade) || 0).toFixed(2).replace('.', ',');
+            var senhaEmpresa = emp.senhaAdmin || "capital2026";
+            var msg = "";
+
+            if (tipoMensagem === 'ONBOARDING') {
+                msg = "🚀 *BEM-VINDO À CAPITAL TECH SaaS — AMBIENTE LIBERADO!* 🚀\n\n" +
+                      "Olá, *" + emp.responsavel + "*! O ecossistema White-Label da *" + emp.marca + "* já está configurado e operando na nuvem:\n\n" +
+                      "💻 *1. Painel do Gestor (Computador/Diretoria):*\n" +
+                      cfg.urlBase + "/gestor.html?tenant=" + emp.tenantId + "\n\n" +
+                      "📱 *2. App do Técnico (Celular das Viaturas):*\n" +
+                      cfg.urlBase + "/app.html?tenant=" + emp.tenantId + "\n\n" +
+                      "🔑 *Credenciais Corporativas:*\n" +
+                      "• *E-mail:* `" + emp.email + "`\n" +
+                      "• *Senha do Gestor:* `" + senhaEmpresa + "`\n" +
+                      "• *PIN Inicial Técnico 01:* `1010`\n" +
+                      "• *Gaveta Isolada (Tenant):* `" + emp.tenantId + "`\n\n" +
+                      "Qualquer dúvida, nosso suporte de engenharia está à disposição!";
+            } else if (tipoMensagem === 'COBRANCA_PIX') {
+                msg = "💼 *LEMBRETE DE FATURA MENSAL — CAPITAL TECH SaaS*\n\n" +
+                      "Olá, *" + emp.responsavel + "* (" + emp.nome + "), tudo bem?\n\n" +
+                      "Segue o demonstrativo da licença corporativa do sistema *" + emp.marca + "*:\n" +
+                      "📦 *Plano:* " + emp.plano + "\n" +
+                      "📅 *Vencimento:* " + emp.vencimento + "\n" +
+                      "💰 *Valor Mensal:* *" + valorFmt + "*\n\n" +
+                      "⚡ *Dados para Pagamento via PIX:*\n" +
+                      "• *Chave PIX:* `" + cfg.pixChave + "`\n" +
+                      "• *Favorecido:* " + cfg.pixNome + "\n\n" +
+                      "Assim que realizar a transferência, basta nos enviar o comprovante por aqui para mantermos a sincronização da sua frota 100% ativa!";
+            } else if (tipoMensagem === 'AVISO_BLOQUEIO') {
+                msg = "🚨 *AVISO DE SUSPENSÃO AUTOMÁTICA DE LICENÇA — CAPITAL TECH*\n\n" +
+                      "Prezado(a) *" + emp.responsavel + "* (" + emp.nome + "),\n\n" +
+                      "Identificamos uma pendência na assinatura mensal (*" + valorFmt + "*, vencimento *" + emp.vencimento + "*). Por esse motivo, o acesso ao Painel do Gestor e aos Terminais de Campo da *" + emp.marca + "* encontra-se temporariamente suspenso.\n\n" +
+                      "Para religar o sistema de todas as viaturas em 1 segundo, regularize via PIX:\n" +
+                      "🔑 *Chave PIX:* `" + cfg.pixChave + "`\n" +
+                      "👤 *Favorecido:* " + cfg.pixNome + "\n\n" +
+                      "Envie o comprovante nesta conversa para liberação imediata.";
+            } else if (tipoMensagem === 'AVISO_LIBERACAO') {
+                msg = "🟢 *PAGAMENTO CONFIRMADO & SISTEMA RELIGADO — CAPITAL TECH*\n\n" +
+                      "Olá, *" + emp.responsavel + "*! Confirmamos o recebimento da mensalidade da *" + emp.marca + "*.\n\n" +
+                      "✅ O Disjuntor Cloud já foi ativado e tanto o *Painel do Gestor* quanto os *Aplicativos das Viaturas* estão 100% liberados e sincronizados.\n\n" +
+                      "Excelente semana de operações e bons negócios!";
+            }
+
+            var w = window.open("https://wa.me/" + zapLimpo + "?text=" + encodeURIComponent(msg), '_blank');
+            if (!w) window.location.href = "https://wa.me/" + zapLimpo + "?text=" + encodeURIComponent(msg);
+        };
+
+        function contarItensSeguro(colecao) {
+            if (!colecao) return 0;
+            if (Array.isArray(colecao)) return colecao.length;
+            if (typeof colecao === 'object') return Object.keys(colecao).length;
+            return 0;
+        }
+
+        window.renderizarPainelMaster = function() {
+            if (!holdingDB) return;
+            if (!holdingDB.empresas) holdingDB.empresas = [];
+
+            if (holdingDB.config) {
+                document.getElementById('cfg-pix-chave').value = holdingDB.config.pixChave || "61986294465";
+                document.getElementById('cfg-pix-nome').value = holdingDB.config.pixNome || "Habner Teixeira Fernandes — Capital Tech SaaS";
+                document.getElementById('cfg-url-base').value = holdingDB.config.urlBase || "https://capital-tech-saas.onrender.com";
+            }
+
+            var busca = (document.getElementById('filtro-busca-emp').value || "").toLowerCase();
+            var filtroSt = document.getElementById('filtro-status-emp').value;
+            var tbody = document.getElementById('tbody-empresas-saas');
+            tbody.innerHTML = "";
+
+            var mrrTotal = 0;
+            var setupsTotal = 0;
+            var qtdAtivas = 0;
+            var qtdBloqueadas = 0;
+
+            for (var i = 0; i < holdingDB.empresas.length; i++) {
+                var emp = holdingDB.empresas[i];
+                if (statusNuvem && typeof statusNuvem[emp.tenantId] === 'string') {
+                    emp.status = statusNuvem[emp.tenantId];
+                }
+
+                var estaAtiva = emp.status !== "BLOQUEADO";
+                if (estaAtiva) {
+                    qtdAtivas++;
+                    mrrTotal += (parseFloat(emp.mensalidade) || 0);
+                } else {
+                    qtdBloqueadas++;
+                }
+                setupsTotal += (parseFloat(emp.setup) || 0);
+
+                var dadosGaveta = (telemetriaNuvem && telemetriaNuvem[emp.tenantId]) ? telemetriaNuvem[emp.tenantId] : null;
+                var numOS = dadosGaveta ? contarItensSeguro(dadosGaveta.ordens) : 0;
+                var numTec = dadosGaveta ? contarItensSeguro(dadosGaveta.tecnicos) : 0;
+                var numCli = dadosGaveta ? contarItensSeguro(dadosGaveta.clientes) : 0;
+
+                var bateBusca = (emp.nome || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.marca || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.cnpj || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.endereco || "").toLowerCase().indexOf(busca) !== -1 ||
+                                (emp.tenantId || "").toLowerCase().indexOf(busca) !== -1;
+                var bateStatus = (filtroSt === "TODOS") || (emp.status === filtroSt);
+
+                if (bateBusca && bateStatus) {
+                    var badgeStatus = estaAtiva
+                        ? '<span class="status-pill status-active">🟢 ATIVO (EM DIA)</span>'
+                        : '<span class="status-pill status-blocked">🔴 BLOQUEADO</span>';
+
+                    var btnDisjuntor = estaAtiva
+                        ? '<button type="button" class="btn-sm danger" onclick="alternarDisjuntorEmpresa(' + i + ', \'BLOQUEADO\')">🔴 Cortar Acesso (Inadimplente)</button>'
+                        : '<button type="button" class="btn-sm wa" onclick="alternarDisjuntorEmpresa(' + i + ', \'ATIVO\')">🟢 Religar Sistema (Pago)</button>';
+
+                    var tr = document.createElement('tr');
+                    tr.innerHTML =
+                        '<td>' +
+                            '<div style="display:flex; align-items:center; gap:10px;">' +
+                                '<div style="width:36px; height:36px; border-radius:8px; background:' + (emp.cor || '#F59E0B') + '; color:#000; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' + (emp.sigla || 'CT') + '</div>' +
+                                '<div>' +
+                                    '<strong style="font-size:0.95rem; color:#fff;">' + emp.nome + '</strong><br>' +
+                                    '<small style="color:var(--muted); font-family:monospace;">CNPJ: ' + emp.cnpj + ' • 📍 ' + emp.endereco + '</small>' +
+                                '</div>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<strong>' + emp.responsavel + '</strong><br>' +
+                            '<small style="color:var(--cyan);">✉️ ' + emp.email + '</small><br>' +
+                            '<small style="color:var(--gold); font-family:monospace;">🔑 Senha: ' + (emp.senhaAdmin || 'capital2026') + ' • 📱 ' + emp.zap + '</small>' +
+                        '</td>' +
+                        '<td>' +
+                            '<span class="tenant-badge">' + emp.tenantId + '</span><br>' +
+                            '<small style="color:var(--muted); display:block; margin-top:4px;">📋 <strong>' + numOS + '</strong> OSs | 🚐 <strong>' + numTec + '</strong> Viaturas | 🏢 <strong>' + numCli + '</strong> Clientes</small>' +
+                        '</td>' +
+                        '<td>' +
+                            '<strong style="color:var(--gold);">' + emp.plano + '</strong><br>' +
+                            '<span style="font-family:monospace; font-weight:800; color:#fff;">R$ ' + (parseFloat(emp.mensalidade) || 0).toFixed(2).replace('.', ',') + '/mês</span><br>' +
+                            '<small style="color:var(--muted);">Venc: ' + emp.vencimento + ' • Setup: R$ ' + (parseFloat(emp.setup) || 0) + '</small>' +
+                        '</td>' +
+                        '<td>' + badgeStatus + '</td>' +
+                        '<td>' +
+                            '<div style="display:flex; flex-direction:column; gap:6px;">' +
+                                '<div style="display:flex; gap:5px;">' +
+                                    '<button type="button" class="btn-sm cyan" style="flex:1; justify-content:center;" onclick="acessarGavetaCliente(' + i + ', \'gestor.html\')">💻 Gestor</button>' +
+                                    '<button type="button" class="btn-sm warn" style="flex:1; justify-content:center;" onclick="acessarGavetaCliente(' + i + ', \'app.html\')">📱 App</button>' +
+                                '</div>' +
+                                btnDisjuntor +
+                                '<button type="button" class="btn-sm warn" onclick="alterarLimiteFrotaCliente(' + i + ')">🚐 Alterar Limite (' + (emp.limiteTecnicos || (dadosGaveta && dadosGaveta.configWhiteLabel && dadosGaveta.configWhiteLabel.limiteTecnicos) || 4) + ' Vagas)</button>' +
+                                '<button type="button" class="btn-sm" onclick="removerEmpresaCarteira(' + i + ')">🗑️ Excluir da Carteira</button>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' +
+                            '<div class="wa-actions-grid">' +
+                                '<button type="button" class="btn-sm wa" onclick="dispararMensagemInteligente(' + i + ', \'ONBOARDING\')" title="Enviar Links e Senha">🚀 Boas-Vindas</button>' +
+                                '<button type="button" class="btn-sm warn" onclick="dispararMensagemInteligente(' + i + ', \'COBRANCA_PIX\')" title="Cobrar Mensalidade c/ PIX">💰 Cobrar PIX</button>' +
+                                '<button type="button" class="btn-sm danger" onclick="dispararMensagemInteligente(' + i + ', \'AVISO_BLOQUEIO\')" title="Avisar Suspensão">🚨 Aviso Corte</button>' +
+                                '<button type="button" class="btn-sm" onclick="dispararMensagemInteligente(' + i + ', \'AVISO_LIBERACAO\')" title="Confirmar Religação">🔓 Liberado</button>' +
+                            '</div>' +
+                        '</td>';
+                    tbody.appendChild(tr);
+                }
+            }
+
+            var globalOS = 0;
+            var globalViaturas = 0;
+            var chavesTenants = Object.keys(telemetriaNuvem || {});
+            for (var k = 0; k < chavesTenants.length; k++) {
+                var g = telemetriaNuvem[chavesTenants[k]];
+                if (g) {
+                    globalOS += contarItensSeguro(g.ordens);
+                    globalViaturas += contarItensSeguro(g.tecnicos);
+                }
+            }
+
+            var arrProjetado = (mrrTotal * 12) + setupsTotal;
+
+            document.getElementById('kpi-mrr').innerText = "R$ " + mrrTotal.toFixed(2).replace('.', ',');
+            document.getElementById('kpi-mrr-sub').innerText = "✔ " + qtdAtivas + " Assinatura(s) Recorrente(s) Ativa(s)";
+            document.getElementById('kpi-arr').innerText = "R$ " + arrProjetado.toFixed(2).replace('.', ',');
+            document.getElementById('kpi-setups-sub').innerText = "Taxas de Implantação: R$ " + setupsTotal.toFixed(2).replace('.', ',');
+            document.getElementById('kpi-empresas').innerText = qtdAtivas + " / " + holdingDB.empresas.length;
+            document.getElementById('kpi-bloqueadas-sub').innerText = qtdBloqueadas > 0
+                ? "🚨 " + qtdBloqueadas + " Empresa(s) Bloqueada(s) no Disjuntor"
+                : "✔ 0% de Inadimplência na Carteira";
+            document.getElementById('kpi-telemetria').innerText = globalOS + " OSs";
+            document.getElementById('kpi-frota-global').innerText = "🚐 " + globalViaturas + " Viaturas Sincronizadas na Nuvem";
+        };
+
+        window.exportarCarteiraCSV = function() {
+            var linhas = ["Empresa;Marca;CNPJ;Responsavel;WhatsApp;Email;Senha;TenantID;Plano;Mensalidade;Vencimento;Status"];
+            for (var i = 0; i < holdingDB.empresas.length; i++) {
+                var e = holdingDB.empresas[i];
+                linhas.push([e.nome, e.marca, e.cnpj, e.responsavel, e.zap, e.email, (e.senhaAdmin || 'capital2026'), e.tenantId, e.plano, e.mensalidade, e.vencimento, e.status].join(";"));
+            }
+            var blob = new Blob(["\uFEFF" + linhas.join("\n")], { type: "text/csv;charset=utf-8;" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "Carteira_Clientes_CapitalTech_SaaS.csv";
+            a.click();
+            avisoMaster("📥 Planilha financeira da Holding exportada!");
+        };
+
+        carregarHoldingLocal();
+        window.renderizarPainelMaster();
+    </script>
+</body>
+</html>

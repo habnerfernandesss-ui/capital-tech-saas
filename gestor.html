@@ -1364,7 +1364,7 @@
             if (!rtdb) return;
 
             // 1. ESCUTA O DISJUNTOR
-            rtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
+            rrtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).on('value', function(snapStatus) {
                 if (snapStatus.val() === "BLOQUEADO") {
                     window.sistemaEstavaBloqueado = true;
