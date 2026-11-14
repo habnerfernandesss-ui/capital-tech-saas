@@ -1345,12 +1345,78 @@
             return dominio.replace(/[^a-z0-9]/g, '_').toUpperCase();
         }
 
+function carregarBanco() {
+            try {
+                // Lê EXCLUSIVAMENTE a gaveta da empresa logada (nunca mistura com outra empresa)
+                var salvo = localStorage.getItem(STORAGE_KEY);
+                if (salvo) {
+                    var parsed = JSON.parse(salvo);
+                    var padrao = obterDadosPadrao();
+                    db = {
+                        configWhiteLabel: parsed.configWhiteLabel || padrao.configWhiteLabel,
+                        clientes: parsed.clientes || [],
+                        tecnicos: parsed.tecnicos || padrao.tecnicos,
+                        materiais: parsed.materiais || padrao.materiais,
+                        tanques: parsed.tanques || [],
+                        ordens: parsed.ordens || []
+                    };
+                } else {
+                    db = obterDadosPadrao();
+                }
+            } catch (e) {
+                db = obterDadosPadrao();
+            }
+        }
+
+        function salvarBancoLocal() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+            } catch (e) {
+                try {
+                    var copiaLeve = JSON.parse(JSON.stringify(db));
+                    if (copiaLeve.ordens) {
+                        for (var i = 0; i < copiaLeve.ordens.length; i++) {
+                            if (copiaLeve.ordens[i].video) {
+                                copiaLeve.ordens[i].temVideo = true;
+                                delete copiaLeve.ordens[i].video;
+                            }
+                        }
+                    }
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaLeve));
+                } catch (err2) {}
+            }
+        }
+
+        // ==========================================================
+        // CONEXÃO FIREBASE MULTI-TENANT ISOLADA + DISJUNTOR
+        // ==========================================================
+        var rtdb = null;
+        var auth = null;
+        var empresaID = "CAPITALTECH_COM";
+
+        function extrairTenantDoEmail(emailStr) {
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('tenant')) {
+                var tUrl = params.get('tenant').toUpperCase();
+                localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tUrl);
+                sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tUrl);
+                return tUrl;
+            }
+            var tSalvo = sessionStorage.getItem("CAPITAL_TECH_ACTIVE_TENANT") || localStorage.getItem("CAPITAL_TECH_ACTIVE_TENANT");
+            if (tSalvo) return tSalvo.toUpperCase();
+
+            var limpo = (emailStr || "admin@capitaltech.com").trim().toLowerCase();
+            var partes = limpo.split('@');
+            var dominio = partes.length > 1 ? partes[1] : limpo;
+            return dominio.replace(/[^a-z0-9]/g, '_').toUpperCase();
+        }
+
         function salvarBanco() {
             salvarBancoLocal();
             if (rtdb && db) {
                 try {
+                    // Salva SOMENTE na gaveta exclusiva desta empresa
                     rtdb.ref('EMPRESAS/' + empresaID).set(db);
-                    rtdb.ref('ERP').set(db);
                 } catch (e) {}
             }
         }
@@ -1363,8 +1429,8 @@
 
             if (!rtdb) return;
 
-            // 1. ESCUTA O DISJUNTOR
-            rrtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
+            // 1. ESCUTA O DISJUNTOR (CORRIGIDO: rtdb.ref)
+            rtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).on('value', function(snapStatus) {
                 if (snapStatus.val() === "BLOQUEADO") {
                     window.sistemaEstavaBloqueado = true;
@@ -1380,7 +1446,7 @@
                 }
             });
 
-            // 2. ESCUTA O CANAL DEDICADO DE VÍDEOS
+            // 2. ESCUTA O CANAL DEDICADO DE VÍDEOS DA EMPRESA
             rtdb.ref('MIDIA_OS/' + empresaID).off();
             rtdb.ref('MIDIA_OS/' + empresaID).on('value', function(snapMidia) {
                 var mapaMidia = snapMidia.val() || {};
@@ -1399,13 +1465,13 @@
                 }
             });
 
-            // 3. SINCRONIZA A GAVETA
+            // 3. SINCRONIZA A GAVETA EXCLUSIVA DA EMPRESA
             rtdb.ref('EMPRESAS/' + empresaID).off();
             rtdb.ref('EMPRESAS/' + empresaID).on('value', function(snapshot) {
                 var dadosNuvem = snapshot.val();
                 if (dadosNuvem) {
                     var padrao = obterDadosPadrao();
-                    var ordensLista = dadosNuvem.ordens || padrao.ordens;
+                    var ordensLista = dadosNuvem.ordens || [];
                     if (!Array.isArray(ordensLista)) ordensLista = Object.values(ordensLista);
                     for (var k = 0; k < ordensLista.length; k++) {
                         var pr = ordensLista[k].protocolo;
@@ -1416,10 +1482,10 @@
                     }
                     db = {
                         configWhiteLabel: dadosNuvem.configWhiteLabel || padrao.configWhiteLabel,
-                        clientes: dadosNuvem.clientes || padrao.clientes,
+                        clientes: dadosNuvem.clientes || [],
                         tecnicos: dadosNuvem.tecnicos || padrao.tecnicos,
                         materiais: dadosNuvem.materiais || padrao.materiais,
-                        tanques: dadosNuvem.tanques || padrao.tanques,
+                        tanques: dadosNuvem.tanques || [],
                         ordens: ordensLista
                     };
                     salvarBancoLocal();

@@ -1161,13 +1161,20 @@
         var auth = null;
         var empresaID = "CAPITALTECH_COM";
 
-        function calcularTenantSeguro(emailStr) {
+function calcularTenantSeguro(emailStr) {
+            var params = new URLSearchParams(window.location.search);
+            if (params.has('tenant')) {
+                var tUrl = params.get('tenant').toUpperCase();
+                localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tUrl);
+                sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", tUrl);
+                return tUrl;
+            }
+            var tSalvo = sessionStorage.getItem("CAPITAL_TECH_ACTIVE_TENANT") || localStorage.getItem("CAPITAL_TECH_ACTIVE_TENANT");
+            if (tSalvo) return tSalvo.toUpperCase();
+
             var limpo = (emailStr || "admin@capitaltech.com").trim().toLowerCase();
             if (limpo.indexOf('@') !== -1) {
                 var dom = limpo.split('@')[1];
-                if (dom.indexOf('gmail') !== -1 || dom.indexOf('hotmail') !== -1 || dom.indexOf('outlook') !== -1) {
-                    return "CAPITALTECH_COM"; // Fallback seguro
-                }
                 return dom.replace(/[^a-z0-9]/g, '_').toUpperCase();
             }
             return limpo.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
@@ -1178,7 +1185,6 @@
             if (rtdb && db) {
                 try {
                     rtdb.ref('EMPRESAS/' + empresaID).set(db);
-                    rtdb.ref('ERP').set(db);
                     if (videoBase64 && videoBase64.length > 50) {
                         rtdb.ref('MIDIA_OS/' + empresaID + '/' + protocoloAtual).set({
                             video: videoBase64, timestamp: Date.now()
@@ -2675,19 +2681,20 @@
             }
         };
 
-        function obterFilaPendenteDoTecnico() {
+function obterFilaPendenteDoTecnico() {
             if (!db || !db.ordens) return [];
             var lockedId = sessionStorage.getItem(TEC_LOCKED_ID);
-            var nomeTecBloqueado = "";
+            var selViatura = document.getElementById('select-viatura-tec');
+            var idAlvo = lockedId || (selViatura ? selViatura.value : "");
+            var nomeTecAlvo = "";
 
-            if (lockedId) {
-                var tqAchado = db.tecnicos.find(function(t) { return t.id === lockedId; });
-                if (tqAchado) nomeTecBloqueado = tqAchado.nome;
+            if (idAlvo && db.tecnicos) {
+                var tqAchado = db.tecnicos.find(function(t) { return t.id === idAlvo; });
+                if (tqAchado) nomeTecAlvo = tqAchado.nome;
             }
 
             var pendentes = db.ordens.filter(function(o) {
-                // Se a tela estiver travada pelo PIN, só vê a própria fila. Senão, vê tudo da base.
-                var pertence = lockedId ? (o.tecnico && o.tecnico.indexOf(nomeTecBloqueado) !== -1) : true;
+                var pertence = nomeTecAlvo ? (o.tecnico && o.tecnico.indexOf(nomeTecAlvo) !== -1) : true;
                 var ehPendente = (o.status === "Pendente" || o.status === "Na Fila" || o.status === "Em Deslocamento" || o.statusEst === "DESPACHADA P/ CAMPO");
                 return pertence && ehPendente;
             });

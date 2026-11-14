@@ -744,14 +744,16 @@
             avisoMaster("🚀 Empresa " + marca + " cadastrada com Senha [" + senhaAdmin + "] e gaveta [" + tenantId + "]!");
         };
 
-        window.acessarGavetaCliente = function(idx, destino) {
+window.acessarGavetaCliente = function(idx, destino) {
             var emp = holdingDB.empresas[idx];
             if (!emp) return;
             var emailAlvo = emp.email || "admin@capitaltech.com";
             localStorage.setItem(SESSION_AUTH_KEY, emailAlvo);
             localStorage.setItem(TEC_SESSION_KEY, emailAlvo);
+            localStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", emp.tenantId);
             sessionStorage.setItem(SESSION_AUTH_KEY, emailAlvo);
             sessionStorage.setItem(TEC_SESSION_KEY, emailAlvo);
+            sessionStorage.setItem("CAPITAL_TECH_ACTIVE_TENANT", emp.tenantId);
             window.location.href = destino + "?tenant=" + encodeURIComponent(emp.tenantId);
         };
 
