@@ -1283,30 +1283,6 @@
             };
         }
 
-        var db = obterDadosPadrao();
-        var cacheVideosNuvem = {};
-
-        function salvarBancoLocal() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(db));
-            } catch (e) {
-                try {
-                    var copiaLeve = JSON.parse(JSON.stringify(db));
-                    if (copiaLeve.ordens) {
-                        for (var i = 0; i < copiaLeve.ordens.length; i++) {
-                            if (copiaLeve.ordens[i].video) {
-                                copiaLeve.ordens[i].temVideo = true;
-                                delete copiaLeve.ordens[i].video;
-                            }
-                        }
-                    }
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaLeve));
-                    localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(copiaLeve));
-                } catch (err2) {}
-            }
-        }
-
         // ==========================================================
         // CONEXÃO FIREBASE MULTI-TENANT + DISJUNTOR
         // ==========================================================
