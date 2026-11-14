@@ -897,7 +897,6 @@
                                         <th>Distribuição nas Viaturas (Quem está com a peça)</th>
                                         <th>Total Geral (Unid.)</th>
                                         <th>Patrimônio (R$)</th>
-                                        <th>Patrimônio (R$)</th>
                                         <th>Ações</th>
                                     </tr>
                                 </thead>
@@ -940,6 +939,7 @@
                                         <th>Pressão Serv. / Norma</th>
                                         <th>Data Fab. / Registro</th>
                                         <th>Status Requalificação (NBR 8865)</th>
+                                     <th>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbody-tanques"></tbody>
@@ -1495,14 +1495,13 @@
             }
         };
 
-        window.salvarWhiteLabel = function() {
+window.salvarWhiteLabel = function() {
             db.configWhiteLabel = {
                 nome: document.getElementById('wl-nome').value.trim() || "CAPITAL TECH",
                 sigla: (document.getElementById('wl-sigla').value.trim() || "CT").toUpperCase(),
                 sub: document.getElementById('wl-sub').value.trim() || "Engenharia GLP • NBR 13523 & 15526",
                 art: document.getElementById('wl-art').value.trim() || "ART-DF #0720260098412",
                 prefixo: (document.getElementById('wl-prefixo').value.trim() || "CT").toUpperCase(),
-                cor: document.getElementById('wl-cor').value
                 cor: document.getElementById('wl-cor').value,
                 limiteTecnicos: (db.configWhiteLabel && db.configWhiteLabel.limiteTecnicos) ? db.configWhiteLabel.limiteTecnicos : 4,
                 senhaAdmin: (db.configWhiteLabel && db.configWhiteLabel.senhaAdmin) ? db.configWhiteLabel.senhaAdmin : "capital2026"
@@ -1803,8 +1802,7 @@ window.salvarNovoTecnico = function() {
             var elFila = document.getElementById('tw-kpi-fila'); if (elFila) elFila.innerText = "📋 " + cFilaTotal + " OSs na Fila";
         };
 
-        window.renderizarTudo = function() {
-            window.removerMaterialEstoque = function(idx) {
+window.removerMaterialEstoque = function(idx) {
             var item = db.materiais[idx];
             if (!item) return;
             if (!confirm("🗑️ Deseja realmente excluir a peça '" + item.nome + "' (" + item.cod + ") do Almoxarifado?")) return;
@@ -1840,6 +1838,8 @@ window.salvarNovoTecnico = function() {
             window.renderizarTudo();
             avisoGestor("🗑️ OS #" + protApagado + " excluída permanentemente!");
         };
+
+        window.renderizarTudo = function() {
             if (!db) return;
             if (!db.clientes) db.clientes = [];
             if (!db.tecnicos) db.tecnicos = [];
