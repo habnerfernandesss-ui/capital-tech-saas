@@ -1367,6 +1367,7 @@
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).on('value', function(snapStatus) {
                 if (snapStatus.val() === "BLOQUEADO") {
+                    window.sistemaEstavaBloqueado = true;
                     document.body.innerHTML =
                         '<div style="background:#05070B; color:#E11D48; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; font-family:Outfit,sans-serif;">' +
                             '<div style="background:#0F1523; border:2px solid #E11D48; border-radius:20px; padding:40px; max-width:560px; box-shadow:0 25px 70px rgba(0,0,0,0.9);">' +
@@ -1374,6 +1375,8 @@
                                 '<p style="color:#94A3B8; font-size:1.05rem; line-height:1.6; margin-bottom:24px;">O acesso corporativo da gaveta <strong style="color:#fff;">[' + empresaID + ']</strong> encontra-se temporariamente bloqueado.</p>' +
                             '</div>' +
                         '</div>';
+                } else if (window.sistemaEstavaBloqueado) {
+                    window.location.reload();
                 }
             });
 

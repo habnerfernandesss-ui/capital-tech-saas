@@ -11,6 +11,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
+    <!-- LIMPADOR DE CACHE ANTIGO PARA EVITAR ARQUIVOS PRESOS NO NAVEGADOR -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+                for (var i = 0; i < regs.length; i++) { regs[i].update(); }
+            });
+        }
+    </script>
+
     <style>
         :root {
             --bg: #030509;
@@ -35,7 +44,6 @@
         h1, h2, h3, h4, .display-font { font-family: 'Outfit', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* ARQUITETURA DE ILUMINAÇÃO SILICON VALLEY */
         .bg-grid-mesh {
             position: fixed; inset: 0; z-index: -2;
             background-size: 56px 56px;
@@ -51,7 +59,6 @@
             filter: blur(95px); z-index: -1; pointer-events: none; opacity: 0.65;
         }
 
-        /* BARRA FINA DE STATUS DE ENGENHARIA */
         .status-strip {
             background: #020306; border-bottom: 1px solid var(--border);
             padding: 7px 4%; font-size: 0.72rem; color: var(--muted);
@@ -61,7 +68,6 @@
         .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulseLive 1.5s infinite; }
         @keyframes pulseLive { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.35); } }
 
-        /* NAVBAR GLASSMORPHISM FLUTUANTE */
         .nav-container { position: sticky; top: 14px; z-index: 1000; max-width: 1320px; margin: 14px auto 0 auto; padding: 0 4%; }
         nav {
             background: rgba(12, 18, 32, 0.85); backdrop-filter: blur(20px);
@@ -82,7 +88,7 @@
         .nav-links { display: flex; align-items: center; gap: 22px; }
         .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
         .nav-links a:hover { color: #fff; }
-        .nav-btns { display: flex; align-items: center; gap: 10px; }
+        .nav-btns { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
         .btn-main {
             background: linear-gradient(135deg, var(--brand), #EA580C);
@@ -100,7 +106,6 @@
         }
         .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(56, 189, 248, 0.08); }
 
-        /* HERO SECTION */
         .hero { max-width: 1280px; margin: 0 auto; padding: 60px 4% 40px 4%; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .hero-kicker {
             display: inline-flex; align-items: center; gap: 10px;
@@ -114,7 +119,6 @@
         .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 42px; }
         .btn-xl { padding: 16px 34px; font-size: 1rem; border-radius: 12px; }
 
-        /* BARRA INSTANTÂNEA WHITE-LABEL NO TOPO DO COCKPIT */
         .wl-instant-bar {
             width: 100%; max-width: 1180px;
             background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(56, 189, 248, 0.1));
@@ -131,7 +135,6 @@
         .dot-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; }
         .dot-swatch:hover { transform: scale(1.15); }
 
-        /* COCKPIT INTERATIVO DE PRODUTO */
         .cockpit-window {
             width: 100%; max-width: 1180px; background: var(--surface);
             border: 1px solid var(--border-bright); border-top: none; border-radius: 0 0 22px 22px;
@@ -164,9 +167,6 @@
 
         canvas#livePressureCanvas { width: 100%; height: 155px; background: #03060C; border: 1px solid var(--border); border-radius: 10px; margin: 12px 0; }
 
-        /* =========================================================
-           NOVO: SHOWCASE DE VÍDEO & BANNERS VISUAIS DE ENGENHARIA
-           ========================================================= */
         .section { max-width: 1240px; margin: 0 auto; padding: 85px 4%; }
         .sec-head { text-align: center; max-width: 780px; margin: 0 auto 50px auto; }
         .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 10px; }
@@ -189,7 +189,7 @@
             font-size: 0.7rem; font-weight: 800; color: #fff; display: inline-flex; align-items: center; gap: 6px;
         }
         .cinema-stage-center {
-            my: auto; text-align: center; z-index: 2; padding: 20px 10px;
+            margin: auto 0; text-align: center; z-index: 2; padding: 20px 10px;
         }
         .play-pulse-btn {
             width: 78px; height: 78px; border-radius: 50%; margin: 0 auto 16px auto;
@@ -217,7 +217,6 @@
             font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 0.72rem; color: var(--brand);
         }
 
-        /* GALERIA DE FOTOS DE OPERAÇÃO & BATERIA 15 TANQUES */
         .photo-showcase-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-top: 30px;
         }
@@ -244,7 +243,6 @@
         .spc-body h3 { font-size: 1.22rem; font-weight: 800; margin-bottom: 8px; color: #fff; }
         .spc-body p { font-size: 0.9rem; color: var(--muted); }
 
-        /* MOTOR DE PRECIFICAÇÃO ÚNICA & ROI */
         .unified-pricing-shell {
             background: linear-gradient(145deg, #0E1629 0%, #070B14 100%);
             border: 2px solid var(--brand); border-radius: 26px; padding: 42px;
@@ -280,7 +278,6 @@
         }
         .roi-comparison-box { background: rgba(16, 185, 129, 0.09); border: 1px solid var(--green); border-radius: 14px; padding: 16px; text-align: left; }
 
-        /* BENTO GRID DE DIFERENCIAIS */
         .bento-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; }
         .bento-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 30px; transition: 0.25s; }
         .bento-card:hover { border-color: var(--brand); transform: translateY(-4px); }
@@ -288,7 +285,6 @@
         .bento-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 10px; }
         .bento-card p { color: var(--muted); font-size: 0.92rem; }
 
-        /* VALIDADOR OFICIAL CBMDF / ABNT */
         .validator-bar {
             background: var(--surface); border: 1px solid var(--border-bright); border-radius: 18px;
             padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
@@ -297,11 +293,9 @@
         .input-std { width: 100%; background: #050811; border: 1px solid var(--border-bright); color: #fff; padding: 13px 16px; border-radius: 10px; font-size: 0.92rem; outline: none; }
         .input-std:focus { border-color: var(--brand); }
 
-        /* CASES DF */
         .cases-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 24px; }
         .case-card { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--brand); border-radius: 18px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
 
-        /* MODAIS DE SELF-ONBOARDING, LOGIN E MARKETPLACE */
         .modal-backdrop { position: fixed; inset: 0; z-index: 9999; background: rgba(2, 4, 9, 0.88); backdrop-filter: blur(14px); display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-window { background: var(--surface); border: 1.5px solid var(--border-bright); border-radius: 22px; width: 100%; max-width: 500px; padding: 36px 32px; box-shadow: 0 35px 95px rgba(0, 0, 0, 0.95); position: relative; }
         .btn-close-modal { position: absolute; top: 18px; right: 18px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-weight: 700; }
@@ -358,21 +352,21 @@
         </div>
     </div>
 
-    <!-- MODAL 2: ACESSO DIRETO AO SISTEMA -->
+    <!-- MODAL 2: ACESSO DIRETO AO SISTEMA (GESTOR, APP E CEO MASTER) -->
     <div class="modal-backdrop" id="modal-login" onclick="if(event.target===this) fecharModais()">
         <div class="modal-window" style="border-top: 4px solid var(--cyan);">
             <button type="button" class="btn-close-modal" onclick="fecharModais()">✕</button>
             <div style="text-align:center; margin-bottom:22px;">
                 <div class="brand-logo-box" style="margin:0 auto 10px auto; background:linear-gradient(135deg, var(--cyan), #0284C7);">🔐</div>
                 <h3 style="font-size:1.45rem; font-weight:900;">Portal de Acesso Corporativo</h3>
-                <p style="font-size:0.85rem; color:var(--muted); margin-top:4px;">Entre direto na Torre de Controle ou no App de Campo.</p>
+                <p style="font-size:0.85rem; color:var(--muted); margin-top:4px;">Entre direto na Torre de Controle, no App ou no Command Center CEO.</p>
             </div>
             <div class="form-row">
                 <label>E-mail da Empresa</label>
                 <input type="email" id="login-quick-email" class="input-std" value="admin@capitaltech.com">
             </div>
             <div class="form-row">
-                <label>PIN do Técnico (Ex: 1010) ou Chave Master (capital2026)</label>
+                <label>Senha da Empresa, PIN ou Chave Master (habner2026 / capital2026)</label>
                 <input type="password" id="login-quick-pass" class="input-std" value="capital2026">
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:22px;">
@@ -383,8 +377,10 @@
                     📱 Abrir App Rua
                 </button>
             </div>
-            <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border); text-align:center;">
-                <a href="master.html" style="font-size:0.75rem; color:var(--muted); text-decoration:none;">👑 Acesso Exclusivo CEO: Command Center (Master)</a>
+            <div style="margin-top:14px;">
+                <button type="button" class="btn-ghost" style="width:100%; justify-content:center; padding:13px; border-color:var(--brand); color:var(--brand); font-weight:800;" onclick="acessarPainelMasterDireto()">
+                    👑 Abrir CEO Command Center (Master)
+                </button>
             </div>
         </div>
     </div>
@@ -420,7 +416,7 @@
         <span class="mono">CONFORMIDADE: ABNT NBR 13523 • NBR 15526 • NBR 8460 • CBMDF • INMETRO</span>
     </div>
 
-    <!-- NAVBAR EXECUTIVA -->
+    <!-- NAVBAR EXECUTIVA COM BOTÃO DIRETO PARA O MASTER -->
     <div class="nav-container">
         <nav>
             <a href="#" class="brand-id">
@@ -434,7 +430,7 @@
                 <a href="#validador">Validador CBMDF</a>
                 <a href="#cases">Cases DF</a>
             </div>
-            <div class="nav-btns">
+<div class="nav-btns">
                 <button type="button" class="btn-ghost" onclick="abrirModal('modal-login')">🔐 Entrar</button>
                 <button type="button" class="btn-main" onclick="abrirModal('modal-trial')">Testar 7 Dias Grátis</button>
             </div>
@@ -568,7 +564,7 @@
         </div>
     </header>
 
-    <!-- NOVA SEÇÃO: VITRINE DE VÍDEO INTERATIVA & BANNERS DE ALTA ENGENHARIA -->
+    <!-- VITRINE DE VÍDEO INTERATIVA & BANNERS DE ALTA ENGENHARIA -->
     <section class="section" id="vitrine-midia" style="padding-top:45px;">
         <div class="sec-head">
             <span class="eyebrow">TOUR VISUAL & AUDITORIA MULTIMÍDIA</span>
@@ -577,7 +573,6 @@
         </div>
 
         <div class="video-cinema-grid">
-            <!-- PLAYER DE VÍDEO / DEMONSTRAÇÃO INTERATIVA -->
             <div class="cinema-screen" id="cinema-player-box">
                 <div class="cinema-hud-top">
                     <span class="hud-badge"><span class="pulse-dot"></span> <span id="vid-scene-tag">CENA 01/03 • AUDITORIA DE BATERIA 15x P190</span></span>
@@ -603,7 +598,6 @@
                 </div>
             </div>
 
-            <!-- COLUNA DE BANNERS INTERATIVOS -->
             <div class="visual-banners-col">
                 <div class="visual-banner-card" onclick="selecionarCenaEspecifica(1)">
                     <div class="vb-thumb">
@@ -643,7 +637,6 @@
             </div>
         </div>
 
-        <!-- BANNERS FOTOGRÁFICOS DE OPERAÇÃO EM CAMPO -->
         <div class="photo-showcase-grid">
             <div class="showcase-photo-card">
                 <div class="spc-visual">
@@ -768,7 +761,6 @@
                 </div>
             </div>
 
-            <!-- CARTÃO DE VALOR DINÂMICO + ROI -->
             <div class="price-checkout-card">
                 <div>
                     <span class="mono" style="font-size:0.72rem; color:var(--muted); text-transform:uppercase; font-weight:700;">INVESTIMENTO MENSAL DA SUA FROTA</span>
@@ -868,7 +860,7 @@
             Brasília - Distrito Federal • 
             <a href="gestor.html" style="color:var(--cyan); text-decoration:none;">Painel do Gestor</a> • 
             <a href="app.html" style="color:var(--brand); text-decoration:none;">App do Técnico</a> • 
-            <a href="master.html" style="color:var(--muted); text-decoration:none;">CEO Command Center</a>
+            <a href="master.html?ceo=1" onclick="localStorage.setItem('CAPITAL_TECH_CEO_UNLOCKED','true'); sessionStorage.setItem('CAPITAL_TECH_CEO_UNLOCKED','true');" style="color:#34D399; font-weight:800; text-decoration:none;">👑 CEO Command Center (Master)</a>
         </p>
     </footer>
 
@@ -880,6 +872,7 @@
         var MASTER_STORAGE_KEY = "CAPITAL_TECH_HOLDING_DB_V1";
         var SESSION_AUTH_KEY = "CAPITAL_TECH_AUTH_SESSION";
         var TEC_SESSION_KEY = "CAPITAL_TECH_TEC_SESSION";
+        var CEO_SESSION_KEY = "CAPITAL_TECH_CEO_UNLOCKED";
 
         var estadoPlano = {
             tecnicos: 4,
@@ -1023,7 +1016,16 @@
             document.getElementById('modal-marketplace-sindico').style.display = 'none';
         };
 
-window.acessarModuloDireto = function(destino) {
+        // ACESSO DIRETO E DESTRANCADO AO PAINEL MASTER (CEO)
+window.acessarPainelMasterDireto = function() {
+            try {
+                localStorage.removeItem(CEO_SESSION_KEY);
+                sessionStorage.removeItem(CEO_SESSION_KEY);
+            } catch (e) {}
+            window.location.href = "master.html";
+        };
+
+        window.acessarModuloDireto = function(destino) {
             var email = document.getElementById('login-quick-email').value.trim() || "admin@capitaltech.com";
             var pass = document.getElementById('login-quick-pass').value.trim();
 
@@ -1042,13 +1044,11 @@ window.acessarModuloDireto = function(destino) {
                 window.location.href = destino + "?tenant=" + encodeURIComponent(tenantId);
             }
 
-            // Senhas mestras do CEO entram direto
-            if (pass === "capital2026" || pass === "habner2026") {
+            if (pass.toLowerCase() === "capital2026" || pass.toLowerCase() === "habner2026") {
                 autorizarEntrada();
                 return;
             }
 
-            // Verifica a senha criada pela empresa no LocalStorage ou no Firebase
             try {
                 var salvoLocal = localStorage.getItem("ERP_SAAS_" + tenantId);
                 if (salvoLocal) {
@@ -1087,7 +1087,7 @@ window.acessarModuloDireto = function(destino) {
             return (nomeEmpresa || "CAPITALTECH_COM").replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
         }
 
-        // 4. SELF-ONBOARDING DE 7 DIAS COM SENHA PRÓPRIA DO CLIENTE
+        // 4. SELF-ONBOARDING DE 7 DIAS COM SENHA PRÓPRIA DO CLIENTE E LIMITE DE FROTA
         window.criarAmbienteTrialAutomatico = function() {
             var nome = document.getElementById('trial-empresa').value.trim();
             var email = document.getElementById('trial-email').value.trim();
@@ -1134,7 +1134,8 @@ window.acessarModuloDireto = function(destino) {
                     art: "ART-DF #0720260098412",
                     prefixo: sigla,
                     cor: estadoPlano.corEscolhida,
-                    senhaAdmin: senhaCriada
+                    senhaAdmin: senhaCriada,
+                    limiteTecnicos: estadoPlano.tecnicos
                 },
                 clientes: [
                     { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: "Águas Claras - Brasília/DF", central: "Tanque Estacionário P190", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
@@ -1168,7 +1169,8 @@ window.acessarModuloDireto = function(destino) {
                 vencimento: expiraEm,
                 cor: estadoPlano.corEscolhida,
                 status: "ATIVO",
-                dataCadastro: new Date().toLocaleDateString('pt-BR')
+                dataCadastro: new Date().toLocaleDateString('pt-BR'),
+                limiteTecnicos: estadoPlano.tecnicos
             };
 
             try {
@@ -1200,120 +1202,6 @@ window.acessarModuloDireto = function(destino) {
                 setTimeout(function() { window.location.href = "gestor.html?tenant=" + encodeURIComponent(tenantId); }, 1200);
             } else {
                 window.location.href = "gestor.html?tenant=" + encodeURIComponent(tenantId);
-            }
-        };
-
-        // 4. SELF-ONBOARDING DE 7 DIAS COM CONEXÃO BLINDADA
-        window.criarAmbienteTrialAutomatico = function() {
-            var nome = document.getElementById('trial-empresa').value.trim();
-            var email = document.getElementById('trial-email').value.trim();
-            var zap = document.getElementById('trial-zap').value.trim() || "61999999999";
-
-            if (!nome || !email) {
-                alert("Preencha o Nome da Sua Empresa e o seu E-mail para liberarmos seu painel.");
-                return;
-            }
-
-            var btn = document.getElementById('btn-confirmar-trial');
-            btn.innerText = "⏳ Provisionando sua gaveta White-Label na nuvem...";
-
-            var marcaUpper = nome.toUpperCase();
-            var partes = marcaUpper.split(' ');
-            var sigla = partes.length > 1 ? (partes[0][0] + partes[1][0]) : marcaUpper.substring(0, 2);
-            var tenantId = gerarTenantIdSeguro(email, marcaUpper);
-
-            var listaTecnicosIniciais = [];
-            var mapaEstoqueInicial = {};
-            for (var t = 1; t <= Math.min(estadoPlano.tecnicos, 10); t++) {
-                var tid = "t" + t;
-                listaTecnicosIniciais.push({
-                    id: tid,
-                    nome: "Técnico 0" + t + " (" + marcaUpper + ")",
-                    carro: "FROTA-0" + t,
-                    placa: "BSB-" + t + "A26",
-                    zap: zap,
-                    regiao: "Distrito Federal",
-                    inmetro: "Manômetro Digital RBC #0" + t,
-                    statusOperacional: "DISPONIVEL",
-                    pin: String(1000 + t * 111)
-                });
-                mapaEstoqueInicial[tid] = 4;
-            }
-
-            var dadosGavetaNova = {
-                configWhiteLabel: {
-                    nome: marcaUpper,
-                    sigla: sigla,
-                    sub: "Frota Licenciada (" + estadoPlano.tecnicos + " Viaturas) • NBR 13523 & 15526",
-                    art: "ART-DF #0720260098412",
-                    prefixo: sigla,
-                    cor: estadoPlano.corEscolhida,
-                    senhaAdmin: typeof senhaCriada !== 'undefined' ? senhaCriada : "capital2026",
-                    limiteTecnicos: estadoPlano.tecnicos
-                },
-                clientes: [
-                    { id: "c1", nome: "Condomínio Residencial Bella Vita (Exemplo)", doc: "08.912.334/0001-19", zap: zap, end: "Águas Claras - Brasília/DF", central: "Tanque Estacionário P190", tanque: "001729", ano: "2017", tara: "135,10 kg", vol: "450 Litros (P190)" }
-                ],
-                tecnicos: listaTecnicosIniciais,
-                materiais: [
-                    { id: "m1", cod: "GLP-REG01", nome: "Regulador 1º Estágio Aliança 12kg/h", preco: 165.00, saldoBase: 25, alocadoPorTecnico: mapaEstoqueInicial }
-                ],
-                tanques: [
-                    { serie: "Nº 001729", cliente: "Condomínio Residencial Bella Vita", tara: "135,10 kg", vol: "450 Litros / 190 kg GLP", pserv: "1,7 MPa • NBR 8460", fabReg: "Data: 2017 • ARXO", statusReq: "Vigente (Requalificar em 2032)" }
-                ],
-                ordens: []
-            };
-
-            var expiraEm = new Date(Date.now() + 7 * 86400000).toLocaleDateString('pt-BR');
-            var registroParaMaster = {
-                id: "emp_" + Date.now(),
-                nome: nome,
-                marca: marcaUpper,
-                sigla: sigla,
-                email: email,
-                tenantId: tenantId,
-                cnpj: "Trial 7 Dias (" + estadoPlano.tecnicos + " Viaturas)",
-                responsavel: email.split('@')[0],
-                zap: zap,
-                endereco: "Autocadastro via Portal SaaS",
-                plano: "Frota " + estadoPlano.tecnicos + " Técnico(s) — Trial até " + expiraEm,
-                mensalidade: estadoPlano.mensalidade,
-                limiteTecnicos: estadoPlano.tecnicos,
-                setup: 0,
-                vencimento: expiraEm,
-                cor: estadoPlano.corEscolhida,
-                status: "ATIVO",
-                dataCadastro: new Date().toLocaleDateString('pt-BR')
-            };
-
-            try {
-                localStorage.setItem("ERP_SAAS_" + tenantId, JSON.stringify(dadosGavetaNova));
-                localStorage.setItem("G3_ERP_MASTER_DB_V2", JSON.stringify(dadosGavetaNova));
-                localStorage.setItem(SESSION_AUTH_KEY, email);
-                localStorage.setItem(TEC_SESSION_KEY, email);
-                sessionStorage.setItem(SESSION_AUTH_KEY, email);
-                sessionStorage.setItem(TEC_SESSION_KEY, email);
-
-                var hSalva = localStorage.getItem(MASTER_STORAGE_KEY);
-                var hObj = hSalva ? JSON.parse(hSalva) : { empresas: [] };
-                if (!hObj.empresas) hObj.empresas = [];
-                hObj.empresas.unshift(registroParaMaster);
-                localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(hObj));
-            } catch (e) {}
-
-            if (rtdb) {
-                rtdb.ref('STATUS_FINANCEIRO/' + tenantId).set("ATIVO");
-                rtdb.ref('EMPRESAS/' + tenantId).set(dadosGavetaNova);
-                rtdb.ref('CAPITAL_HOLDING/empresas').once('value', function(snap) {
-                    var lista = snap.val() || [];
-                    lista.unshift(registroParaMaster);
-                    rtdb.ref('CAPITAL_HOLDING/empresas').set(lista).finally(function() {
-                        window.location.href = "gestor.html";
-                    });
-                });
-                setTimeout(function() { window.location.href = "gestor.html"; }, 1200);
-            } else {
-                window.location.href = "gestor.html";
             }
         };
 

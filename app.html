@@ -1199,6 +1199,7 @@
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).off();
             rtdb.ref('STATUS_FINANCEIRO/' + empresaID).on('value', function(snapStatus) {
                 if (snapStatus.val() === "BLOQUEADO") {
+                    window.sistemaEstavaBloqueado = true;
                     document.body.innerHTML =
                         "<div style='background:#05070B; color:#E11D48; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; font-family:Outfit,sans-serif;'>" +
                             "<div style='background:#0E131F; border:2px solid #E11D48; border-radius:20px; padding:34px; max-width:480px;'>" +
@@ -1206,6 +1207,8 @@
                                 "<p style='color:#94A3B8; font-size:0.98rem; line-height:1.5;'>A licença corporativa da empresa <strong style='color:#fff;'>[" + empresaID + "]</strong> está suspensa no momento.</p>" +
                             "</div>" +
                         "</div>";
+                } else if (window.sistemaEstavaBloqueado) {
+                    window.location.reload();
                 }
             });
 
@@ -1604,29 +1607,6 @@
         };
         setTimeout(function(){ if(typeof window.renderizarListaBateriaTanques === 'function') window.renderizarListaBateriaTanques(); }, 300);
 
-        window.renderizarListaBateriaTanques = function() {
-            var cont = document.getElementById('lista-bateria-tanques');
-            var badge = document.getElementById('badge-qtd-bateria');
-            if (!cont) return;
-
-            if (badge) badge.innerText = window.bateriaTanquesOS.length + (window.bateriaTanquesOS.length === 1 ? " TANQUE NA BATERIA" : " TANQUES NA BATERIA");
-
-            if (window.bateriaTanquesOS.length === 0) {
-                cont.innerHTML = '<div style="color:var(--muted); font-size:0.8rem; padding:8px; text-align:center; border:1px dashed var(--border); border-radius:8px;">Se a central tiver apenas 1 tanque, basta manter os campos acima preenchidos. Para 2 a 15+ tanques, adicione cada um aqui.</div>';
-                return;
-            }
-
-            cont.innerHTML = "";
-            for (var i = 0; i < window.bateriaTanquesOS.length; i++) {
-                var t = window.bateriaTanquesOS[i];
-                var thumbHTML = t.foto ? '<img src="' + t.foto + '" onclick="abrirZoomBateria(' + i + ')" style="width:54px; height:54px; object-fit:cover; border-radius:6px; border:1px solid var(--cyan); cursor:zoom-in; flex-shrink:0;">' : '<div style="width:54px; height:54px; border-radius:6px; background:#06080D; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:var(--muted); flex-shrink:0;">S/ Foto</div>';
-                var card = document.createElement('div');
-                card.style.cssText = "background:var(--card); border:1px solid rgba(56,189,248,0.35); border-left:4px solid var(--g3-amber); border-radius:10px; padding:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;";
-                card.innerHTML = '<div style="display:flex; align-items:center; gap:10px; min-width:0;">' + thumbHTML + '<div style="min-width:0;"><div style="font-size:0.82rem; font-weight:900; color:var(--g3-amber);">🛢️ TANQUE #' + (i + 1) + ' • SÉRIE: ' + t.serie + '</div><div style="font-size:0.74rem; color:#e2e8f0;">Tara: ' + t.tara + ' | Ano: ' + t.ano + '</div><div style="font-size:0.68rem; color:#34D399; font-family:monospace;">✔ ' + t.requalificacao + '</div></div></div><button type="button" onclick="removerTanqueDaBateria(' + i + ')" style="background:rgba(225,29,72,0.15); border:1px solid var(--red); color:#fda4af; padding:6px 10px; border-radius:6px; font-weight:800; cursor:pointer; font-size:0.72rem; flex-shrink:0;">✕</button>';
-                cont.appendChild(card);
-            }
-        };
-
         // ==========================================================
         // RASTREABILIDADE GERAL, COMPRESSOR DE IMAGENS E OCR
         // ==========================================================
@@ -1993,6 +1973,78 @@
                 status.innerText = "✔ Local Confirmado";
                 window.atualizarQR();
             }, opcoesGPS);
+        };
+
+        window.abrirRotaMapa = function(app) {
+            var end = document.getElementById('cli-endereco').value || "Taguatinga, Brasília - DF";
+            var url = app === 'waze'
+                ? "https://waze.com/ul?q=" + encodeURIComponent(end)
+                : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(end);
+            window.open(url, '_blank');
+        };
+
+        window.atualizarProgressoSeguranca = function() {
+            var checks = document.querySelectorAll('.chk-seg');
+            var marcados = 0;
+            for (var i = 0; i < checks.length; i++) {
+                if (checks[i].checked) marcados++;
+            }
+            var pct = Math.round((marcados / checks.length) * 100);
+            document.getElementById('safety-bar').style.width = pct + "%";
+            document.getElementById('safety-counter').innerText = marcados + "/" + checks.length + " VERIFICADOS (" + pct + "%)";
+        };
+
+        window.verificarCalibracao = function() {
+            var val = document.getElementById('est-equip').value.split('|')[1];
+            var dataCalib = new Date(val);
+            var alerta = document.getElementById('alerta-inmetro');
+            if (dataCalib < new Date()) {
+                alerta.className = "calib-alert calib-err";
+                alerta.innerHTML = "<span>🚨 ALERTA INMETRO: Manômetro com calibração VENCIDA!</span><span>BLOQUEADO</span>";
+            } else {
+                alerta.className = "calib-alert calib-ok";
+                alerta.innerHTML = "<span>✔ RASTREABILIDADE INMETRO VALIDADA: Calibração vigente até " + dataCalib.toLocaleDateString('pt-BR') + ".</span><span>APTO</span>";
+            }
+        };
+
+        var segCronometro = 0;
+        var intCronometro = null;
+        window.iniciarCronometro = function() {
+            if (intCronometro) return;
+            intCronometro = setInterval(function() {
+                segCronometro++;
+                var m = String(Math.floor(segCronometro / 60)).padStart(2, '0');
+                var s = String(segCronometro % 60).padStart(2, '0');
+                document.getElementById('cronometro-display').innerText = m + ":" + s;
+            }, 1000);
+        };
+        window.pausarCronometro = function() { clearInterval(intCronometro); intCronometro = null; };
+        window.zerarCronometro = function() { window.pausarCronometro(); segCronometro = 0; document.getElementById('cronometro-display').innerText = "00:00"; };
+
+        window.statusEstanqueidade = "APROVADO (Queda: 0.0 kPa)";
+        window.calcularEstanqueidade = function() {
+            var pIni = parseFloat(document.getElementById('p-inicial').value) || 0;
+            var pFim = parseFloat(document.getElementById('p-final').value) || 0;
+            var pTol = parseFloat(document.getElementById('p-tolerada').value) || 0;
+            var queda = +(pIni - pFim).toFixed(2);
+
+            var box = document.getElementById('verdict-box');
+            var title = document.getElementById('verdict-title');
+            var badge = document.getElementById('verdict-badge');
+
+            if (queda <= pTol && pFim > 0) {
+                window.statusEstanqueidade = "APROVADO (Queda: " + queda + " kPa)";
+                box.className = "verdict-banner verdict-ok";
+                title.innerText = "APROVADO — REDE ESTANQUE (VARIAÇÃO: " + queda + " kPa)";
+                badge.innerText = "✔ LIBERADO P/ OPERAÇÃO";
+                badge.style.color = "#34D399";
+            } else {
+                window.statusEstanqueidade = "REPROVADO (Fuga de " + queda + " kPa)";
+                box.className = "verdict-banner verdict-fail";
+                title.innerText = "REPROVADO — QUEDA DE " + queda + " kPa ACIMA DA TOLERÂNCIA";
+                badge.style.color = "#fda4af";
+            }
+            window.atualizarQR();
         };
 
         // ==========================================================
